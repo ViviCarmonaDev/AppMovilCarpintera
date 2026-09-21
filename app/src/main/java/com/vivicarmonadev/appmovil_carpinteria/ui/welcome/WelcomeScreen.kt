@@ -40,7 +40,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun WelcomeScreen(
-    onExploreClick: () -> Unit
+    onNext: () -> Unit
 ) {
     // Animación de entrada
     var visible by remember { mutableStateOf(false) }
@@ -135,8 +135,8 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 PrimaryButton(
-                    text = "Explorar app",
-                    onClick = onExploreClick
+                    text = "Empecemos",
+                    onClick = onNext
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -156,6 +156,6 @@ fun WelcomeScreen(
 @Composable
 private fun WelcomeScreenPreview() {
     AppMovilCarpinteriaTheme {
-        WelcomeScreen(onExploreClick = {})
+        WelcomeScreen(onNext = {})
     }
 }
