@@ -13,3 +13,16 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firebase — NO subir claves API
+google-services.json
+
+# Kotlin
+*.hprof
+
+# Keystore (NUNCA subir)
+*.jks
+*.keystore
+
+# OS
+Thumbs.db

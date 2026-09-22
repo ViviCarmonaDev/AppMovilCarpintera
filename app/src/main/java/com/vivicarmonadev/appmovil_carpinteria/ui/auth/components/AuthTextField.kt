@@ -21,8 +21,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -33,9 +35,12 @@ fun AuthTextField(
     label: String,
     placeholder: String,
     modifier: Modifier = Modifier,
-    isPassword: Boolean = false
+    isPassword: Boolean = false,
+    errorMessage: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    val hasError = errorMessage != null
 
     Column(modifier = modifier.fillMaxWidth()) {
 
@@ -43,7 +48,7 @@ fun AuthTextField(
             text = label,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF2C2C2C)   // ← carbón directo
+            color = Color(0xFF2C2C2C)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -61,6 +66,8 @@ fun AuthTextField(
             },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
+            isError = hasError,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = if (isPassword && !passwordVisible)
                 PasswordVisualTransformation() else VisualTransformation.None,
             trailingIcon = if (isPassword) {
@@ -79,18 +86,28 @@ fun AuthTextField(
                 }
             } else null,
             colors = OutlinedTextFieldDefaults.colors(
-                // Sin borde visible
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = if (hasError) Color(0xFFC5544A) else Color.Transparent,
+                unfocusedBorderColor = if (hasError) Color(0xFFC5544A) else Color.Transparent,
                 disabledBorderColor = Color.Transparent,
-                // Fondo gris muy claro
+                errorBorderColor = Color(0xFFC5544A),
                 focusedContainerColor = Color(0xFF2C2C2C).copy(alpha = 0.05f),
                 unfocusedContainerColor = Color(0xFF2C2C2C).copy(alpha = 0.05f),
-                // Color del texto ingresado
+                errorContainerColor = Color(0xFFC5544A).copy(alpha = 0.05f),
                 focusedTextColor = Color(0xFF2C2C2C),
                 unfocusedTextColor = Color(0xFF2C2C2C),
                 cursorColor = Color(0xFF8B5A2B)
             )
         )
+
+        // Mensaje de error debajo del campo
+        if (hasError) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = errorMessage ?: "",
+                fontSize = 12.sp,
+                color = Color(0xFFC5544A),
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }

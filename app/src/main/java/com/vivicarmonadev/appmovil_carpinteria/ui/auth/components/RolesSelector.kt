@@ -27,8 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
-enum class UserRole { CLIENT, CARPENTER }
+
 
 @Composable
 fun RoleSelector(
