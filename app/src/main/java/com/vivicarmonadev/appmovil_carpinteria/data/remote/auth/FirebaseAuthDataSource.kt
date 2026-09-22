@@ -6,6 +6,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.GoogleAuthProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,5 +72,14 @@ class FirebaseAuthDataSource @Inject constructor() {
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    /**
+     * Inicia sesión con Google usando el idToken obtenido del Credential Manager.
+     */
+    suspend fun signInWithGoogleIdToken(idToken: String): FirebaseUser? {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = auth.signInWithCredential(credential).await()
+        return result.user
     }
 }

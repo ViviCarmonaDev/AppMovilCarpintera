@@ -11,9 +11,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,14 +31,14 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.BottomNavIte
 import com.vivicarmonadev.appmovil_carpinteria.ui.home.HomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.more.MoreScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.more.MoreViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.profile.EditProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.profile.EditProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.profile.ProfileScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.projects.ProjectsScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.services.ServicesScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen2
-import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
 
-// RUTAS
 object Routes {
     const val WELCOME_1 = "welcome_1"
     const val WELCOME_2 = "welcome_2"
@@ -47,17 +50,17 @@ object Routes {
     const val SERVICES = "services"
     const val MORE = "more"
     const val PROFILE = "profile"
+    const val EDIT_PROFILE = "edit_profile"
 }
 
-// APP NAVIGATION
+// ⚠️ Reemplaza por tu Web Client ID real
+private const val WEB_CLIENT_ID = "TU_WEB_CLIENT_ID_AQUI"
+
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
-    // ViewModel compartido entre RegisterScreen y RegisterCredentialsScreen
     val registerViewModel = remember { RegisterViewModel() }
-
-    // ViewModel compartido por TODO el flujo logueado (Home, Más, Perfil)
     val mainViewModel = remember { MainViewModel() }
 
     NavHost(
@@ -92,13 +95,13 @@ fun AppNavigation(
 
             LoginScreen(
                 viewModel = loginViewModel,
+                serverClientId = WEB_CLIENT_ID,
                 onLoginSuccess = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
                     }
                 },
-                onGoToRegister = { navController.navigate(Routes.REGISTER) },
-                onGoogleSignIn = { /* TODO: firebase */ }
+                onGoToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
 
@@ -172,7 +175,7 @@ fun AppNavigation(
             ) {
                 MoreScreen(
                     mainViewModel = mainViewModel,
-                    onEditProfile = { navController.navigate(Routes.PROFILE) },
+                    onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                     onLogout = {
                         moreViewModel.logout {
                             navController.navigate(Routes.WELCOME_1) {
@@ -192,14 +195,33 @@ fun AppNavigation(
             ) {
                 ProfileScreen(
                     mainViewModel = mainViewModel,
-                    onEditProfile = { /* TODO: pantalla editar perfil */ }
+                    onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) }
                 )
             }
+        }
+
+        // --- EDIT PROFILE ---
+        composable(Routes.EDIT_PROFILE) {
+            val editProfileViewModel = remember { EditProfileViewModel() }
+            val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
+
+            // Cuando carga el usuario, inicializamos el ViewModel con sus datos
+            LaunchedEffect(user) {
+                user?.let { editProfileViewModel.initialize(it) }
+            }
+
+            EditProfileScreen(
+                viewModel = editProfileViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = {
+                    // Volvemos a la pantalla anterior (Perfil o Más)
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
 
-// SCAFFOLD CON BOTTOM NAV
 @Composable
 private fun MainScaffold(
     currentRoute: String,
@@ -207,31 +229,11 @@ private fun MainScaffold(
     content: @Composable () -> Unit
 ) {
     val bottomNavItems = listOf(
-        BottomNavItem(
-            route = Routes.HOME,
-            label = "Inicio",
-            icon = Icons.Filled.Home
-        ),
-        BottomNavItem(
-            route = Routes.PROJECTS,
-            label = "Proyectos",
-            icon = Icons.Filled.Folder
-        ),
-        BottomNavItem(
-            route = Routes.SERVICES,
-            label = "Servicios",
-            icon = Icons.Filled.Build
-        ),
-        BottomNavItem(
-            route = Routes.MORE,
-            label = "Más",
-            icon = Icons.Filled.MoreHoriz
-        ),
-        BottomNavItem(
-            route = Routes.PROFILE,
-            label = "Perfil",
-            icon = Icons.Filled.Person
-        )
+        BottomNavItem(Routes.HOME, "Inicio", Icons.Filled.Home),
+        BottomNavItem(Routes.PROJECTS, "Proyectos", Icons.Filled.Folder),
+        BottomNavItem(Routes.SERVICES, "Servicios", Icons.Filled.Build),
+        BottomNavItem(Routes.MORE, "Más", Icons.Filled.MoreHoriz),
+        BottomNavItem(Routes.PROFILE, "Perfil", Icons.Filled.Person)
     )
 
     Column(

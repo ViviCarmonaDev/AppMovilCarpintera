@@ -46,4 +46,21 @@ interface AuthRepository {
     // Obtiene el User desde Firestore a partir del uid, Devuelve null si el documento no existe.
 
     suspend fun getUserById(uid: String): Result<User?>
+
+    /**
+     * Inicia sesión con Google.
+     * Recibe el idToken ya obtenido por el GoogleSignInHelper.
+     */
+    suspend fun loginWithGoogle(idToken: String): Result<User>
+
+    /**
+     * Actualiza los datos editables del usuario en Firestore.
+     * Solo se envían los campos que cambiaron.
+     */
+    suspend fun updateUser(
+        uid: String,
+        nombres: String,
+        apellidos: String,
+        telefono: String
+    ): Result<User>
 }

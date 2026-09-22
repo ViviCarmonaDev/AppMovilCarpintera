@@ -5,7 +5,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.vivicarmonadev.appmovil_carpinteria.data.model.UserDto
 import com.vivicarmonadev.appmovil_carpinteria.data.model.toDomain
-import com.vivicarmonadev.appmovil_carpinteria.data.model.toDto
 import com.vivicarmonadev.appmovil_carpinteria.data.remote.auth.FirebaseAuthDataSource
 import com.vivicarmonadev.appmovil_carpinteria.data.remote.firestore.FirestoreUserDataSource
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
@@ -14,9 +13,9 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.repository.AuthRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.ktx.auth
 
 /**
  * Implementación del AuthRepository usando Firebase.
@@ -24,7 +23,7 @@ import kotlinx.coroutines.tasks.await
  * Es el "pegamento" entre la capa de dominio (que solo conoce la interfaz)
  * y la capa de datos (que conoce Firebase).
  *
- * Sus responsabilidades:
+ * Responsabilidades:
  *  1. Coordinar FirebaseAuthDataSource + FirestoreUserDataSource
  *  2. Convertir entre UserDto (Firestore) y User (dominio)
  *  3. Envolver errores en Result
@@ -40,28 +39,46 @@ class AuthRepositoryImpl(
     // USUARIO ACTUAL (reactivo)
 
     override val currentUser: Flow<User?> = callbackFlow {
-        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+        var firestoreListener: ListenerRegistration? = null
+
+        // Listener de Firebase Auth (detecta login/logout)
+        val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val firebaseUser = firebaseAuth.currentUser
+
+            // Siempre remover el listener de Firestore al cambiar sesión
+            firestoreListener?.remove()
+            firestoreListener = null
 
             if (firebaseUser == null) {
                 trySend(null)
             } else {
-                // Cuando cambia el estado, leemos el usuario desde Firestore
-                // para tener todos sus datos (nombre, rol, etc.).
-                // Usamos launch para no bloquear el callback.
-                kotlinx.coroutines.GlobalScope.launch {
-                    val result = userDataSource.getUserById(firebaseUser.uid)
-                    val user = result.getOrNull()?.toDomain()
-                    trySend(user)
-                }
+                // Escuchar el documento del usuario en Firestore en TIEMPO REAL
+                firestoreListener = firestore
+                    .collection("users")
+                    .document(firebaseUser.uid)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            // Error leyendo el documento → emitir null
+                            trySend(null)
+                            return@addSnapshotListener
+                        }
+
+                        if (snapshot != null && snapshot.exists()) {
+                            val userDto = snapshot.toObject(UserDto::class.java)
+                            trySend(userDto?.toDomain())
+                        } else {
+                            // El documento no existe todavía → emitir null
+                            trySend(null)
+                        }
+                    }
             }
         }
 
-        auth.addAuthStateListener(listener)
+        auth.addAuthStateListener(authListener)
 
-        // Cuando el Flow se cancela, removemos el listener
         awaitClose {
-            auth.removeAuthStateListener(listener)
+            auth.removeAuthStateListener(authListener)
+            firestoreListener?.remove()
         }
     }
 
@@ -76,7 +93,6 @@ class AuthRepositoryImpl(
         role: UserRole
     ): Result<User> {
         return try {
-            // 1. Crear el usuario en Firebase Auth
             val displayName = "$nombres $apellidos".trim()
             val firebaseUser = authDataSource.createUserWithEmail(
                 email = email,
@@ -88,7 +104,6 @@ class AuthRepositoryImpl(
                 return Result.failure(Exception("No se pudo crear el usuario en Firebase Auth"))
             }
 
-            // 2. Guardar los datos adicionales en Firestore
             val userDto = UserDto(
                 uid = firebaseUser.uid,
                 nombres = nombres,
@@ -102,16 +117,12 @@ class AuthRepositoryImpl(
             val saveResult = userDataSource.saveUser(userDto)
 
             if (saveResult.isFailure) {
-                // Si falla el guardado en Firestore, igual devolvemos error.
-                // El usuario existe en Auth pero no en Firestore.
-                // TODO: manejar este caso (borrar el usuario de Auth o reintentar)
                 return Result.failure(
                     saveResult.exceptionOrNull()
                         ?: Exception("Error al guardar en Firestore")
                 )
             }
 
-            // 3. Devolver el User de dominio
             Result.success(userDto.toDomain())
 
         } catch (e: Exception) {
@@ -119,21 +130,19 @@ class AuthRepositoryImpl(
         }
     }
 
-    // LOGIN
+    // LOGIN CON EMAIL
 
     override suspend fun login(
         email: String,
         password: String
     ): Result<User> {
         return try {
-            // 1. Iniciar sesión con Firebase Auth
             val firebaseUser = authDataSource.signInWithEmail(email, password)
 
             if (firebaseUser == null) {
                 return Result.failure(Exception("Credenciales incorrectas"))
             }
 
-            // 2. Leer los datos del usuario desde Firestore
             val result = userDataSource.getUserById(firebaseUser.uid)
 
             if (result.isFailure) {
@@ -155,7 +164,67 @@ class AuthRepositoryImpl(
         }
     }
 
+    // ============================================
+    // LOGIN CON GOOGLE
+    // ============================================
+    override suspend fun loginWithGoogle(idToken: String): Result<User> {
+        return try {
+            // 1. Autenticar en Firebase con el idToken de Google
+            val firebaseUser = authDataSource.signInWithGoogleIdToken(idToken)
+
+            if (firebaseUser == null) {
+                return Result.failure(Exception("No se pudo autenticar con Google"))
+            }
+
+            // 2. Buscar el usuario en Firestore
+            val result = userDataSource.getUserById(firebaseUser.uid)
+
+            if (result.isFailure) {
+                return Result.failure(
+                    result.exceptionOrNull() ?: Exception("Error al leer usuario")
+                )
+            }
+
+            val existingUser = result.getOrNull()
+
+            if (existingUser != null) {
+                // Usuario ya existía → devolverlo
+                Result.success(existingUser.toDomain())
+            } else {
+                // Primera vez con Google → crear documento básico en Firestore
+                val fullName = firebaseUser.displayName ?: ""
+                val nameParts = fullName.split(" ").filter { it.isNotBlank() }
+
+                val newUserDto = UserDto(
+                    uid = firebaseUser.uid,
+                    nombres = nameParts.firstOrNull() ?: "",
+                    apellidos = if (nameParts.size > 1)
+                        nameParts.drop(1).joinToString(" ") else "",
+                    telefono = "",
+                    email = firebaseUser.email ?: "",
+                    role = UserRole.CLIENT.toFirestoreValue(),
+                    photoUrl = firebaseUser.photoUrl?.toString()
+                )
+
+                val saveResult = userDataSource.saveUser(newUserDto)
+
+                if (saveResult.isFailure) {
+                    return Result.failure(
+                        saveResult.exceptionOrNull() ?: Exception("Error al guardar usuario")
+                    )
+                }
+
+                Result.success(newUserDto.toDomain())
+            }
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ============================================
     // LOGOUT
+    // ============================================
     override suspend fun logout(): Result<Unit> {
         return try {
             authDataSource.signOut()
@@ -165,11 +234,57 @@ class AuthRepositoryImpl(
         }
     }
 
+    // ============================================
     // LEER USUARIO POR UID
+    // ============================================
     override suspend fun getUserById(uid: String): Result<User?> {
         return try {
             val result = userDataSource.getUserById(uid)
             result.map { dto -> dto?.toDomain() }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUser(
+        uid: String,
+        nombres: String,
+        apellidos: String,
+        telefono: String
+    ): Result<User> {
+        return try {
+            // 1. Actualizar solo los campos que cambiaron en Firestore
+            val fields = mapOf(
+                "nombres" to nombres,
+                "apellidos" to apellidos,
+                "telefono" to telefono
+            )
+
+            val updateResult = userDataSource.updateUserFields(uid, fields)
+
+            if (updateResult.isFailure) {
+                return Result.failure(
+                    updateResult.exceptionOrNull() ?: Exception("Error al actualizar")
+                )
+            }
+
+            // 2. Leer el usuario actualizado desde Firestore
+            val getResult = userDataSource.getUserById(uid)
+
+            if (getResult.isFailure) {
+                return Result.failure(
+                    getResult.exceptionOrNull() ?: Exception("Error al leer usuario")
+                )
+            }
+
+            val updatedUser = getResult.getOrNull()
+
+            if (updatedUser == null) {
+                return Result.failure(Exception("El usuario no existe"))
+            }
+
+            Result.success(updatedUser.toDomain())
+
         } catch (e: Exception) {
             Result.failure(e)
         }
