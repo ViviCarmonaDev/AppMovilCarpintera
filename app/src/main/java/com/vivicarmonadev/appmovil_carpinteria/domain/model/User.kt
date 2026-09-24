@@ -3,7 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.domain.model
 /**
  * Modelo de dominio del Usuario, Este modelo NO depende de Firebase.
  */
-data class User(
+data class User (
     val uid: String = "",
     val nombres: String = "",
     val apellidos: String = "",

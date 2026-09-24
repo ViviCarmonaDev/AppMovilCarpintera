@@ -40,6 +40,9 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen2
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.CompleteProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.CompleteProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -48,6 +51,7 @@ object Routes {
     const val REGISTER = "register"
     const val REGISTER_CREDENTIALS = "register_credentials"
     const val COMPLETE_PROFILE = "complete_profile"
+    const val CARPENTER_PROFILE = "carpenter_profile"
     const val HOME = "home"
     const val PROJECTS = "projects"
     const val SERVICES = "services"
@@ -69,16 +73,27 @@ fun AppNavigation(
     val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
 
     // Auto-navegación: si el usuario está logueado pero no completó el perfil,
-    // lo mandamos a Completar Perfil. Si está logueado y completo, al Home.
+    // lo mandamos a Completar Perfil (solo si NO estamos en pantallas de auth).
     LaunchedEffect(currentUser) {
         val user = currentUser
-        if (user != null && !user.profileCompleted) {
-            // Usuario logueado pero perfil incompleto → forzar Completar Perfil
-            val currentRoute = navController.currentBackStackEntry?.destination?.route
-            if (currentRoute != Routes.COMPLETE_PROFILE) {
-                navController.navigate(Routes.COMPLETE_PROFILE) {
-                    popUpTo(0) { inclusive = true }
-                }
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+        // Rutas de autenticación donde NO hay que redirigir
+        val authRoutes = listOf(
+            Routes.WELCOME_1,
+            Routes.WELCOME_2,
+            Routes.LOGIN,
+            Routes.REGISTER,
+            Routes.REGISTER_CREDENTIALS
+        )
+
+        if (user != null &&
+            !user.profileCompleted &&
+            currentRoute !in authRoutes &&
+            currentRoute != Routes.COMPLETE_PROFILE
+        ) {
+            navController.navigate(Routes.COMPLETE_PROFILE) {
+                popUpTo(0) { inclusive = true }
             }
         }
     }
@@ -143,7 +158,14 @@ fun AppNavigation(
             RegisterCredentialsScreen(
                 viewModel = registerViewModel,
                 onRegisterSuccess = {
-                    navController.navigate(Routes.HOME) {
+                    // Chequear el rol para decidir a dónde ir
+                    val user = currentUser
+                    val destination = if (user?.role == UserRole.CARPENTER) {
+                        Routes.CARPENTER_PROFILE
+                    } else {
+                        Routes.HOME
+                    }
+                    navController.navigate(destination) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
                     }
                 },
@@ -163,10 +185,35 @@ fun AppNavigation(
             LaunchedEffect(currentUser) {
                 currentUser?.let { completeProfileViewModel.initialize(it) }
             }
-
                   CompleteProfileScreen(
                 viewModel = completeProfileViewModel,
                 onCompleteSuccess = {
+                    // Chequear el rol para decidir a dónde ir
+                    val user = currentUser
+                    val destination = if (user?.role == UserRole.CARPENTER) {
+                        Routes.CARPENTER_PROFILE
+                    } else {
+                        Routes.HOME
+                    }
+
+                    navController.navigate(destination) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // --- PERFIL DEL TALLER (solo para carpinteros) ---
+        composable(Routes.CARPENTER_PROFILE) {
+            val carpenterViewModel = remember { CarpenterProfileViewModel() }
+
+            LaunchedEffect(currentUser) {
+                currentUser?.let { carpenterViewModel.initialize(it.uid) }
+            }
+
+            CarpenterProfileScreen(
+                viewModel = carpenterViewModel,
+                onSaveSuccess = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(0) { inclusive = true }
                     }
