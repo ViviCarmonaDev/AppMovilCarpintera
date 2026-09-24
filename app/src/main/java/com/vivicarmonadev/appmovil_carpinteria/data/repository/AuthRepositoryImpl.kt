@@ -88,6 +88,7 @@ class AuthRepositoryImpl(
         nombres: String,
         apellidos: String,
         telefono: String,
+        direccion: String,
         email: String,
         password: String,
         role: UserRole
@@ -109,8 +110,10 @@ class AuthRepositoryImpl(
                 nombres = nombres,
                 apellidos = apellidos,
                 telefono = telefono,
+                direccion = direccion,
                 email = email,
                 role = role.toFirestoreValue(),
+                profileCompleted = true,
                 photoUrl = null
             )
 
@@ -163,10 +166,7 @@ class AuthRepositoryImpl(
             Result.failure(e)
         }
     }
-
-    // ============================================
     // LOGIN CON GOOGLE
-    // ============================================
     override suspend fun loginWithGoogle(idToken: String): Result<User> {
         return try {
             // 1. Autenticar en Firebase con el idToken de Google
@@ -201,8 +201,10 @@ class AuthRepositoryImpl(
                     apellidos = if (nameParts.size > 1)
                         nameParts.drop(1).joinToString(" ") else "",
                     telefono = "",
+                    direccion = "",
                     email = firebaseUser.email ?: "",
                     role = UserRole.CLIENT.toFirestoreValue(),
+                    profileCompleted = false,
                     photoUrl = firebaseUser.photoUrl?.toString()
                 )
 
@@ -222,9 +224,7 @@ class AuthRepositoryImpl(
         }
     }
 
-    // ============================================
     // LOGOUT
-    // ============================================
     override suspend fun logout(): Result<Unit> {
         return try {
             authDataSource.signOut()
@@ -234,9 +234,8 @@ class AuthRepositoryImpl(
         }
     }
 
-    // ============================================
     // LEER USUARIO POR UID
-    // ============================================
+
     override suspend fun getUserById(uid: String): Result<User?> {
         return try {
             val result = userDataSource.getUserById(uid)
@@ -250,15 +249,18 @@ class AuthRepositoryImpl(
         uid: String,
         nombres: String,
         apellidos: String,
-        telefono: String
+        telefono: String,
+        direccion: String
     ): Result<User> {
         return try {
             // 1. Actualizar solo los campos que cambiaron en Firestore
             val fields = mapOf(
                 "nombres" to nombres,
                 "apellidos" to apellidos,
-                "telefono" to telefono
-            )
+                "telefono" to telefono,
+                "direccion" to direccion,
+
+                )
 
             val updateResult = userDataSource.updateUserFields(uid, fields)
 
@@ -269,6 +271,54 @@ class AuthRepositoryImpl(
             }
 
             // 2. Leer el usuario actualizado desde Firestore
+            val getResult = userDataSource.getUserById(uid)
+
+            if (getResult.isFailure) {
+                return Result.failure(
+                    getResult.exceptionOrNull() ?: Exception("Error al leer usuario")
+                )
+            }
+
+            val updatedUser = getResult.getOrNull()
+
+            if (updatedUser == null) {
+                return Result.failure(Exception("El usuario no existe"))
+            }
+
+            Result.success(updatedUser.toDomain())
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun completeProfile(
+        uid: String,
+        nombres: String,
+        apellidos: String,
+        telefono: String,
+        direccion: String,
+        role: UserRole
+    ): Result<User> {
+        return try {
+            val fields = mapOf(
+                "nombres" to nombres,
+                "apellidos" to apellidos,
+                "telefono" to telefono,
+                "direccion" to direccion,
+                "role" to role.toFirestoreValue(),
+                "profile_completed" to true        // ← marcar como completado
+            )
+
+            val updateResult = userDataSource.updateUserFields(uid, fields)
+
+            if (updateResult.isFailure) {
+                return Result.failure(
+                    updateResult.exceptionOrNull() ?: Exception("Error al actualizar")
+                )
+            }
+
+            // Leer el usuario actualizado
             val getResult = userDataSource.getUserById(uid)
 
             if (getResult.isFailure) {

@@ -86,16 +86,29 @@ fun AuthTextField(
                 }
             } else null,
             colors = OutlinedTextFieldDefaults.colors(
+                // Borde
                 focusedBorderColor = if (hasError) Color(0xFFC5544A) else Color.Transparent,
                 unfocusedBorderColor = if (hasError) Color(0xFFC5544A) else Color.Transparent,
                 disabledBorderColor = Color.Transparent,
                 errorBorderColor = Color(0xFFC5544A),
+
+                // Fondo del campo
                 focusedContainerColor = Color(0xFF2C2C2C).copy(alpha = 0.05f),
                 unfocusedContainerColor = Color(0xFF2C2C2C).copy(alpha = 0.05f),
                 errorContainerColor = Color(0xFFC5544A).copy(alpha = 0.05f),
+
+                // Texto que escribe el usuario
                 focusedTextColor = Color(0xFF2C2C2C),
                 unfocusedTextColor = Color(0xFF2C2C2C),
-                cursorColor = Color(0xFF8B5A2B)
+                errorTextColor = Color(0xFFC5544A),
+
+                // Placeholder
+                focusedPlaceholderColor = Color(0xFF2C2C2C).copy(alpha = 0.35f),
+                unfocusedPlaceholderColor = Color(0xFF2C2C2C).copy(alpha = 0.35f),
+
+                // Cursor
+                cursorColor = Color(0xFF8B5A2B),
+                errorCursorColor = Color(0xFF8B5A2B)
             )
         )
 

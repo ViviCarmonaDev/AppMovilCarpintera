@@ -47,7 +47,7 @@ class LoginViewModel(
             return
         }
         if (!state.isPasswordValid) {
-            _uiState.update { it.copy(errorMessage = "La contraseña debe tener al menos 6 caracteres") }
+            _uiState.update { it.copy(errorMessage = "La contraseña debe tener al menos 8 caracteres") }
             return
         }
 
@@ -79,28 +79,37 @@ class LoginViewModel(
     }
 
     // ---- LOGIN CON GOOGLE ----
+
     fun loginWithGoogle(
         context: Context,
         serverClientId: String
     ) {
+        android.util.Log.d("GoogleSignIn", "=== Iniciando login con Google ===")
+        android.util.Log.d("GoogleSignIn", "serverClientId: $serverClientId")
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                // 1. Obtener el idToken de Google (abre el diálogo de cuentas)
+                android.util.Log.d("GoogleSignIn", "Paso 1: creando helper")
                 val helper = GoogleSignInHelper(context, serverClientId)
-                val idToken = helper.getGoogleIdToken()
 
-                // 2. Autenticar en Firebase con el idToken
+                android.util.Log.d("GoogleSignIn", "Paso 2: obteniendo idToken")
+                val idToken = helper.getGoogleIdToken()
+                android.util.Log.d("GoogleSignIn", "✓ idToken obtenido: ${idToken.take(30)}...")
+
+                android.util.Log.d("GoogleSignIn", "Paso 3: autenticando con Firebase")
                 val result = authRepository.loginWithGoogle(idToken)
 
                 result.fold(
-                    onSuccess = {
+                    onSuccess = { user ->
+                        android.util.Log.d("GoogleSignIn", "✓ Éxito! usuario: ${user.email}, rol: ${user.role}")
                         _uiState.update {
                             it.copy(isLoading = false, isSuccess = true, errorMessage = null)
                         }
                     },
                     onFailure = { exception ->
+                        android.util.Log.e("GoogleSignIn", "✗ Fallo Firebase: ${exception.message}", exception)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -112,12 +121,13 @@ class LoginViewModel(
                 )
 
             } catch (e: Exception) {
-                // Cancelación del usuario o error de Google
+                android.util.Log.e("GoogleSignIn", "✗ Excepción: ${e.message}", e)
+                android.util.Log.e("GoogleSignIn", "✗ Tipo: ${e.javaClass.name}")
+
                 val message = when {
                     e.message?.contains("canceled", ignoreCase = true) == true ||
                             e.message?.contains("cancel", ignoreCase = true) == true ->
-                        null   // El usuario canceló → no mostrar error
-
+                        null
                     else -> mapErrorToMessage(e)
                 }
 

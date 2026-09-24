@@ -38,6 +38,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.projects.ProjectsScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.services.ServicesScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen2
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.CompleteProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.CompleteProfileScreen
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -45,6 +47,7 @@ object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val REGISTER_CREDENTIALS = "register_credentials"
+    const val COMPLETE_PROFILE = "complete_profile"
     const val HOME = "home"
     const val PROJECTS = "projects"
     const val SERVICES = "services"
@@ -53,8 +56,7 @@ object Routes {
     const val EDIT_PROFILE = "edit_profile"
 }
 
-// ⚠️ Reemplaza por tu Web Client ID real
-private const val WEB_CLIENT_ID = "TU_WEB_CLIENT_ID_AQUI"
+private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
 
 @Composable
 fun AppNavigation(
@@ -62,6 +64,24 @@ fun AppNavigation(
 ) {
     val registerViewModel = remember { RegisterViewModel() }
     val mainViewModel = remember { MainViewModel() }
+
+    // Observamos el usuario actual para saber si tiene el perfil completo
+    val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+
+    // Auto-navegación: si el usuario está logueado pero no completó el perfil,
+    // lo mandamos a Completar Perfil. Si está logueado y completo, al Home.
+    LaunchedEffect(currentUser) {
+        val user = currentUser
+        if (user != null && !user.profileCompleted) {
+            // Usuario logueado pero perfil incompleto → forzar Completar Perfil
+            val currentRoute = navController.currentBackStackEntry?.destination?.route
+            if (currentRoute != Routes.COMPLETE_PROFILE) {
+                navController.navigate(Routes.COMPLETE_PROFILE) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -130,6 +150,25 @@ fun AppNavigation(
                 onBackToLogin = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // --- COMPLETAR PERFIL ---
+        composable(Routes.COMPLETE_PROFILE) {
+            val completeProfileViewModel = remember { CompleteProfileViewModel() }
+
+            // Inicializamos con los datos del usuario actual (de Google)
+            LaunchedEffect(currentUser) {
+                currentUser?.let { completeProfileViewModel.initialize(it) }
+            }
+
+                  CompleteProfileScreen(
+                viewModel = completeProfileViewModel,
+                onCompleteSuccess = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

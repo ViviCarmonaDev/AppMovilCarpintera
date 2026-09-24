@@ -15,6 +15,8 @@ data class RegisterUiState(
     val nombres: String = "",
     val apellidos: String = "",
     val telefono: String = "",
+    val direccion: String = "",
+
 
     // ---- Paso 2 ----
     val email: String = "",
@@ -30,20 +32,19 @@ data class RegisterUiState(
     val nombresTouched: Boolean = false,
     val apellidosTouched: Boolean = false,
     val telefonoTouched: Boolean = false,
+    val direccionTouched: Boolean = false,
     val emailTouched: Boolean = false,
     val passwordTouched: Boolean = false,
     val confirmPasswordTouched: Boolean = false
 ) {
 
-    // ============================================
     // VALIDACIONES — devuelven String? (null = sin error)
-    // ============================================
 
     val nombresError: String?
         get() = when {
             !nombresTouched -> null
             nombres.isBlank() -> "Ingresa tus nombres"
-            nombres.trim().length < 2 -> "Mínimo 2 caracteres"
+            nombres.trim().length < 3 -> "Mínimo 3 caracteres"
             !nombres.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$")) -> "Solo letras y espacios"
             else -> null
         }
@@ -67,6 +68,13 @@ data class RegisterUiState(
             else -> null
         }
 
+    val direccionError: String?
+        get() = when {
+            !direccionTouched -> null
+            direccion.isBlank() -> "Ingresa tu dirección"
+            else -> null
+        }
+
     val emailError: String?
         get() = when {
             !emailTouched -> null
@@ -80,7 +88,7 @@ data class RegisterUiState(
         get() = when {
             !passwordTouched -> null
             password.isBlank() -> "Ingresa una contraseña"
-            password.length < 6 -> "Mínimo 6 caracteres"
+            password.length < 8 -> "Mínimo 8 caracteres"
             else -> null
         }
 
@@ -92,15 +100,15 @@ data class RegisterUiState(
             else -> null
         }
 
-    // ============================================
     // VALIDEZ DE CADA PASO (para habilitar/deshabilitar botones)
-    // ============================================
 
     val isStep1Valid: Boolean
         get() = selectedRole != null &&
                 nombres.isNotBlank() && nombresError == null &&
                 apellidos.isNotBlank() && apellidosError == null &&
-                telefono.isNotBlank() && telefonoError == null
+                telefono.isNotBlank() && telefonoError == null &&
+                direccion.isNotBlank() && direccionError == null
+
 
     val isStep2Valid: Boolean
         get() = email.isNotBlank() && emailError == null &&

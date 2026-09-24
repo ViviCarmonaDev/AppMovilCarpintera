@@ -3,8 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.auth
 /**
  * Estado de la UI del login.
  *
- * Los flags "touched" indican si el usuario ya interactuó con cada campo,
- * para no mostrar errores antes de que escriba.
+ * Los flags "touched" indican si el usuario ya interactuó con cada campo, para no mostrar errores antes de que escriba.
  */
 data class LoginUiState(
     val email: String = "",
@@ -34,7 +33,7 @@ data class LoginUiState(
         get() = when {
             !passwordTouched -> null
             password.isBlank() -> "Ingresa tu contraseña"
-            password.length < 6 -> "Mínimo 6 caracteres"
+            password.length < 8 -> "Mínimo 8 caracteres"
             else -> null
         }
 
@@ -44,7 +43,7 @@ data class LoginUiState(
         get() = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
     val isPasswordValid: Boolean
-        get() = password.length >= 6
+        get() = password.length >= 8
 
     val isFormValid: Boolean
         get() = isEmailValid && isPasswordValid

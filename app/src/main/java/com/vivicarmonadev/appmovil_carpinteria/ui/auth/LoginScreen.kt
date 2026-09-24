@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -95,7 +96,7 @@ fun LoginScreen(
             Text(
                 text = uiState.errorMessage ?: "",
                 fontSize = 13.sp,
-                color = Color(0xFFC5544A),
+                color = Color(0xFF000000),
                 fontWeight = FontWeight.Medium
             )
         }
@@ -154,6 +155,7 @@ fun LoginScreen(
                 fontSize = 14.sp,
                 color = Color(0xFF2C2C2C).copy(alpha = 0.7f)
             )
+            Spacer(modifier = Modifier.width(6.dp))
             TextButton(
                 onClick = onGoToRegister,
                 contentPadding = PaddingValues(0.dp)

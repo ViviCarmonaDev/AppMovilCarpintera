@@ -32,6 +32,9 @@ data class UserDto(
     @PropertyName("telefono")
     val telefono: String = "",
 
+    @PropertyName("direccion")
+    val direccion: String = "",
+
     @PropertyName("email")
     val email: String = "",
 
@@ -40,6 +43,9 @@ data class UserDto(
 
     @PropertyName("photo_url")
     val photoUrl: String? = null,
+
+    @PropertyName("photo_url")
+    val profileCompleted: Boolean = false,
 
     @ServerTimestamp
     @PropertyName("created_at")
@@ -52,18 +58,19 @@ data class UserDto(
 
 // CONVERSORES
 
-/**
- * Convierte de DTO (Firestore) a modelo de dominio.
- */
+//Convierte de DTO (Firestore) a modelo de dominio.
+
 fun UserDto.toDomain(): User {
     return User(
         uid = uid,
         nombres = nombres,
         apellidos = apellidos,
         telefono = telefono,
+        direccion = direccion,
         email = email,
         role = UserRole.fromString(role),
         photoUrl = photoUrl,
+        profileCompleted = profileCompleted,
         createdAt = createdAt?.time ?: 0L,
         updatedAt = updatedAt?.time ?: 0L
     )
@@ -78,9 +85,11 @@ fun User.toDto(): UserDto {
         nombres = nombres,
         apellidos = apellidos,
         telefono = telefono,
+        direccion = direccion,
         email = email,
         role = role.toFirestoreValue(),
         photoUrl = photoUrl,
+        profileCompleted = profileCompleted,
         createdAt = if (createdAt > 0) Date(createdAt) else null,
         updatedAt = if (updatedAt > 0) Date(updatedAt) else null
     )

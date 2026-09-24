@@ -92,7 +92,7 @@ fun RegisterCredentialsScreen(
                 Text(
                     text = uiState.errorMessage ?: "",
                     fontSize = 13.sp,
-                    color = Color(0xFFC5544A),
+                    color = Color(0xFF000000),
                     fontWeight = FontWeight.Medium
                 )
             }

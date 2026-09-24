@@ -1,9 +1,10 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,43 +12,40 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel de la pantalla "Editar perfil".
+ * ViewModel de "Completar perfil".
  *
- * Carga los datos del usuario actual, permite editarlos y guardarlos
- * en Firestore. Cuando el guardado es exitoso, marca `isSuccess = true`
- * para que la pantalla navegue hacia atrás.
+ * Se usa cuando un usuario entra por Google y necesita completar
+ * los datos faltantes: rol, teléfono y dirección.
+ *
+ * Los nombres, apellidos, email y foto vienen pre-llenados desde Google.
  */
-class EditProfileViewModel(
+class CompleteProfileViewModel(
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(EditProfileUiState())
-    val uiState: StateFlow<EditProfileUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CompleteProfileUiState())
+    val uiState: StateFlow<CompleteProfileUiState> = _uiState.asStateFlow()
 
-    // Guardamos el uid del usuario actual para usarlo al guardar
-    private var currentUid: String = ""
+    // INICIALIZAR CON DATOS DEL USUARIO ACTUAL
 
-    // ============================================
-    // CARGAR DATOS INICIALES
-    // ============================================
-    // Se llama una sola vez al abrir la pantalla, con el usuario actual.
     fun initialize(user: User) {
-        currentUid = user.uid
         _uiState.update {
             it.copy(
-                originalNombres = user.nombres,
-                originalApellidos = user.apellidos,
-                originalTelefono = user.telefono,
+                uid = user.uid,
                 nombres = user.nombres,
                 apellidos = user.apellidos,
-                telefono = user.telefono
+                email = user.email,
+                photoUrl = user.photoUrl
             )
         }
     }
 
-    // ============================================
     // EVENTOS DE EDICIÓN
-    // ============================================
+
+    fun onRoleSelected(role: UserRole) {
+        _uiState.update { it.copy(selectedRole = role, roleTouched = true) }
+    }
+
     fun onNombresChange(value: String) {
         _uiState.update {
             it.copy(nombres = value, nombresTouched = true, errorMessage = null)
@@ -61,39 +59,45 @@ class EditProfileViewModel(
     }
 
     fun onTelefonoChange(value: String) {
-        // Solo dígitos, máximo 9 caracteres
         val filtered = value.filter { it.isDigit() }.take(9)
         _uiState.update {
             it.copy(telefono = filtered, telefonoTouched = true, errorMessage = null)
         }
     }
 
-    // ============================================
-    // GUARDAR CAMBIOS
-    // ============================================
-    fun saveChanges() {
+    fun onDireccionChange(value: String) {
+        _uiState.update {
+            it.copy(direccion = value, direccionTouched = true, errorMessage = null)
+        }
+    }
+
+    // GUARDAR PERFIL COMPLETO
+
+    fun saveProfile() {
         val state = _uiState.value
 
-        // Marcar todos los campos como tocados para mostrar errores si hay
+        // Marcar todo como tocado para mostrar errores
         _uiState.update {
             it.copy(
                 nombresTouched = true,
                 apellidosTouched = true,
-                telefonoTouched = true
+                telefonoTouched = true,
+                direccionTouched = true,
+                roleTouched = true
             )
         }
 
         if (!state.isFormValid) {
-            _uiState.update { it.copy(errorMessage = "Revisa los datos ingresados") }
+            _uiState.update { it.copy(errorMessage = "Completa todos los campos") }
             return
         }
 
-        if (!state.hasChanges) {
-            _uiState.update { it.copy(errorMessage = "No hay cambios para guardar") }
+        if (state.selectedRole == null) {
+            _uiState.update { it.copy(errorMessage = "Selecciona un rol") }
             return
         }
 
-        if (currentUid.isBlank()) {
+        if (state.uid.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Error: usuario no identificado") }
             return
         }
@@ -101,22 +105,19 @@ class EditProfileViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            val result = authRepository.updateUser(
-                uid = currentUid,
+            val result = authRepository.completeProfile(
+                uid = state.uid,
                 nombres = state.nombres.trim(),
                 apellidos = state.apellidos.trim(),
                 telefono = state.telefono.trim(),
-                direccion = state.direccion.trim()
+                direccion = state.direccion.trim(),
+                role = state.selectedRole
             )
 
             result.fold(
                 onSuccess = {
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true,
-                            errorMessage = null
-                        )
+                        it.copy(isLoading = false, isSuccess = true, errorMessage = null)
                     }
                 },
                 onFailure = { exception ->
@@ -132,16 +133,8 @@ class EditProfileViewModel(
         }
     }
 
-    // ============================================
-    // RESET (por si el usuario vuelve a entrar)
-    // ============================================
-    fun resetSuccess() {
-        _uiState.update { it.copy(isSuccess = false) }
-    }
-
-    // ============================================
     // MAPEO DE ERRORES
-    // ============================================
+
     private fun mapErrorToMessage(exception: Throwable): String {
         val message = exception.message ?: return "Error desconocido"
         return when {
@@ -149,7 +142,7 @@ class EditProfileViewModel(
                 "Sin conexión. Revisa tu internet"
 
             message.contains("PERMISSION_DENIED", ignoreCase = true) ->
-                "No tienes permiso para actualizar este perfil"
+                "No tienes permiso para actualizar"
 
             else -> message
         }

@@ -85,6 +85,16 @@ fun RegisterScreen(
             keyboardType = KeyboardType.Phone
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        AuthTextField(
+            value = uiState.direccion,
+            onValueChange = { viewModel.ondireccionChange(it) },
+            label = "direccion",
+            placeholder = "Ej. jr. san martin",
+            errorMessage = uiState.direccionError,
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         PrimaryButton(

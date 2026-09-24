@@ -8,9 +8,11 @@ data class User(
     val nombres: String = "",
     val apellidos: String = "",
     val telefono: String = "",
+    val direccion: String = "",
     val email: String = "",
     val role: UserRole = UserRole.CLIENT,
     val photoUrl: String? = null,
+    val profileCompleted: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 ) {

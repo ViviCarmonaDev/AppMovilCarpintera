@@ -90,6 +90,7 @@ fun ProfileScreen(
                 "Nombre completo" to currentUser.fullName.ifBlank { "Sin nombre" },
                 "Correo electrónico" to currentUser.email.ifBlank { "Sin correo" },
                 "Teléfono" to currentUser.telefono.ifBlank { "Sin teléfono" },
+                "direccion" to currentUser.direccion.ifBlank { "Sin dirección" },
                 "Rol" to if (currentUser.role.name.lowercase() == "carpenter") "Carpintero" else "Cliente"
             )
         )
@@ -103,9 +104,8 @@ fun ProfileScreen(
     }
 }
 
-// ============================================
 // HEADER CON AVATAR
-// ============================================
+
 @Composable
 private fun ProfileHeader(
     userName: String,

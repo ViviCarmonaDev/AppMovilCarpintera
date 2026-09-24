@@ -42,6 +42,12 @@ class RegisterViewModel(
         }
     }
 
+    fun ondireccionChange(value: String) {
+        _uiState.update {
+            it.copy(direccion = value, direccionTouched = true)
+        }
+    }
+
     // ---- PASO 2 ----
     fun onEmailChange(value: String) {
         _uiState.update {
@@ -71,6 +77,7 @@ class RegisterViewModel(
                 nombresTouched = true,
                 apellidosTouched = true,
                 telefonoTouched = true,
+                direccionTouched = true,
                 emailTouched = true,
                 passwordTouched = true,
                 confirmPasswordTouched = true
@@ -97,6 +104,7 @@ class RegisterViewModel(
                 nombres = state.nombres.trim(),
                 apellidos = state.apellidos.trim(),
                 telefono = state.telefono.trim(),
+                direccion = state.direccion.trim(),
                 email = state.email.trim(),
                 password = state.password,
                 role = state.selectedRole

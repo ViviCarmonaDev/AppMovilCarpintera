@@ -25,6 +25,7 @@ interface AuthRepository {
         nombres: String,
         apellidos: String,
         telefono: String,
+        direccion: String,
         email: String,
         password: String,
         role: UserRole
@@ -61,6 +62,21 @@ interface AuthRepository {
         uid: String,
         nombres: String,
         apellidos: String,
-        telefono: String
+        telefono: String,
+        direccion: String
+    ): Result<User>
+
+    /**
+     * Completa el perfil de un usuario de Google.
+     * Actualiza nombres, apellidos, teléfono, dirección, rol
+     * y marca `profileCompleted = true`.
+     */
+    suspend fun completeProfile(
+        uid: String,
+        nombres: String,
+        apellidos: String,
+        telefono: String,
+        direccion: String,
+        role: UserRole
     ): Result<User>
 }

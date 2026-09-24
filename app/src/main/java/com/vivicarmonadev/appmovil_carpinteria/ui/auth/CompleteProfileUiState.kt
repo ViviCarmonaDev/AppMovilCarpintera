@@ -1,23 +1,27 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.auth
+
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
 /**
- * Estado de la UI de "Editar perfil".
+ * Estado de la UI de "Completar perfil".
  *
- * Guarda dos versiones de los datos:
- *  - Los originales (como estaban al abrir la pantalla)
- *  - Los editados (como el usuario los va cambiando)
+ * Se muestra cuando un usuario entra por Google y necesita completar
+ * los datos que Google no provee: rol, teléfono y dirección.
  *
- * Así podemos saber si el usuario cambió algo (`hasChanges`).
+ * Los nombres, apellidos y email vienen pre-llenados desde Google.
  */
-data class EditProfileUiState(
-    // ---- Datos originales ----
-    val originalNombres: String = "",
-    val originalApellidos: String = "",
-    val originalTelefono: String = "",
+data class CompleteProfileUiState(
 
-    // ---- Datos editados ----
+    // Datos pre-llenados desde Google (solo lectura, excepto nombres/apellidos)
+
+    val uid: String = "",
     val nombres: String = "",
     val apellidos: String = "",
+    val email: String = "",                    // solo lectura
+    val photoUrl: String? = null,
+
+    // Datos que el usuario debe completar
+    val selectedRole: UserRole? = null,
     val telefono: String = "",
     val direccion: String = "",
 
@@ -25,14 +29,15 @@ data class EditProfileUiState(
     val nombresTouched: Boolean = false,
     val apellidosTouched: Boolean = false,
     val telefonoTouched: Boolean = false,
+    val direccionTouched: Boolean = false,
+    val roleTouched: Boolean = false,
 
     // ---- Estado general ----
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false
 ) {
-
-    // VALIDACIONES (mismas reglas que el registro)
+    // VALIDACIONES
     val nombresError: String?
         get() = when {
             !nombresTouched -> null
@@ -61,21 +66,20 @@ data class EditProfileUiState(
             else -> null
         }
 
-    // ============================================
+    val direccionError: String?
+        get() = when {
+            !direccionTouched -> null
+            direccion.isBlank() -> "Ingresa tu dirección"
+            direccion.trim().length < 5 -> "Mínimo 5 caracteres"
+            else -> null
+        }
+
     // VALIDEZ DEL FORMULARIO
-    // ============================================
 
     val isFormValid: Boolean
-        get() = nombres.isNotBlank() && nombresError == null &&
+        get() = selectedRole != null &&
+                nombres.isNotBlank() && nombresError == null &&
                 apellidos.isNotBlank() && apellidosError == null &&
-                telefono.isNotBlank() && telefonoError == null
-
-    // ============================================
-    // ¿HUBO CAMBIOS?
-    // ============================================
-    // Sirve para habilitar el botón "Guardar" solo si hay algo distinto.
-    val hasChanges: Boolean
-        get() = nombres != originalNombres ||
-                apellidos != originalApellidos ||
-                telefono != originalTelefono
+                telefono.isNotBlank() && telefonoError == null &&
+                direccion.isNotBlank() && direccionError == null
 }
