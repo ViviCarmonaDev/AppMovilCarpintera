@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.LoginScreen
@@ -43,6 +45,10 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.CompleteProfil
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.ui.projects.PortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemViewModel
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -58,6 +64,7 @@ object Routes {
     const val MORE = "more"
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "edit_profile"
+    const val EDIT_PORTFOLIO_ITEM = "edit_portfolio_item"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -233,12 +240,52 @@ fun AppNavigation(
 
         // --- PROJECTS ---
         composable(Routes.PROJECTS) {
+            val portfolioViewModel = remember { PortfolioViewModel() }
+
             MainScaffold(
                 currentRoute = Routes.PROJECTS,
                 navController = navController
             ) {
-                ProjectsScreen()
+                ProjectsScreen(
+                    viewModel = portfolioViewModel,
+                    onCreateClick = {
+                        navController.navigate(Routes.EDIT_PORTFOLIO_ITEM)
+                    },
+                    onEditClick = { item ->
+                        navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=${item.id}")
+                    }
+                )
             }
+        }
+
+        // --- CREAR/EDITAR TRABAJO ---
+        composable(
+            route = "${Routes.EDIT_PORTFOLIO_ITEM}?itemId={itemId}",
+            arguments = listOf(
+                navArgument("itemId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId")
+
+            val editViewModel = remember {
+                EditPortfolioItemViewModel().apply {
+                    if (itemId.isNullOrBlank()) {
+                        initializeCreate()
+                    } else {
+                        initializeEdit(itemId)
+                    }
+                }
+            }
+
+            EditPortfolioItemScreen(
+                viewModel = editViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
         }
 
         // --- SERVICES ---
