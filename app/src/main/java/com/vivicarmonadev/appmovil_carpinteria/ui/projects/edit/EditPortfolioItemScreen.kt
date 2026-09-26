@@ -35,6 +35,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.border
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
@@ -131,11 +134,46 @@ fun EditPortfolioItemScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // ---- TIPO DE PRECIO ----
+                Text(
+                    text = "Tipo de precio",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF2C2C2C)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TipoPrecioChip(
+                        text = "FIJO",
+                        subtitle = "Precio final",
+                        isSelected = uiState.tipoPrecio == TipoPrecio.FIJO,
+                        onClick = { viewModel.onTipoPrecioChange(TipoPrecio.FIJO) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    TipoPrecioChip(
+                        text = "A TRATAR",
+                        subtitle = "Se negocia",
+                        isSelected = uiState.tipoPrecio == TipoPrecio.A_TRATAR,
+                        onClick = { viewModel.onTipoPrecioChange(TipoPrecio.A_TRATAR) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // ---- PRECIO ----
                 AuthTextField(
                     value = uiState.precioReferencial,
                     onValueChange = { viewModel.onPrecioChange(it) },
-                    label = "Precio referencial (opcional)",
+                    label = if (uiState.tipoPrecio == TipoPrecio.FIJO)
+                        "Precio (obligatorio)"
+                    else
+                        "Precio referencial (opcional)",
                     placeholder = "Ej. 250 o 250.50",
                     errorMessage = uiState.precioError,
                     keyboardType = KeyboardType.Decimal
@@ -299,3 +337,59 @@ private fun DiscardChangesDialog(
         }
     )
 }
+
+    // SELECTOR DE TIPO DE PRECIO
+
+    @Composable
+    private fun TipoPrecioChip(
+        text: String,
+        subtitle: String,
+        isSelected: Boolean,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        val containerColor = if (isSelected)
+            Color(0xFF8B5A2B)
+        else
+            Color(0xFFF5EFE7)
+
+        val contentColor = if (isSelected)
+            Color(0xFFF9F7F5)
+        else
+            Color(0xFF2C2C2C)
+
+        val subtitleColor = if (isSelected)
+            Color(0xFFF9F7F5).copy(alpha = 0.85f)
+        else
+            Color(0xFF6B6B6B)
+
+        val borderColor = if (isSelected)
+            Color(0xFF8B5A2B)
+        else
+            Color(0xFFE0DCD7)
+
+        Box(
+            modifier = modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(containerColor)
+                .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp, horizontal = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = text,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = contentColor
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = subtitleColor
+                )
+            }
+        }
+    }

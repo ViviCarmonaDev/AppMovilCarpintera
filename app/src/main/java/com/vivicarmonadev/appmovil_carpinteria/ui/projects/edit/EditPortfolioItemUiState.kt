@@ -1,5 +1,7 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit
 
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
+
 /**
  * Estado de la UI de "Crear/Editar trabajo".
  *
@@ -11,16 +13,16 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit
  */
 data class EditPortfolioItemUiState(
     // ---- Datos del formulario ----
-    val id: String = "",                        // vacío si es nuevo
-    val uid: String = "",                       // dueño (carpintero)
+    val id: String = "",
+    val uid: String = "",
     val titulo: String = "",
     val descripcion: String = "",
     val categoria: String = "",
     val material: String = "",
-    val precio: String = "",                    // como String, se convierte a Double al guardar
-    val precioReferencial: String = "",         // como String, se convierte a Double al guardar
-    val fotoUrl1: String? = null,               // reservado
-    val fotoUrl2: String? = null,               // reservado
+    val precioReferencial: String = "",
+    val tipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
+    val fotoUrl1: String? = null,
+    val fotoUrl2: String? = null,
 
     // ---- Valores originales (para detectar cambios en modo edición) ----
     val originalTitulo: String = "",
@@ -28,6 +30,7 @@ data class EditPortfolioItemUiState(
     val originalCategoria: String = "",
     val originalMaterial: String = "",
     val originalPrecio: String = "",
+    val originalTipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
 
     // ---- Flags de "tocado" ----
     val tituloTouched: Boolean = false,
@@ -35,18 +38,18 @@ data class EditPortfolioItemUiState(
     val categoriaTouched: Boolean = false,
     val materialTouched: Boolean = false,
     val precioTouched: Boolean = false,
+    val tipoPrecioTouched: Boolean = false,
 
     // ---- Estado general ----
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
     val isEditMode: Boolean = false,
-
-    // ---- Diálogo de descartar cambios ----
     val showDiscardDialog: Boolean = false
 ) {
 
     // VALIDACIONES
+
     val tituloError: String?
         get() = when {
             !tituloTouched -> null
@@ -81,12 +84,17 @@ data class EditPortfolioItemUiState(
             else -> null
         }
 
+    // El precio es obligatorio si el tipo es FIJO. Opcional si es A_TRATAR.
     val precioError: String?
         get() = when {
             !precioTouched -> null
-            precio.isBlank() -> null              // ← opcional, no es error
-            !precio.matches(Regex("^\\d+(\\.\\d{1,2})?$")) -> "Solo números (ej: 250 o 250.50)"
-            (precio.toDoubleOrNull() ?: 0.0) <= 0 -> "El precio debe ser mayor a 0"
+            tipoPrecio == TipoPrecio.FIJO && precioReferencial.isBlank() ->
+                "El precio es obligatorio cuando es FIJO"
+            precioReferencial.isBlank() -> null      // opcional si es A_TRATAR
+            !precioReferencial.matches(Regex("^\\d+(\\.\\d{1,2})?$")) ->
+                "Solo números (ej: 250 o 250.50)"
+            (precioReferencial.toDoubleOrNull() ?: 0.0) <= 0 ->
+                "El precio debe ser mayor a 0"
             else -> null
         }
 
@@ -100,13 +108,12 @@ data class EditPortfolioItemUiState(
                 precioError == null
 
     // ¿HUBO CAMBIOS?
-    // Solo útil en modo edición: sirve para saber si el usuario modificó algo.
-    // En modo creación siempre es true (hay algo para guardar).
     val hasChanges: Boolean
         get() = if (!isEditMode) true
         else titulo != originalTitulo ||
                 descripcion != originalDescripcion ||
                 categoria != originalCategoria ||
                 material != originalMaterial ||
-                precioReferencial != originalPrecio
+                precioReferencial != originalPrecio ||
+                tipoPrecio != originalTipoPrecio
 }

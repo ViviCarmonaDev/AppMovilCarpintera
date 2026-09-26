@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 
 /**
  * ViewModel de "Crear/Editar trabajo".
@@ -78,6 +79,7 @@ class EditPortfolioItemViewModel(
                             categoria = item.categoria,
                             material = item.material,
                             precioReferencial = precioStr,
+                            tipoPrecio = item.tipoPrecio,
                             fotoUrl1 = item.fotoUrl1,
                             fotoUrl2 = item.fotoUrl2,
                             isEditMode = true,
@@ -87,7 +89,8 @@ class EditPortfolioItemViewModel(
                             originalDescripcion = item.descripcion,
                             originalCategoria = item.categoria,
                             originalMaterial = item.material,
-                            originalPrecio = precioStr
+                            originalPrecio = precioStr,
+                            originalTipoPrecio = item.tipoPrecio
                         )
                     }
                 },
@@ -143,6 +146,12 @@ class EditPortfolioItemViewModel(
         }
     }
 
+    fun onTipoPrecioChange(tipo: TipoPrecio) {
+        _uiState.update {
+            it.copy(tipoPrecio = tipo, tipoPrecioTouched = true, errorMessage = null)
+        }
+    }
+
     // GUARDAR (crear o actualizar)
 
     fun save() {
@@ -182,6 +191,7 @@ class EditPortfolioItemViewModel(
                 categoria = state.categoria.trim(),
                 material = state.material.trim(),
                 precioReferencial = precioDouble,
+                tipoPrecio = state.tipoPrecio,
                 fotoUrl1 = state.fotoUrl1,
                 fotoUrl2 = state.fotoUrl2
             )

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 
 @Composable
 fun PortfolioScreen(
@@ -59,17 +60,14 @@ fun PortfolioScreen(
 
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // ---- HEADER ----
             PortfolioHeader(isCarpenter = uiState.isCarpenter)
 
-            // ---- BUSCADOR ----
             SearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = { viewModel.onSearchQueryChange(it) },
                 onClear = { viewModel.clearSearch() }
             )
 
-            // ---- CONTENIDO ----
             when {
                 uiState.isLoading -> {
                     Box(
@@ -102,7 +100,6 @@ fun PortfolioScreen(
             }
         }
 
-        // ---- FAB (solo para carpinteros) ----
         if (uiState.isCarpenter && !uiState.isLoading && !uiState.isEmpty) {
             FloatingAddButton(
                 onClick = onCreateClick,
@@ -112,7 +109,6 @@ fun PortfolioScreen(
             )
         }
 
-        // ---- DIÁLOGO DE CONFIRMACIÓN DE ELIMINACIÓN ----
         if (uiState.itemToDelete != null) {
             DeleteConfirmDialog(
                 itemTitle = uiState.itemToDelete?.titulo ?: "",
@@ -153,7 +149,6 @@ private fun PortfolioHeader(isCarpenter: Boolean) {
 }
 
 // BARRA DE BÚSQUEDA
-
 @Composable
 private fun SearchBar(
     query: String,
@@ -203,6 +198,7 @@ private fun SearchBar(
 }
 
 // LISTA DE TRABAJOS
+
 @Composable
 private fun ItemsList(
     items: List<PortfolioItem>,
@@ -242,7 +238,6 @@ private fun PortfolioItemCard(
             .background(Color.White)
             .padding(16.dp)
     ) {
-        // Título
         Text(
             text = item.titulo,
             fontSize = 17.sp,
@@ -254,7 +249,6 @@ private fun PortfolioItemCard(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Categoría + Material
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -268,7 +262,6 @@ private fun PortfolioItemCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Descripción
         if (item.descripcion.isNotBlank()) {
             Text(
                 text = item.descripcion,
@@ -280,18 +273,29 @@ private fun PortfolioItemCard(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Precio + Botones
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = item.precioTexto,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF8B5A2B)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = item.precioTexto,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF8B5A2B)
+                )
+
+                if (item.etiquetaPrecio != null) {
+                    TipoPrecioTag(
+                        texto = item.etiquetaPrecio!!,
+                        tipo = item.tipoPrecio
+                    )
+                }
+            }
 
             if (isCarpenter) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -316,7 +320,6 @@ private fun PortfolioItemCard(
 }
 
 // TAG / CHIP
-
 @Composable
 private fun Tag(text: String, color: Color, textColor: Color) {
     Box(
@@ -335,7 +338,6 @@ private fun Tag(text: String, color: Color, textColor: Color) {
 }
 
 // ESTADO VACÍO
-
 @Composable
 private fun EmptyState(
     isCarpenter: Boolean,
@@ -416,7 +418,6 @@ private fun EmptyState(
         }
     }
 }
-
 // ESTADO VACÍO DE BÚSQUEDA
 
 @Composable
@@ -454,7 +455,6 @@ private fun SearchEmptyState(query: String) {
         )
     }
 }
-
 // FAB (botón flotante de agregar)
 
 @Composable
@@ -480,7 +480,6 @@ private fun FloatingAddButton(
 }
 
 // DIÁLOGO DE CONFIRMACIÓN
-
 @Composable
 private fun DeleteConfirmDialog(
     itemTitle: String,
@@ -534,4 +533,31 @@ private fun DeleteConfirmDialog(
             }
         }
     )
+}
+
+// ETIQUETA DE TIPO DE PRECIO
+@Composable
+private fun TipoPrecioTag(
+    texto: String,
+    tipo: TipoPrecio
+) {
+    val (bgColor, textColor) = when (tipo) {
+        TipoPrecio.FIJO -> Color(0xFF8B5A2B) to Color(0xFFF9F7F5)
+        TipoPrecio.A_TRATAR -> Color(0xFFD4E0D9) to Color(0xFF2E4A3E)
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(bgColor)
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+    ) {
+        Text(
+            text = texto,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp,
+            color = textColor
+        )
+    }
 }

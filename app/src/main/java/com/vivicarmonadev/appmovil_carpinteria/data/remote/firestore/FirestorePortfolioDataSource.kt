@@ -28,7 +28,7 @@ class FirestorePortfolioDataSource {
 
     fun getAllItemsFlow(): Flow<List<PortfolioItemDto>> = callbackFlow {
         val listener = firestore.collection(COLLECTION_PORTFOLIO)
-            .orderBy("created_at", Query.Direction.DESCENDING)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList())
@@ -50,7 +50,7 @@ class FirestorePortfolioDataSource {
     fun getItemsByUidFlow(uid: String): Flow<List<PortfolioItemDto>> = callbackFlow {
         val listener = firestore.collection(COLLECTION_PORTFOLIO)
             .whereEqualTo("uid", uid)
-            .orderBy("created_at", Query.Direction.DESCENDING)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList())
