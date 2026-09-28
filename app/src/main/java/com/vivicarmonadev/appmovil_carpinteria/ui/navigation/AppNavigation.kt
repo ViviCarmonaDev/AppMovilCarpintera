@@ -49,6 +49,8 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.ui.projects.PortfolioViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileViewModel
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -65,6 +67,7 @@ object Routes {
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "edit_profile"
     const val EDIT_PORTFOLIO_ITEM = "edit_portfolio_item"
+    const val CARPENTER_PUBLIC_PROFILE = "carpenter_public_profile"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -225,6 +228,28 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        // --- PERFIL PÚBLICO DEL CARPINTERO (vista del cliente) ---
+        composable(
+            route = "${Routes.CARPENTER_PUBLIC_PROFILE}/{uid}",
+            arguments = listOf(
+                navArgument("uid") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid") ?: ""
+
+            val publicProfileViewModel = remember {
+                CarpenterPublicProfileViewModel()
+            }
+
+            CarpenterPublicProfileScreen(
+                viewModel = publicProfileViewModel,
+                uid = uid,
+                onBack = { navController.popBackStack() }
             )
         }
 
