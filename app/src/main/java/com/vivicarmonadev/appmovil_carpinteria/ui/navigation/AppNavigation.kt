@@ -88,29 +88,39 @@ fun AppNavigation(
 
     // Observamos el usuario actual para saber si tiene el perfil completo
     val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+    val tieneCarpenterProfile by mainViewModel.tieneCarpenterProfile.collectAsStateWithLifecycle()
 
     // Auto-navegación: si el usuario está logueado pero no completó el perfil,
     // lo mandamos a Completar Perfil (solo si NO estamos en pantallas de auth).
-    LaunchedEffect(currentUser) {
-        val user = currentUser
+    LaunchedEffect(currentUser, tieneCarpenterProfile) {
+        val user = currentUser ?: return@LaunchedEffect
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
         // Rutas de autenticación donde NO hay que redirigir
-        val authRoutes = listOf(
+        val rutasQueNoRedirigen = listOf(
             Routes.WELCOME_1,
             Routes.WELCOME_2,
             Routes.LOGIN,
             Routes.REGISTER,
             Routes.REGISTER_CREDENTIALS,
-            Routes.EDIT_PROFILE
+            Routes.EDIT_PROFILE,
+            Routes.CARPENTER_PROFILE
         )
 
-        if (user != null &&
-            !user.profileCompleted &&
-            currentRoute !in authRoutes &&
-            currentRoute != Routes.COMPLETE_PROFILE
-        ) {
+        // Caso 1: perfil básico incompleto → COMPLETE_PROFILE
+        if (!user.profileCompleted && currentRoute !in rutasQueNoRedirigen) {
             navController.navigate(Routes.COMPLETE_PROFILE) {
+                popUpTo(0) { inclusive = true }
+            }
+            return@LaunchedEffect
+        }
+
+        // Caso 2: carpintero sin perfil de taller → CARPENTER_PROFILE
+        if (user.role == UserRole.CARPENTER &&
+            tieneCarpenterProfile == false &&
+            currentRoute !in rutasQueNoRedirigen
+        ) {
+            navController.navigate(Routes.CARPENTER_PROFILE) {
                 popUpTo(0) { inclusive = true }
             }
         }
