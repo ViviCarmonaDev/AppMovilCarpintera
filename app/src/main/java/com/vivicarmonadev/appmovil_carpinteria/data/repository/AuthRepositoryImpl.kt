@@ -259,8 +259,8 @@ class AuthRepositoryImpl(
                 "apellidos" to apellidos,
                 "telefono" to telefono,
                 "direccion" to direccion,
-
-                )
+                "profileCompleted" to true
+            )
 
             val updateResult = userDataSource.updateUserFields(uid, fields)
 
@@ -307,7 +307,7 @@ class AuthRepositoryImpl(
                 "telefono" to telefono,
                 "direccion" to direccion,
                 "role" to role.toFirestoreValue(),
-                "profile_completed" to true        // ← marcar como completado
+                "profileCompleted" to true
             )
 
             val updateResult = userDataSource.updateUserFields(uid, fields)

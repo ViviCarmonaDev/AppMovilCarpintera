@@ -5,12 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.model.toDomain
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.CarpenterRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.PedidoRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.PortfolioRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpenterProfile
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 import com.google.firebase.firestore.ktx.firestore
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,17 +21,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * ViewModel del Home.
- *
- * Carga los datos según el rol del usuario:
- *  - Cliente: lista de carpinteros + trabajos recientes + pedidos (placeholder)
- *  - Carpintero: sus últimos trabajos + métricas
- */
 class HomeViewModel(
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
     private val carpenterRepository: CarpenterRepositoryImpl = CarpenterRepositoryImpl(),
-    private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl()
+    private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl(),
+    private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -37,10 +34,14 @@ class HomeViewModel(
     private var currentUid: String = ""
     private var currentRole: UserRole = UserRole.CLIENT
 
+    // Jobs para poder cancelar los Flows
+    private var pedidosJob: Job? = null
+
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 if (user != null) {
+                    val uidChanged = currentUid != user.uid
                     currentUid = user.uid
                     currentRole = user.role
 
@@ -51,9 +52,11 @@ class HomeViewModel(
                         )
                     }
 
-                    when (user.role) {
-                        UserRole.CLIENT -> loadClientHome()
-                        UserRole.CARPENTER -> loadCarpenterHome(user.uid)
+                    if (uidChanged) {
+                        when (user.role) {
+                            UserRole.CLIENT -> loadClientHome(user.uid)
+                            UserRole.CARPENTER -> loadCarpenterHome(user.uid)
+                        }
                     }
                 }
             }
@@ -61,20 +64,15 @@ class HomeViewModel(
     }
 
     // HOME DEL CLIENTE
-
-    private fun loadClientHome() {
+    private fun loadClientHome(uid: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingHome = true) }
 
             loadAllCarpenters()
             loadRecentPortfolioItems()
+            loadRecentOrders(uid)
 
-            _uiState.update {
-                it.copy(
-                    isLoadingHome = false,
-                    recentOrders = emptyList()
-                )
-            }
+            _uiState.update { it.copy(isLoadingHome = false) }
         }
     }
 
@@ -94,7 +92,6 @@ class HomeViewModel(
                 )
                 if (userDto != null) {
                     val user = userDto.toDomain()
-
                     val profileResult = carpenterRepository.getCarpenterProfileOnce(user.uid)
                     val profile = profileResult.getOrNull()
 
@@ -123,8 +120,18 @@ class HomeViewModel(
         }
     }
 
-    // HOME DEL CARPINTERO
+    private fun loadRecentOrders(uid: String) {
+        pedidosJob?.cancel()
+        pedidosJob = viewModelScope.launch {
+            pedidoRepository.getMyPedidos(uid).collect { pedidos ->
+                _uiState.update {
+                    it.copy(recentOrders = pedidos.take(2))   // solo los primeros 2
+                }
+            }
+        }
+    }
 
+    // HOME DEL CARPINTERO
     private fun loadCarpenterHome(uid: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingHome = true) }
@@ -146,14 +153,13 @@ class HomeViewModel(
 }
 
 // ESTADO DEL HOME
-
 data class HomeUiState(
     val currentUser: User? = null,
     val isCarpenter: Boolean = false,
 
     val carpenters: List<Pair<User, CarpenterProfile>> = emptyList(),
     val recentPortfolioItems: List<PortfolioItem> = emptyList(),
-    val recentOrders: List<Any> = emptyList(),
+    val recentOrders: List<Pedido> = emptyList(),      // ← Ahora tipado como Pedido
 
     val myPortfolioItems: List<PortfolioItem> = emptyList(),
 

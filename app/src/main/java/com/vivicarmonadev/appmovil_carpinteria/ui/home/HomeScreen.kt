@@ -19,7 +19,9 @@ fun HomeScreen(
     onCarpenterClick: (String) -> Unit,
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllCarpentersClick: () -> Unit,
-    onSeeAllPortfolioClick: () -> Unit
+    onSeeAllPortfolioClick: () -> Unit,
+    onOrderClick: (String) -> Unit,
+    onSeeAllOrdersClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -53,7 +55,10 @@ fun HomeScreen(
                     onCarpenterClick = onCarpenterClick,
                     onPortfolioItemClick = onPortfolioItemClick,
                     onSeeAllCarpentersClick = onSeeAllCarpentersClick,
-                    onSeeAllPortfolioClick = onSeeAllPortfolioClick
+                    onSeeAllPortfolioClick = onSeeAllPortfolioClick,
+                    recentOrders = uiState.recentOrders,
+                    onOrderClick = onOrderClick,
+                    onSeeAllOrdersClick = onSeeAllOrdersClick
                 )
             }
         }

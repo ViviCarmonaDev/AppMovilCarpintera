@@ -44,7 +44,7 @@ data class UserDto(
     @PropertyName("photo_url")
     val photoUrl: String? = null,
 
-    @PropertyName("photo_url")
+    @PropertyName("profileCompleted")
     val profileCompleted: Boolean = false,
 
     @ServerTimestamp

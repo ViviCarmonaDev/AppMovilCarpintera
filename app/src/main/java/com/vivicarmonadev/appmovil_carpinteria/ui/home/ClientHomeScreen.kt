@@ -47,17 +47,23 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
 import com.vivicarmonadev.appmovil_carpinteria.ui.home.components.CarpenterCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.home.components.EmptyOrdersCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.home.components.PortfolioMiniCard
+import com.vivicarmonadev.appmovil_carpinteria.ui.home.components.RecentOrderCard
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 
 @Composable
 fun ClientHomeScreen(
     userName: String,
     carpenters: List<Pair<User, CarpenterProfile>>,
     recentPortfolioItems: List<PortfolioItem>,
+    recentOrders: List<Pedido>,
     hasRecentOrders: Boolean,
     onCarpenterClick: (String) -> Unit,
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllCarpentersClick: () -> Unit,
-    onSeeAllPortfolioClick: () -> Unit
+    onSeeAllPortfolioClick: () -> Unit,
+    onOrderClick: (String) -> Unit,
+    onSeeAllOrdersClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -87,16 +93,30 @@ fun ClientHomeScreen(
         // ---- PEDIDOS RECIENTES ----
         SectionTitle(
             title = "Pedidos recientes",
+            actionText = if (recentOrders.isNotEmpty()) "Ver todos →" else null,
+            onActionClick = onSeeAllOrdersClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
-        if (hasRecentOrders) {
-            // TODO: cuando implementemos pedidos
-            Box(modifier = Modifier.padding(horizontal = 20.dp))
-        } else {
+        if (recentOrders.isEmpty()) {
             EmptyOrdersCard(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
+        } else {
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                recentOrders.forEach { pedido ->
+                    RecentOrderCard(
+                        titulo = pedido.titulo,
+                        estadoTexto = pedido.status.toDisplayText().uppercase(),
+                        estadoColor = estadoColorPara(pedido.status),
+                        tiempoTexto = "Hace poco",     // ← Podés calcular tiempo relativo si querés
+                        onClick = { onOrderClick(pedido.id) }
+                    )
+                }
+            }
         }
 
         // ---- CARPINTEROS DESTACADOS ----
@@ -156,9 +176,8 @@ fun ClientHomeScreen(
     }
 }
 
-// ============================================
 // HEADER
-// ============================================
+
 @Composable
 private fun ClientHeader(userName: String) {
     Column(
@@ -206,9 +225,8 @@ private fun ClientHeader(userName: String) {
     }
 }
 
-// ============================================
 // BÚSQUEDA
-// ============================================
+
 @Composable
 private fun SearchBar(modifier: Modifier = Modifier) {
     Row(
@@ -234,9 +252,8 @@ private fun SearchBar(modifier: Modifier = Modifier) {
     }
 }
 
-// ============================================
 // CATEGORÍAS
-// ============================================
+
 @Composable
 private fun CategoriesRow(modifier: Modifier = Modifier) {
     val categories = listOf(
@@ -293,9 +310,7 @@ private fun CategoryChip(
     }
 }
 
-// ============================================
 // HINT DE CARPINTEROS VACÍO
-// ============================================
 @Composable
 private fun EmptyCarpentersHint(modifier: Modifier = Modifier) {
     Row(
@@ -341,9 +356,8 @@ private fun EmptyCarpentersHint(modifier: Modifier = Modifier) {
     }
 }
 
-// ============================================
 // HINT DE PORTAFOLIO VACÍO
-// ============================================
+
 @Composable
 private fun EmptyPortfolioHint(modifier: Modifier = Modifier) {
     Row(
@@ -388,3 +402,12 @@ private fun EmptyPortfolioHint(modifier: Modifier = Modifier) {
         }
     }
 }
+    @Composable
+    private fun estadoColorPara(estado: EstadoPedido): Color = when (estado) {
+        EstadoPedido.PENDIENTE -> Color(0xFFE0A458)
+        EstadoPedido.ACEPTADO -> Color(0xFF6B8E7F)
+        EstadoPedido.EN_PROCESO -> Color(0xFF8B5A2B)
+        EstadoPedido.TERMINADO -> Color(0xFF4A6B8B)
+        EstadoPedido.ENTREGADO -> Color(0xFF4A6B5D)
+        EstadoPedido.CANCELADO -> Color(0xFFC5544A)
+    }

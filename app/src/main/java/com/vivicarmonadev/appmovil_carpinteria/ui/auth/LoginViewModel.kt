@@ -5,24 +5,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.remote.auth.GoogleSignInHelper
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel del login.
- *
- * Maneja el login con email/contraseña y con Google.
- * El `serverClientId` es el Web Client ID de Firebase (se pasa desde AppNavigation).
- */
 class LoginViewModel(
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    // Usuario recién logueado (para que AppNavigation decida el destino)
+    private val _loggedInUser = MutableStateFlow<User?>(null)
+    val loggedInUser: StateFlow<User?> = _loggedInUser.asStateFlow()
 
     // ---- EVENTOS ----
     fun onEmailChange(value: String) {
@@ -37,7 +36,6 @@ class LoginViewModel(
     fun login() {
         val state = _uiState.value
 
-        // Marcar campos como tocados para mostrar errores
         _uiState.update {
             it.copy(emailTouched = true, passwordTouched = true)
         }
@@ -60,7 +58,8 @@ class LoginViewModel(
             )
 
             result.fold(
-                onSuccess = {
+                onSuccess = { user ->
+                    _loggedInUser.value = user       // ← NUEVO
                     _uiState.update {
                         it.copy(isLoading = false, isSuccess = true, errorMessage = null)
                     }
@@ -79,37 +78,26 @@ class LoginViewModel(
     }
 
     // ---- LOGIN CON GOOGLE ----
-
     fun loginWithGoogle(
         context: Context,
         serverClientId: String
     ) {
-        android.util.Log.d("GoogleSignIn", "=== Iniciando login con Google ===")
-        android.util.Log.d("GoogleSignIn", "serverClientId: $serverClientId")
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                android.util.Log.d("GoogleSignIn", "Paso 1: creando helper")
                 val helper = GoogleSignInHelper(context, serverClientId)
-
-                android.util.Log.d("GoogleSignIn", "Paso 2: obteniendo idToken")
                 val idToken = helper.getGoogleIdToken()
-                android.util.Log.d("GoogleSignIn", "✓ idToken obtenido: ${idToken.take(30)}...")
-
-                android.util.Log.d("GoogleSignIn", "Paso 3: autenticando con Firebase")
                 val result = authRepository.loginWithGoogle(idToken)
 
                 result.fold(
                     onSuccess = { user ->
-                        android.util.Log.d("GoogleSignIn", "✓ Éxito! usuario: ${user.email}, rol: ${user.role}")
+                        _loggedInUser.value = user       // ← NUEVO
                         _uiState.update {
                             it.copy(isLoading = false, isSuccess = true, errorMessage = null)
                         }
                     },
                     onFailure = { exception ->
-                        android.util.Log.e("GoogleSignIn", "✗ Fallo Firebase: ${exception.message}", exception)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -121,9 +109,6 @@ class LoginViewModel(
                 )
 
             } catch (e: Exception) {
-                android.util.Log.e("GoogleSignIn", "✗ Excepción: ${e.message}", e)
-                android.util.Log.e("GoogleSignIn", "✗ Tipo: ${e.javaClass.name}")
-
                 val message = when {
                     e.message?.contains("canceled", ignoreCase = true) == true ||
                             e.message?.contains("cancel", ignoreCase = true) == true ->

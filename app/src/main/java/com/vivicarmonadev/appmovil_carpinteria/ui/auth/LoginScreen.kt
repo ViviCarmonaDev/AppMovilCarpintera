@@ -28,22 +28,23 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.DividerWithText
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.GoogleSignInButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
     serverClientId: String,
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (User) -> Unit,
     onGoToRegister: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val loggedInUser by viewModel.loggedInUser.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Cuando el login es exitoso (email o Google), navegamos al Home
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            onLoginSuccess()
-        }
+    LaunchedEffect(loggedInUser) {
+        val user = loggedInUser ?: return@LaunchedEffect
+        onLoginSuccess(user)
     }
 
     AuthScreenContainer(

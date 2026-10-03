@@ -101,7 +101,8 @@ fun AppNavigation(
             Routes.WELCOME_2,
             Routes.LOGIN,
             Routes.REGISTER,
-            Routes.REGISTER_CREDENTIALS
+            Routes.REGISTER_CREDENTIALS,
+            Routes.EDIT_PROFILE
         )
 
         if (user != null &&
@@ -148,8 +149,15 @@ fun AppNavigation(
             LoginScreen(
                 viewModel = loginViewModel,
                 serverClientId = WEB_CLIENT_ID,
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
+                onLoginSuccess = { user ->
+                    // Decidir el destino según el usuario
+                    val destination = when {
+                        !user.profileCompleted -> Routes.COMPLETE_PROFILE
+                        user.role == UserRole.CARPENTER -> Routes.CARPENTER_PROFILE
+                        else -> Routes.HOME
+                    }
+
+                    navController.navigate(destination) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
                     }
                 },
@@ -268,20 +276,15 @@ fun AppNavigation(
                 currentRoute = Routes.HOME,
                 navController = navController
             ) {
+
                 HomeScreen(
                     viewModel = homeViewModel,
-                    onCarpenterClick = { uid ->
-                        navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid")
-                    },
-                    onPortfolioItemClick = { itemId ->
-                        navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$itemId")
-                    },
-                    onSeeAllCarpentersClick = {
-                        navController.navigate(Routes.PROJECTS)
-                    },
-                    onSeeAllPortfolioClick = {
-                        navController.navigate(Routes.PROJECTS)
-                    }
+                    onCarpenterClick = { uid -> navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid") },
+                    onPortfolioItemClick = { itemId -> navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$itemId") },
+                    onSeeAllCarpentersClick = { navController.navigate(Routes.PROJECTS) },
+                    onSeeAllPortfolioClick = { navController.navigate(Routes.PROJECTS) },
+                    onOrderClick = { pedidoId -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$pedidoId") },
+                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
                 )
             }
         }
@@ -334,16 +337,6 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )
-        }
-
-        // --- SERVICES ---
-        composable(Routes.PEDIDOS) {
-            MainScaffold(
-                currentRoute = Routes.PEDIDOS,
-                navController = navController
-            ) {
-                ServicesScreen()
-            }
         }
 
         // --- MORE ---
@@ -462,7 +455,7 @@ private fun MainScaffold(
     val bottomNavItems = listOf(
         BottomNavItem(Routes.HOME, "Inicio", Icons.Filled.Home),
         BottomNavItem(Routes.PROJECTS, "Proyectos", Icons.Filled.Folder),
-        BottomNavItem(Routes.PEDIDOS, "Pedidos", Icons.Filled.Build),
+        BottomNavItem(Routes.PEDIDOS, "Pedidos", Icons.Filled.Inbox),
         BottomNavItem(Routes.MORE, "Más", Icons.Filled.MoreHoriz),
         BottomNavItem(Routes.PROFILE, "Perfil", Icons.Filled.Person)
     )
