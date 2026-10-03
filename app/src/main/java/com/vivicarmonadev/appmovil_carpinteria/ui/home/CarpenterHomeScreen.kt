@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +27,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,10 +38,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
+import com.vivicarmonadev.appmovil_carpinteria.ui.home.components.PortfolioMiniCard
 
 @Composable
-fun CarpenterHomeScreen(userName: String) {
+fun CarpenterHomeScreen(
+    userName: String,
+    portfolioItems: List<PortfolioItem>,
+    onPortfolioItemClick: (String) -> Unit,
+    onSeeAllPortfolioClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -50,6 +59,7 @@ fun CarpenterHomeScreen(userName: String) {
 
         // ---- MÉTRICAS ----
         MetricsRow(
+            portfolioCount = portfolioItems.size,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
@@ -59,7 +69,7 @@ fun CarpenterHomeScreen(userName: String) {
         SectionTitle(
             title = "Pedidos activos",
             actionText = "Ver todos →",
-            onActionClick = { /* TODO */ },
+            onActionClick = { /* TODO: ir a pedidos */ },
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
 
@@ -70,14 +80,29 @@ fun CarpenterHomeScreen(userName: String) {
         // ---- MI PORTAFOLIO ----
         SectionTitle(
             title = "Mi portafolio",
-            actionText = "Gestionar →",
-            onActionClick = { /* TODO */ },
+            actionText = if (portfolioItems.isNotEmpty()) "Ver todos →" else null,
+            onActionClick = onSeeAllPortfolioClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
-        EmptyPortfolioHint(
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
+        if (portfolioItems.isEmpty()) {
+            EmptyPortfolioHint(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                onClick = onSeeAllPortfolioClick
+            )
+        } else {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(portfolioItems.take(5), key = { it.id }) { item ->
+                    PortfolioMiniCard(
+                        item = item,
+                        onClick = { onPortfolioItemClick(item.id) }
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -134,12 +159,15 @@ private fun CarpenterHeader(userName: String) {
 }
 
 // ============================================
-// MÉTRICAS (estadísticas rápidas)
+// MÉTRICAS
 // ============================================
 @Composable
-private fun MetricsRow(modifier: Modifier = Modifier) {
+private fun MetricsRow(
+    portfolioCount: Int,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         MetricCard(
@@ -155,9 +183,9 @@ private fun MetricsRow(modifier: Modifier = Modifier) {
             modifier = Modifier.weight(1f)
         )
         MetricCard(
-            icon = Icons.Filled.CheckCircle,
-            value = "0",
-            label = "Completados",
+            icon = Icons.Filled.Folder,
+            value = "$portfolioCount",
+            label = "Trabajos",
             modifier = Modifier.weight(1f)
         )
     }
@@ -251,13 +279,16 @@ private fun EmptyOrdersHint(modifier: Modifier = Modifier) {
 // HINT DE PORTAFOLIO VACÍO
 // ============================================
 @Composable
-private fun EmptyPortfolioHint(modifier: Modifier = Modifier) {
+private fun EmptyPortfolioHint(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFF5EFE7))
-            .clickable { /* TODO: ir a portafolio */ }
+            .clickable(onClick = onClick)
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -287,7 +318,7 @@ private fun EmptyPortfolioHint(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Sube fotos de tus trabajos para atraer clientes",
+                text = "Publicá tu primer trabajo para atraer clientes",
                 fontSize = 12.sp,
                 color = Color(0xFF6B6B6B),
                 lineHeight = 16.sp
@@ -295,3 +326,4 @@ private fun EmptyPortfolioHint(modifier: Modifier = Modifier) {
         }
     }
 }
+

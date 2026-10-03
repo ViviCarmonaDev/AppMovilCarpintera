@@ -27,9 +27,7 @@ class EditProfileViewModel(
     // Guardamos el uid del usuario actual para usarlo al guardar
     private var currentUid: String = ""
 
-    // ============================================
     // CARGAR DATOS INICIALES
-    // ============================================
     // Se llama una sola vez al abrir la pantalla, con el usuario actual.
     fun initialize(user: User) {
         currentUid = user.uid
@@ -38,16 +36,17 @@ class EditProfileViewModel(
                 originalNombres = user.nombres,
                 originalApellidos = user.apellidos,
                 originalTelefono = user.telefono,
+                originalDireccion = user.direccion,
                 nombres = user.nombres,
                 apellidos = user.apellidos,
-                telefono = user.telefono
+                telefono = user.telefono,
+                direccion = user.direccion
             )
         }
     }
 
-    // ============================================
     // EVENTOS DE EDICIÓN
-    // ============================================
+
     fun onNombresChange(value: String) {
         _uiState.update {
             it.copy(nombres = value, nombresTouched = true, errorMessage = null)
@@ -68,9 +67,14 @@ class EditProfileViewModel(
         }
     }
 
-    // ============================================
+    fun onDireccionChange(value: String) {
+        _uiState.update {
+            it.copy(direccion = value, direccionTouched = true, errorMessage = null)
+        }
+    }
+
     // GUARDAR CAMBIOS
-    // ============================================
+
     fun saveChanges() {
         val state = _uiState.value
 
@@ -79,7 +83,8 @@ class EditProfileViewModel(
             it.copy(
                 nombresTouched = true,
                 apellidosTouched = true,
-                telefonoTouched = true
+                telefonoTouched = true,
+                direccionTouched = true
             )
         }
 
@@ -132,16 +137,13 @@ class EditProfileViewModel(
         }
     }
 
-    // ============================================
     // RESET (por si el usuario vuelve a entrar)
-    // ============================================
     fun resetSuccess() {
         _uiState.update { it.copy(isSuccess = false) }
     }
 
-    // ============================================
     // MAPEO DE ERRORES
-    // ============================================
+
     private fun mapErrorToMessage(exception: Throwable): String {
         val message = exception.message ?: return "Error desconocido"
         return when {

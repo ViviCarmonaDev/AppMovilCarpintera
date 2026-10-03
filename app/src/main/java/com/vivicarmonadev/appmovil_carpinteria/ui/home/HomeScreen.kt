@@ -11,19 +11,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
-import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.home.HomeViewModel
 
 @Composable
 fun HomeScreen(
-    viewModel: MainViewModel
+    viewModel: HomeViewModel,
+    onCarpenterClick: (String) -> Unit,
+    onPortfolioItemClick: (String) -> Unit,
+    onSeeAllCarpentersClick: () -> Unit,
+    onSeeAllPortfolioClick: () -> Unit
 ) {
-    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFFAF6F1)
     ) {
-        if (currentUser == null) {
+        if (uiState.currentUser == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -31,13 +35,25 @@ fun HomeScreen(
                 CircularProgressIndicator(color = Color(0xFF8B5A2B))
             }
         } else {
-            val user = currentUser!!
+            val user = uiState.currentUser!!
+
             when (user.role) {
                 UserRole.CARPENTER -> CarpenterHomeScreen(
-                    userName = user.nombres.ifBlank { "Usuario" }
+                    userName = user.nombres.ifBlank { "Usuario" },
+                    portfolioItems = uiState.myPortfolioItems,
+                    onPortfolioItemClick = onPortfolioItemClick,
+                    onSeeAllPortfolioClick = onSeeAllPortfolioClick
                 )
+
                 UserRole.CLIENT -> ClientHomeScreen(
-                    userName = user.nombres.ifBlank { "Usuario" }
+                    userName = user.nombres.ifBlank { "Usuario" },
+                    carpenters = uiState.carpenters,
+                    recentPortfolioItems = uiState.recentPortfolioItems,
+                    hasRecentOrders = uiState.hasRecentOrders,
+                    onCarpenterClick = onCarpenterClick,
+                    onPortfolioItemClick = onPortfolioItemClick,
+                    onSeeAllCarpentersClick = onSeeAllCarpentersClick,
+                    onSeeAllPortfolioClick = onSeeAllPortfolioClick
                 )
             }
         }

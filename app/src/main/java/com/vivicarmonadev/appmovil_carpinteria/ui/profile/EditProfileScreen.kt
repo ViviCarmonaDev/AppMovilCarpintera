@@ -126,6 +126,16 @@ fun EditProfileScreen(
                 keyboardType = KeyboardType.Phone
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AuthTextField(
+                value = uiState.direccion,
+                onValueChange = { viewModel.onDireccionChange(it) },
+                label = "Dirección",
+                placeholder = "Ej. jr. la molina",
+                errorMessage = uiState.direccionError,
+            )
+
             // ---- ERROR GENERAL ----
             if (uiState.errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -166,9 +176,7 @@ fun EditProfileScreen(
     }
 }
 
-// ============================================
 // HEADER CON BOTÓN ATRÁS
-// ============================================
 @Composable
 private fun EditProfileHeader(onBack: () -> Unit) {
     Row(

@@ -51,6 +51,12 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioIte
 import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.home.HomeViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.PedidosScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.PedidosViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.edit.EditPedidoScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.edit.EditPedidoViewModel
+import androidx.compose.material.icons.filled.Inbox
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -62,12 +68,13 @@ object Routes {
     const val CARPENTER_PROFILE = "carpenter_profile"
     const val HOME = "home"
     const val PROJECTS = "projects"
-    const val SERVICES = "services"
     const val MORE = "more"
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "edit_profile"
     const val EDIT_PORTFOLIO_ITEM = "edit_portfolio_item"
     const val CARPENTER_PUBLIC_PROFILE = "carpenter_public_profile"
+    const val PEDIDOS = "pedidos"
+    const val EDIT_PEDIDO = "edit_pedido"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -255,11 +262,27 @@ fun AppNavigation(
 
         // --- HOME ---
         composable(Routes.HOME) {
+            val homeViewModel = remember { HomeViewModel() }
+
             MainScaffold(
                 currentRoute = Routes.HOME,
                 navController = navController
             ) {
-                HomeScreen(viewModel = mainViewModel)
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    onCarpenterClick = { uid ->
+                        navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid")
+                    },
+                    onPortfolioItemClick = { itemId ->
+                        navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$itemId")
+                    },
+                    onSeeAllCarpentersClick = {
+                        navController.navigate(Routes.PROJECTS)
+                    },
+                    onSeeAllPortfolioClick = {
+                        navController.navigate(Routes.PROJECTS)
+                    }
+                )
             }
         }
 
@@ -314,9 +337,9 @@ fun AppNavigation(
         }
 
         // --- SERVICES ---
-        composable(Routes.SERVICES) {
+        composable(Routes.PEDIDOS) {
             MainScaffold(
-                currentRoute = Routes.SERVICES,
+                currentRoute = Routes.PEDIDOS,
                 navController = navController
             ) {
                 ServicesScreen()
@@ -358,6 +381,56 @@ fun AppNavigation(
             }
         }
 
+        // --- PEDIDOS (Centro de Pedidos) ---
+        composable(Routes.PEDIDOS) {
+            val pedidosViewModel = remember { PedidosViewModel() }
+
+            MainScaffold(
+                currentRoute = Routes.PEDIDOS,
+                navController = navController
+            ) {
+                PedidosScreen(
+                    viewModel = pedidosViewModel,
+                    onCreateClick = {
+                        navController.navigate(Routes.EDIT_PEDIDO)
+                    },
+                    onEditClick = { pedido ->
+                        navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=${pedido.id}")
+                    }
+                )
+            }
+        }
+
+        // --- CREAR/EDITAR PEDIDO ---
+        composable(
+            route = "${Routes.EDIT_PEDIDO}?pedidoId={pedidoId}",
+            arguments = listOf(
+                navArgument("pedidoId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId")
+
+            val editPedidoViewModel = remember {
+                EditPedidoViewModel().apply {
+                    if (pedidoId.isNullOrBlank()) {
+                        initializeCreate()
+                    } else {
+                        initializeEdit(pedidoId)
+                    }
+                }
+            }
+
+            EditPedidoScreen(
+                viewModel = editPedidoViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
         // --- EDIT PROFILE ---
         composable(Routes.EDIT_PROFILE) {
             val editProfileViewModel = remember { EditProfileViewModel() }
@@ -389,7 +462,7 @@ private fun MainScaffold(
     val bottomNavItems = listOf(
         BottomNavItem(Routes.HOME, "Inicio", Icons.Filled.Home),
         BottomNavItem(Routes.PROJECTS, "Proyectos", Icons.Filled.Folder),
-        BottomNavItem(Routes.SERVICES, "Servicios", Icons.Filled.Build),
+        BottomNavItem(Routes.PEDIDOS, "Pedidos", Icons.Filled.Build),
         BottomNavItem(Routes.MORE, "Más", Icons.Filled.MoreHoriz),
         BottomNavItem(Routes.PROFILE, "Perfil", Icons.Filled.Person)
     )

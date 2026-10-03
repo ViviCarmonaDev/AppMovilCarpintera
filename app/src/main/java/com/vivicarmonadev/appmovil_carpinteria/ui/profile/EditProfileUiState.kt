@@ -14,6 +14,7 @@ data class EditProfileUiState(
     val originalNombres: String = "",
     val originalApellidos: String = "",
     val originalTelefono: String = "",
+    val originalDireccion: String = "",
 
     // ---- Datos editados ----
     val nombres: String = "",
@@ -25,6 +26,7 @@ data class EditProfileUiState(
     val nombresTouched: Boolean = false,
     val apellidosTouched: Boolean = false,
     val telefonoTouched: Boolean = false,
+    val direccionTouched: Boolean = false,
 
     // ---- Estado general ----
     val isLoading: Boolean = false,
@@ -61,21 +63,27 @@ data class EditProfileUiState(
             else -> null
         }
 
-    // ============================================
+    val direccionError: String?
+        get() = when {
+            !direccionTouched -> null
+            direccion.isBlank() -> "Ingresa tu dirección"
+            direccion.trim().length < 2 -> "Mínimo 2 caracteres"
+            !direccion.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$")) -> "Solo letras y espacios"
+            else -> null
+        }
+
     // VALIDEZ DEL FORMULARIO
-    // ============================================
 
     val isFormValid: Boolean
         get() = nombres.isNotBlank() && nombresError == null &&
                 apellidos.isNotBlank() && apellidosError == null &&
                 telefono.isNotBlank() && telefonoError == null
 
-    // ============================================
     // ¿HUBO CAMBIOS?
-    // ============================================
     // Sirve para habilitar el botón "Guardar" solo si hay algo distinto.
     val hasChanges: Boolean
         get() = nombres != originalNombres ||
                 apellidos != originalApellidos ||
-                telefono != originalTelefono
+                telefono != originalTelefono ||
+                direccion != originalDireccion
 }

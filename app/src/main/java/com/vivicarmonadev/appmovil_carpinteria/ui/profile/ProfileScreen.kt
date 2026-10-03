@@ -168,9 +168,7 @@ private fun ProfileHeader(
     }
 }
 
-// ============================================
 // ESTADÍSTICAS
-// ============================================
 @Composable
 private fun StatsRow(modifier: Modifier = Modifier) {
     Row(
@@ -234,9 +232,7 @@ private fun StatCard(
     }
 }
 
-// ============================================
 // TÍTULO DE SECCIÓN
-// ============================================
 @Composable
 private fun SectionTitleText(text: String) {
     Text(
@@ -249,9 +245,7 @@ private fun SectionTitleText(text: String) {
     )
 }
 
-// ============================================
 // TARJETA DE INFORMACIÓN
-// ============================================
 @Composable
 private fun InfoCard(
     modifier: Modifier = Modifier,
@@ -265,7 +259,7 @@ private fun InfoCard(
             .padding(vertical = 8.dp)
     ) {
         rows.forEachIndexed { index, (label, value) ->
-            InfoRow(label = label, value = value)
+            InfoRow(label = label, value = value) 
             if (index < rows.size - 1) {
                 Box(
                     modifier = Modifier
@@ -300,10 +294,8 @@ private fun InfoRow(label: String, value: String) {
         )
     }
 }
-
-// ============================================
 // BOTÓN EDITAR PERFIL
-// ============================================
+
 @Composable
 private fun EditProfileButton(onClick: () -> Unit) {
     Row(
