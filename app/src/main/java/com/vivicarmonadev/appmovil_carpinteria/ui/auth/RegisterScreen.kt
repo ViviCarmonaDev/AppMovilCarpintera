@@ -34,7 +34,8 @@ fun RegisterScreen(
 
     AuthScreenContainer(
         title = "Registro",
-        subtitle = "Datos básicos"
+        subtitle = "Datos básicos",
+        onBack = onBackToLogin
     ) {
         StepIndicator(currentStep = 1, totalSteps = 2)
 

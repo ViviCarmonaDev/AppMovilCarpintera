@@ -43,7 +43,8 @@ fun RegisterCredentialsScreen(
 
     AuthScreenContainer(
         title = "Registro",
-        subtitle = "Credenciales"
+        subtitle = "Credenciales",
+        onBack = onBackToLogin
     ) {
         StepIndicator(currentStep = 2, totalSteps = 2)
 

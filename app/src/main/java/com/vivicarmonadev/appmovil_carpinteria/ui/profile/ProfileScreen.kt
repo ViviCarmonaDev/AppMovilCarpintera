@@ -35,13 +35,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Store
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
 
 @Composable
 fun ProfileScreen(
     mainViewModel: MainViewModel,
-    onEditProfile: () -> Unit = {}
+    onEditProfile: () -> Unit = {},
+    onEditCarpenterProfile: () -> Unit = {}
 ) {
     val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
 
@@ -96,6 +100,16 @@ fun ProfileScreen(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Banner del taller (solo para carpinteros)
+
+        if (currentUser.role == UserRole.CARPENTER) {
+            EditCarpenterProfileBanner(
+                onClick = onEditCarpenterProfile,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // ---- BOTÓN EDITAR PERFIL ----
         EditProfileButton(onClick = onEditProfile)
@@ -322,6 +336,65 @@ private fun EditProfileButton(onClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.5.sp,
             color = Color(0xFFF9F7F5)
+        )
+    }
+}
+
+// BANNER EDITAR TALLER (solo carpinteros)
+@Composable
+private fun EditCarpenterProfileBanner(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFFFFFFF))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Ícono con fondo beige
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFF5EFE7)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Store,
+                contentDescription = null,
+                tint = Color(0xFF8B5A2B),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        // Texto
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Gestiona tu taller",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF2C2C2C)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "RUC, nombre, habilidades",
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B)
+            )
+        }
+
+        // Flecha
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+            contentDescription = null,
+            tint = Color(0xFF8A8A8A),
+            modifier = Modifier.size(14.dp)
         )
     }
 }

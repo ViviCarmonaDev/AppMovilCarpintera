@@ -28,6 +28,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButto
 @Composable
 fun CarpenterProfileScreen(
     viewModel: CarpenterProfileViewModel,
+    onBack: () -> Unit,
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -45,7 +46,8 @@ fun CarpenterProfileScreen(
         subtitle = if (uiState.isEditMode)
             "Actualiza los datos de tu taller"
         else
-            "Cuéntanos sobre tu negocio"
+            "Cuéntanos sobre tu negocio",
+        onBack = onBack
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 

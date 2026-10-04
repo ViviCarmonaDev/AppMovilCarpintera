@@ -124,6 +124,26 @@ fun AppNavigation(
                 popUpTo(0) { inclusive = true }
             }
         }
+
+        // Caso 3: usuario logueado y estamos en WELCOME → ir al destino correcto
+        // (para sesión persistente: cierra la app y al volver va directo)
+
+        if (currentRoute == Routes.WELCOME_1 || currentRoute == Routes.WELCOME_2) {
+            if (user.profileCompleted) {
+                val destination = if (
+                    user.role == UserRole.CARPENTER &&
+                    tieneCarpenterProfile == false
+                ) {
+                    Routes.CARPENTER_PROFILE
+                } else {
+                    Routes.HOME
+                }
+                navController.navigate(destination) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+            return@LaunchedEffect
+        }
     }
 
     NavHost(
@@ -160,14 +180,9 @@ fun AppNavigation(
                 viewModel = loginViewModel,
                 serverClientId = WEB_CLIENT_ID,
                 onLoginSuccess = { user ->
-                    // Decidir el destino según el usuario
-                    val destination = when {
-                        !user.profileCompleted -> Routes.COMPLETE_PROFILE
-                        user.role == UserRole.CARPENTER -> Routes.CARPENTER_PROFILE
-                        else -> Routes.HOME
-                    }
-
-                    navController.navigate(destination) {
+                    // Navegamos a HOME. El LaunchedEffect(currentUser, tieneCarpenterProfile)
+                    // va a redirigir si el perfil está incompleto.
+                    navController.navigate(Routes.HOME) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
                     }
                 },
@@ -222,6 +237,12 @@ fun AppNavigation(
             }
                   CompleteProfileScreen(
                 viewModel = completeProfileViewModel,
+                      onBack = {
+                          // Cerrar sesión y volver al Welcome
+                          navController.navigate(Routes.WELCOME_1) {
+                              popUpTo(0) { inclusive = true }
+                          }
+                      },
                 onCompleteSuccess = {
                     // Chequear el rol para decidir a dónde ir
                     val user = currentUser
@@ -239,7 +260,17 @@ fun AppNavigation(
         }
 
         // --- PERFIL DEL TALLER (solo para carpinteros) ---
-        composable(Routes.CARPENTER_PROFILE) {
+        composable(
+            route = "${Routes.CARPENTER_PROFILE}?fromEdit={fromEdit}",
+            arguments = listOf(
+                navArgument("fromEdit") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val fromEdit = backStackEntry.arguments?.getBoolean("fromEdit") ?: false
+
             val carpenterViewModel = remember { CarpenterProfileViewModel() }
 
             LaunchedEffect(currentUser) {
@@ -248,9 +279,18 @@ fun AppNavigation(
 
             CarpenterProfileScreen(
                 viewModel = carpenterViewModel,
+                onBack = {
+                    navController.popBackStack()
+                },
                 onSaveSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(0) { inclusive = true }
+                    if (fromEdit) {
+                        // Vino desde "Más" o "Perfil" → volver atrás
+                        navController.popBackStack()
+                    } else {
+                        // Vino del registro → ir al Home
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -360,6 +400,9 @@ fun AppNavigation(
                 MoreScreen(
                     mainViewModel = mainViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
+                    onEditCarpenterProfile = {
+                        navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true")
+                    },
                     onLogout = {
                         moreViewModel.logout {
                             navController.navigate(Routes.WELCOME_1) {
@@ -379,7 +422,10 @@ fun AppNavigation(
             ) {
                 ProfileScreen(
                     mainViewModel = mainViewModel,
-                    onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) }
+                    onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
+                    onEditCarpenterProfile = {
+                        navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true")
+                    }
                 )
             }
         }

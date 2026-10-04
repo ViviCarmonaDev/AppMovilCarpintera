@@ -29,6 +29,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.auth.CompleteProfileViewModel
 @Composable
 fun CompleteProfileScreen(
     viewModel: CompleteProfileViewModel,
+    onBack: () -> Unit,
     onCompleteSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -42,7 +43,8 @@ fun CompleteProfileScreen(
 
     AuthScreenContainer(
         title = "Completa tu perfil",
-        subtitle = "Solo unos datos más y listo"
+        subtitle = "Solo unos datos más y listo",
+        onBack = onBack
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 

@@ -39,13 +39,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Store
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
 @Composable
 fun MoreScreen(
     mainViewModel: MainViewModel,
     onEditProfile: () -> Unit = {},
+    onEditCarpenterProfile: () -> Unit = {},
     onSettings: () -> Unit = {},
     onLanguage: () -> Unit = {},
     onHelp: () -> Unit = {},
@@ -83,6 +86,17 @@ fun MoreScreen(
             subtitle = "Nombre, foto y datos personales",
             onClick = onEditProfile
         )
+
+        // Solo para carpinteros: acceso al perfil del taller
+
+        if (user?.role == UserRole.CARPENTER) {
+            MoreItem(
+                icon = Icons.Filled.Store,
+                title = "Mi taller",
+                subtitle = "RUC, nombre, habilidades",
+                onClick = onEditCarpenterProfile
+            )
+        }
         MoreItem(
             icon = Icons.Filled.Settings,
             title = "Configuración",
