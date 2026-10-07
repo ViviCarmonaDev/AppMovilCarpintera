@@ -12,12 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +23,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 
 data class BottomNavItem(
     val route: String,
@@ -46,8 +43,15 @@ fun BottomNavBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFFFFFFFF))
-            .padding(vertical = 8.dp),
+            .clip(
+                RoundedCornerShape(
+                    topStart = 30.dp,   // esquina superior izquierda
+                    topEnd = 30.dp      // esquina superior derecha
+                )
+            )
+            .background(Color(0xFFF5EFE7))
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -69,19 +73,19 @@ private fun NavItem(
     onClick: () -> Unit
 ) {
     val selectedColor = Color(0xFF8B5A2B)
-    val unselectedColor = Color(0xFF8A8A8A)
+    val unselectedColor = Color(0xFF9A9A9A)
 
     Column(
         modifier = Modifier
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 12.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
                 .background(
                     if (isSelected) Color(0xFF8B5A2B).copy(alpha = 0.12f)
                     else Color.Transparent
@@ -92,13 +96,13 @@ private fun NavItem(
                 imageVector = item.icon,
                 contentDescription = item.label,
                 tint = if (isSelected) selectedColor else unselectedColor,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = item.label,
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (isSelected) selectedColor else unselectedColor
         )

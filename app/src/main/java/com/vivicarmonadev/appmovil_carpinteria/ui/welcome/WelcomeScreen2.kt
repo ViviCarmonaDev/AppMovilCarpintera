@@ -109,7 +109,7 @@ fun WelcomeScreen2(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 45.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp) //espacio entre botones
             ) {
                 Box(modifier = Modifier.weight(1f)) {

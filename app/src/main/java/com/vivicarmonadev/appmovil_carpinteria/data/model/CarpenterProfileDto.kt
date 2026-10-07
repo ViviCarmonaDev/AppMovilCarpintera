@@ -20,48 +20,23 @@ data class CarpenterProfileDto(
     @DocumentId
     val uid: String = "",
 
-    @PropertyName("nombre_taller")
     val nombreTaller: String = "",
-
-    @PropertyName("ruc")
     val ruc: String = "",
-
-    @PropertyName("descripcion")
     val descripcion: String = "",
-
-    @PropertyName("direccion_taller")
     val direccionTaller: String = "",
-
-    @PropertyName("telefono_taller")
     val telefonoTaller: String = "",
-
-    @PropertyName("anios_experiencia")
     val aniosExperiencia: Int = 0,
-
-    @PropertyName("skills")
     val skills: List<String> = emptyList(),
-
-    @PropertyName("foto_taller_url")
     val fotoTallerUrl: String? = null,
-
-    @PropertyName("foto_maestro_url")
     val fotoMaestroUrl: String? = null,
-
-    @PropertyName("rating")
     val rating: Float = 0f,
-
-    @PropertyName("total_reviews")
     val totalReviews: Int = 0,
-
-    @PropertyName("profile_completed")
     val profileCompleted: Boolean = false,
 
     @ServerTimestamp
-    @PropertyName("created_at")
     val createdAt: Date? = null,
 
     @ServerTimestamp
-    @PropertyName("updated_at")
     val updatedAt: Date? = null
 )
 
@@ -99,6 +74,7 @@ fun CarpenterProfile.toDto(): CarpenterProfileDto {
         skills = skills,
         fotoTallerUrl = fotoTallerUrl,
         fotoMaestroUrl = fotoMaestroUrl,
+
         rating = rating,
         totalReviews = totalReviews,
         profileCompleted = profileCompleted,

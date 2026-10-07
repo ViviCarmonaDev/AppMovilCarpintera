@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -23,40 +22,43 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.LoginScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.LoginViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.RegisterCredentialsScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.RegisterScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.RegisterViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.login.LoginScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.login.LoginViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.register.RegisterCredentialsScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.register.RegisterScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.register.RegisterViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.BottomNavBar
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.BottomNavItem
-import com.vivicarmonadev.appmovil_carpinteria.ui.home.HomeScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.more.MoreScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.more.MoreViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.profile.EditProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.profile.EditProfileViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.profile.ProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.projects.ProjectsScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.services.ServicesScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.HomeScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.more.MoreScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.more.MoreViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.EditProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.EditProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.ProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.view.PortfolioScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen2
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.CompleteProfileViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.CompleteProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.profile.CarpenterProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.completeProfileGoogle.completeProfileGoogleViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.completeProfileGoogle.CompleteProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.completeProfileTaller.CarpenterProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.auth.completeProfileTaller.completeProfileTallerViewModel
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
-import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
-import com.vivicarmonadev.appmovil_carpinteria.ui.projects.PortfolioViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.projects.edit.EditPortfolioItemViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.publico.CarpenterPublicProfileViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.home.HomeViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.PedidosScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.PedidosViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.edit.EditPedidoScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.pedidos.edit.EditPedidoViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create.CreatePortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create.CreatePortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.view.PortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit.EditPortfolioItemScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit.EditPortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.HomeViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.PedidosScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.PedidosViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit.EditPedidoScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit.EditPedidoViewModel
 import androidx.compose.material.icons.filled.Inbox
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.components.DeletePortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioScreen
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -67,11 +69,13 @@ object Routes {
     const val COMPLETE_PROFILE = "complete_profile"
     const val CARPENTER_PROFILE = "carpenter_profile"
     const val HOME = "home"
-    const val PROJECTS = "projects"
+    const val PORTFOLIO = "projects"
     const val MORE = "more"
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "edit_profile"
+    const val CREATE_PORTFOLIO_ITEM = "create_portfolio_item"
     const val EDIT_PORTFOLIO_ITEM = "edit_portfolio_item"
+    const val PORTFOLIO_ITEM_DETAIL = "portfolio_item_detail"
     const val CARPENTER_PUBLIC_PROFILE = "carpenter_public_profile"
     const val PEDIDOS = "pedidos"
     const val EDIT_PEDIDO = "edit_pedido"
@@ -229,20 +233,20 @@ fun AppNavigation(
 
         // --- COMPLETAR PERFIL ---
         composable(Routes.COMPLETE_PROFILE) {
-            val completeProfileViewModel = remember { CompleteProfileViewModel() }
+            val completeProfileViewModel = remember { completeProfileGoogleViewModel() }
 
             // Inicializamos con los datos del usuario actual (de Google)
             LaunchedEffect(currentUser) {
                 currentUser?.let { completeProfileViewModel.initialize(it) }
             }
-                  CompleteProfileScreen(
+            CompleteProfileScreen(
                 viewModel = completeProfileViewModel,
-                      onBack = {
-                          // Cerrar sesión y volver al Welcome
-                          navController.navigate(Routes.WELCOME_1) {
-                              popUpTo(0) { inclusive = true }
-                          }
-                      },
+                onBack = {
+                    // Cerrar sesión y volver al Welcome
+                    navController.navigate(Routes.WELCOME_1) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onCompleteSuccess = {
                     // Chequear el rol para decidir a dónde ir
                     val user = currentUser
@@ -271,7 +275,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val fromEdit = backStackEntry.arguments?.getBoolean("fromEdit") ?: false
 
-            val carpenterViewModel = remember { CarpenterProfileViewModel() }
+            val carpenterViewModel = remember { completeProfileTallerViewModel() }
 
             LaunchedEffect(currentUser) {
                 currentUser?.let { carpenterViewModel.initialize(it.uid) }
@@ -331,8 +335,8 @@ fun AppNavigation(
                     viewModel = homeViewModel,
                     onCarpenterClick = { uid -> navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid") },
                     onPortfolioItemClick = { itemId -> navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$itemId") },
-                    onSeeAllCarpentersClick = { navController.navigate(Routes.PROJECTS) },
-                    onSeeAllPortfolioClick = { navController.navigate(Routes.PROJECTS) },
+                    onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
+                    onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
                     onOrderClick = { pedidoId -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$pedidoId") },
                     onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
                 )
@@ -340,26 +344,36 @@ fun AppNavigation(
         }
 
         // --- PROJECTS ---
-        composable(Routes.PROJECTS) {
-            val portfolioViewModel = remember { PortfolioViewModel() }
 
+        composable(Routes.PORTFOLIO) {
+            val portfolioViewModel = remember { PortfolioViewModel() }
             MainScaffold(
-                currentRoute = Routes.PROJECTS,
+                currentRoute = Routes.PORTFOLIO,
                 navController = navController
             ) {
-                ProjectsScreen(
+                PortfolioScreen(
                     viewModel = portfolioViewModel,
                     onCreateClick = {
-                        navController.navigate(Routes.EDIT_PORTFOLIO_ITEM)
+                        navController.navigate(Routes.CREATE_PORTFOLIO_ITEM)
                     },
-                    onEditClick = { item ->
-                        navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=${item.id}")
+                    onItemClick = { item ->
+                        navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/${item.id}")  // ✅
                     }
                 )
             }
         }
 
-        // --- CREAR/EDITAR TRABAJO ---
+        // --- CREAR TRABAJO ---
+        composable(Routes.CREATE_PORTFOLIO_ITEM) {
+            val createViewModel = remember { CreatePortfolioViewModel() }
+            CreatePortfolioScreen(
+                viewModel = createViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // --- EDITAR TRABAJO ---
         composable(
             route = "${Routes.EDIT_PORTFOLIO_ITEM}?itemId={itemId}",
             arguments = listOf(
@@ -371,23 +385,43 @@ fun AppNavigation(
             )
         ) { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("itemId")
-
             val editViewModel = remember {
-                EditPortfolioItemViewModel().apply {
-                    if (itemId.isNullOrBlank()) {
-                        initializeCreate()
-                    } else {
+                EditPortfolioViewModel().apply {
+                    if (itemId != null) {
                         initializeEdit(itemId)
                     }
                 }
             }
-
             EditPortfolioItemScreen(
                 viewModel = editViewModel,
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )
         }
+
+
+        // --- DETALLE DE TRABAJO ---
+    composable(
+        route = "${Routes.PORTFOLIO_ITEM_DETAIL}/{itemId}",
+        arguments = listOf(
+            navArgument("itemId") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+        val detailViewModel = remember { DetailPortfolioViewModel() }
+
+        DetailPortfolioScreen(
+            viewModel = detailViewModel,
+            itemId = itemId,
+            onBack = { navController.popBackStack() },
+            onEditClick = { id ->
+                navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$id")
+            },
+            onDeleteSuccess = {
+                navController.popBackStack()
+            }
+        )
+    }
 
         // --- MORE ---
         composable(Routes.MORE) {
@@ -510,7 +544,7 @@ private fun MainScaffold(
 ) {
     val bottomNavItems = listOf(
         BottomNavItem(Routes.HOME, "Inicio", Icons.Filled.Home),
-        BottomNavItem(Routes.PROJECTS, "Proyectos", Icons.Filled.Folder),
+        BottomNavItem(Routes.PORTFOLIO, "Proyectos", Icons.Filled.Folder),
         BottomNavItem(Routes.PEDIDOS, "Pedidos", Icons.Filled.Inbox),
         BottomNavItem(Routes.MORE, "Más", Icons.Filled.MoreHoriz),
         BottomNavItem(Routes.PROFILE, "Perfil", Icons.Filled.Person)
@@ -519,7 +553,7 @@ private fun MainScaffold(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF6F1))
+            .background(Color(0xFFFFFFFF))
     ) {
         Box(
             modifier = Modifier
