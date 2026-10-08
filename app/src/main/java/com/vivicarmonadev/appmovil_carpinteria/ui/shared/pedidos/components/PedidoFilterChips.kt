@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.components
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

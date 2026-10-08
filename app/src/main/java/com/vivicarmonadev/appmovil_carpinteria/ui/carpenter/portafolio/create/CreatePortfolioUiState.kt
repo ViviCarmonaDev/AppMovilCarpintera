@@ -14,6 +14,7 @@ data class CreatePortfolioUiState(
     val material: String = "",
     val precioReferencial: String = "",
     val tipoPrecio: TipoPrecio? = null,
+    val imagenesUrls: List<String> = emptyList(),
 
     // ---- Flags de "tocado" ----
     val tituloTouched: Boolean = false,

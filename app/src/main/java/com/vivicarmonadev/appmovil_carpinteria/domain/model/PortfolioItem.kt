@@ -2,7 +2,7 @@ package com.vivicarmonadev.appmovil_carpinteria.domain.model
 
 /**
  * Modelo de dominio de un trabajo del portafolio del carpintero.
- *
+
  * Representa un trabajo realizado que el carpintero publica para
  * mostrar su experiencia y atraer clientes.
  *
@@ -18,8 +18,10 @@ data class PortfolioItem(
     val material: String = "",
     val precioReferencial: Double? = null,
     val tipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
-    val fotoUrl1: String? = null,
-    val fotoUrl2: String? = null,
+
+    // ---- Imágenes (hasta 3) ----
+    val imagenesUrls: List<String> = emptyList(),
+
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 ) {
@@ -37,9 +39,9 @@ data class PortfolioItem(
             TipoPrecio.A_TRATAR -> if (precioReferencial != null) "A TRATAR" else null
         }
 
-    // ¿Tiene al menos una foto?
-    val tieneFotos: Boolean
-        get() = !fotoUrl1.isNullOrBlank() || !fotoUrl2.isNullOrBlank()
+    // ¿Tiene imágenes?
+    val tieneImagenes: Boolean
+        get() = imagenesUrls.isNotEmpty()
 }
 
 // Tipo de precio de un trabajo: FIJO o A_TRATAR

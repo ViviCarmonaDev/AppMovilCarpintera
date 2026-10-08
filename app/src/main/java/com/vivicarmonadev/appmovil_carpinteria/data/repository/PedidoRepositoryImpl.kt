@@ -11,22 +11,19 @@ import kotlinx.coroutines.flow.map
 
 /**
  * Implementación del PedidoRepository usando Firestore.
- *
- * Es el "pegamento" entre la capa de dominio (que solo conoce la interfaz) y la capa de datos (que conoce Firestore).
+ * Es el "pegamento" entre la capa de dominio y la capa de datos.
  */
 class PedidoRepositoryImpl(
     private val dataSource: FirestorePedidoDataSource = FirestorePedidoDataSource()
 ) : PedidoRepository {
 
-    // FLUJO REACTIVO
+    // CLIENTE
 
     override fun getMyPedidos(clientUid: String): Flow<List<Pedido>> {
         return dataSource.getPedidosByClientFlow(clientUid).map { list ->
             list.map { it.toDomain() }
         }
     }
-
-    // LEER UNO
 
     override suspend fun getPedidoById(id: String): Result<Pedido?> {
         return try {
@@ -45,8 +42,6 @@ class PedidoRepositoryImpl(
             Result.failure(e)
         }
     }
-
-    // CREAR
 
     override suspend fun createPedido(order: Pedido): Result<Pedido> {
         return try {
@@ -74,8 +69,6 @@ class PedidoRepositoryImpl(
         }
     }
 
-    // ACTUALIZAR
-
     override suspend fun updatePedido(order: Pedido): Result<Pedido> {
         return try {
             if (order.id.isBlank()) {
@@ -98,8 +91,6 @@ class PedidoRepositoryImpl(
         }
     }
 
-    // ACTUALIZAR SOLO ESTADO
-
     override suspend fun updatePedidoStatus(
         pedidoId: String,
         nuevoEstado: EstadoPedido
@@ -119,8 +110,6 @@ class PedidoRepositoryImpl(
         }
     }
 
-    // ELIMINAR
-
     override suspend fun deletePedido(id: String): Result<Unit> {
         return try {
             if (id.isBlank()) {
@@ -129,6 +118,51 @@ class PedidoRepositoryImpl(
 
             dataSource.deletePedido(id)
 
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // CARPINTERO
+
+    override fun getPedidosAsignadosAMi(carpenterUid: String): Flow<List<Pedido>> {
+        return dataSource.getPedidosByCarpenterFlow(carpenterUid).map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
+    override fun getPedidosLibres(): Flow<List<Pedido>> {
+        return dataSource.getPedidosLibresFlow().map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun asignarCarpintero(
+        pedidoId: String,
+        carpenterUid: String,
+        carpinteroNombre: String
+    ): Result<Unit> {
+        return try {
+            if (pedidoId.isBlank()) {
+                return Result.failure(Exception("El pedido no tiene ID"))
+            }
+
+            dataSource.asignarCarpintero(
+                pedidoId = pedidoId,
+                carpenterUid = carpenterUid,
+                carpinteroNombre = carpinteroNombre
+            )
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // UTILIDADES
+
+    override suspend fun getNextNumeroSecuencial(): Result<Long> {
+        return try {
+            dataSource.getNextNumeroSecuencial()
         } catch (e: Exception) {
             Result.failure(e)
         }

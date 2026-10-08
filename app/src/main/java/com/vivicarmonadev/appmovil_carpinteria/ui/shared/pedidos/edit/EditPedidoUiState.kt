@@ -1,33 +1,36 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit
 
-/**
- * Estado de la UI de "Crear/Editar pedido".
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpinteroResumen
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 
- * Se usa para dos casos:
- *  - Crear: formulario vacío, guarda con create
- *  - Editar: formulario pre-llenado, guarda con update
-
- * El flag `isEditMode` diferencia entre los dos casos.
- */
 data class EditPedidoUiState(
-    // ---- Datos del formulario ----
+    // ---- Identificación ----
     val id: String = "",
+    val numeroSecuencial: Long = 0L,
     val clientUid: String = "",
+    val clienteNombre: String = "",
+    val status: EstadoPedido = EstadoPedido.PENDIENTE,
 
-    // Sección 1: Tipo de mueble y medidas
+    // ---- Datos del formulario ----
     val titulo: String = "",
     val categoria: String = "",
     val tipoMadera: String = "",
-    val anchoCm: String = "",               // como String, se convierte a Double al guardar
+    val anchoCm: String = "",
     val altoCm: String = "",
     val profundidadCm: String = "",
-
-    // Sección 2: Detalles
     val descripcion: String = "",
-    val fechaEstimada: Long? = null,        // timestamp
-    val presupuestoMax: String = "",        // como String, opcional
+    val fechaEstimada: Long? = null,
+    val presupuestoMax: String = "",
 
-    // ---- Valores originales (para detectar cambios) ----
+    // ---- Imágenes ----
+    val imagenesUrls: List<String> = emptyList(),
+
+    // ---- Carpintero ----
+    val carpenterUid: String? = null,
+    val carpinteroNombre: String? = null,
+    val carpinterosDisponibles: List<CarpinteroResumen> = emptyList(),
+
+    // ---- Valores originales ----
     val originalTitulo: String = "",
     val originalCategoria: String = "",
     val originalTipoMadera: String = "",
@@ -37,6 +40,8 @@ data class EditPedidoUiState(
     val originalDescripcion: String = "",
     val originalFechaEstimada: Long? = null,
     val originalPresupuestoMax: String = "",
+    val originalImagenesUrls: List<String> = emptyList(),
+    val originalCarpenterUid: String? = null,
 
     // ---- Flags de "tocado" ----
     val tituloTouched: Boolean = false,
@@ -46,17 +51,14 @@ data class EditPedidoUiState(
     val altoTouched: Boolean = false,
     val profundidadTouched: Boolean = false,
     val descripcionTouched: Boolean = false,
-    val fechaTouched: Boolean = false,
     val presupuestoTouched: Boolean = false,
+    val fechaTouched: Boolean = false,
 
     // ---- Estado general ----
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
-    val isEditMode: Boolean = false,
     val showDiscardDialog: Boolean = false,
-
-    // ---- Date picker ----
     val showDatePicker: Boolean = false
 ) {
 
@@ -67,7 +69,7 @@ data class EditPedidoUiState(
             !tituloTouched -> null
             titulo.isBlank() -> "Ingresa un título"
             titulo.trim().length < 3 -> "Mínimo 3 caracteres"
-            titulo.trim().length > 100 -> "Máximo 100 caracteres"
+            titulo.trim().length > 80 -> "Máximo 80 caracteres"
             else -> null
         }
 
@@ -87,28 +89,19 @@ data class EditPedidoUiState(
             else -> null
         }
 
-    val anchoError: String?
-        get() = validarMedida(anchoCm, anchoTouched, "ancho")
-
-    val altoError: String?
-        get() = validarMedida(altoCm, altoTouched, "alto")
-
-    val profundidadError: String?
-        get() = validarMedida(profundidadCm, profundidadTouched, "profundidad")
-
     val descripcionError: String?
         get() = when {
             !descripcionTouched -> null
             descripcion.isBlank() -> "Ingresa una descripción"
             descripcion.trim().length < 20 -> "Mínimo 20 caracteres"
-            descripcion.trim().length > 1000 -> "Máximo 1000 caracteres"
+            descripcion.trim().length > 500 -> "Máximo 500 caracteres"
             else -> null
         }
 
     val presupuestoError: String?
         get() = when {
             !presupuestoTouched -> null
-            presupuestoMax.isBlank() -> null               // opcional
+            presupuestoMax.isBlank() -> null
             !presupuestoMax.matches(Regex("^\\d+(\\.\\d{1,2})?$")) ->
                 "Solo números (ej: 500 o 500.50)"
             (presupuestoMax.toDoubleOrNull() ?: 0.0) <= 0 ->
@@ -116,45 +109,27 @@ data class EditPedidoUiState(
             else -> null
         }
 
-    private fun validarMedida(
-        valor: String,
-        touched: Boolean,
-        nombre: String
-    ): String? = when {
-        !touched -> null
-        valor.isBlank() -> null                            // opcional
-        !valor.matches(Regex("^\\d+(\\.\\d{1,2})?$")) ->
-            "Solo números"
-        (valor.toDoubleOrNull() ?: 0.0) <= 0 ->
-            "Debe ser mayor a 0"
-        (valor.toDoubleOrNull() ?: 0.0) > 5000 ->
-            "Máximo 5000 cm"
-        else -> null
-    }
-
-    // VALIDEZ DEL FORMULARIO
+    // VALIDEZ
 
     val isFormValid: Boolean
         get() = titulo.isNotBlank() && tituloError == null &&
                 categoria.isNotBlank() && categoriaError == null &&
                 tipoMadera.isNotBlank() && tipoMaderaError == null &&
                 descripcion.isNotBlank() && descripcionError == null &&
-                anchoError == null &&
-                altoError == null &&
-                profundidadError == null &&
                 presupuestoError == null
 
     // ¿HUBO CAMBIOS?
 
     val hasChanges: Boolean
-        get() = if (!isEditMode) true
-        else titulo != originalTitulo ||
+        get() = titulo != originalTitulo ||
+                descripcion != originalDescripcion ||
                 categoria != originalCategoria ||
                 tipoMadera != originalTipoMadera ||
                 anchoCm != originalAnchoCm ||
                 altoCm != originalAltoCm ||
                 profundidadCm != originalProfundidadCm ||
-                descripcion != originalDescripcion ||
+                presupuestoMax != originalPresupuestoMax ||
                 fechaEstimada != originalFechaEstimada ||
-                presupuestoMax != originalPresupuestoMax
+                imagenesUrls != originalImagenesUrls ||
+                carpenterUid != originalCarpenterUid
 }

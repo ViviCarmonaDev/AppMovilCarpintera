@@ -8,7 +8,7 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
  * Se usa para dos casos:
  *  - Crear: formulario vacío, guarda con create
  *  - Editar: formulario pre-llenado, guarda con update
- *
+
  * El flag `isEditMode` diferencia entre los dos casos.
  */
 data class EditPortfolioUiState(
@@ -21,8 +21,9 @@ data class EditPortfolioUiState(
     val material: String = "",
     val precioReferencial: String = "",
     val tipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
-    val fotoUrl1: String? = null,
-    val fotoUrl2: String? = null,
+
+    // ---- Imágenes (hasta 3) ----
+    val imagenesUrls: List<String> = emptyList(),
 
     // ---- Valores originales (para detectar cambios en modo edición) ----
     val originalTitulo: String = "",
@@ -31,6 +32,7 @@ data class EditPortfolioUiState(
     val originalMaterial: String = "",
     val originalPrecio: String = "",
     val originalTipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
+    val originalImagenesUrls: List<String> = emptyList(),
 
     // ---- Flags de "tocado" ----
     val tituloTouched: Boolean = false,
@@ -115,5 +117,6 @@ data class EditPortfolioUiState(
                 categoria != originalCategoria ||
                 material != originalMaterial ||
                 precioReferencial != originalPrecio ||
-                tipoPrecio != originalTipoPrecio
+                tipoPrecio != originalTipoPrecio ||
+                imagenesUrls != originalImagenesUrls
 }

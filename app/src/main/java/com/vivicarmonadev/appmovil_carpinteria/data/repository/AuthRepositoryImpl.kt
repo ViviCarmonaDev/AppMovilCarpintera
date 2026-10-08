@@ -19,15 +19,16 @@ import com.google.firebase.auth.ktx.auth
 
 /**
  * Implementación del AuthRepository usando Firebase.
- *
+
  * Es el "pegamento" entre la capa de dominio (que solo conoce la interfaz)
  * y la capa de datos (que conoce Firebase).
- *
+
  * Responsabilidades:
  *  1. Coordinar FirebaseAuthDataSource + FirestoreUserDataSource
  *  2. Convertir entre UserDto (Firestore) y User (dominio)
  *  3. Envolver errores en Result
  */
+
 class AuthRepositoryImpl(
     private val authDataSource: FirebaseAuthDataSource = FirebaseAuthDataSource(),
     private val userDataSource: FirestoreUserDataSource = FirestoreUserDataSource()

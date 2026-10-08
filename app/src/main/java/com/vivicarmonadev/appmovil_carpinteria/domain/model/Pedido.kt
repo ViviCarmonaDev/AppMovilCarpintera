@@ -2,42 +2,69 @@ package com.vivicarmonadev.appmovil_carpinteria.domain.model
 
 /**
  * Modelo de dominio de un pedido.
+ *
+ * Un pedido es la solicitud que hace un cliente para que un carpintero, le fabrique un mueble u objeto de madera.
 
- * Un pedido es la solicitud que hace un cliente para que un carpintero le fabrique un mueble u objeto de madera.
- * En esta primera versión, el cliente crea el pedido y queda en estado PENDIENTE.
- **/
+ * El cliente crea el pedido. Puede:
+ *  - Asignarlo a un carpintero específico.
+ *  - Dejarlo libre para que cualquier carpintero lo tome.
 
+ * El carpintero va cambiando el estado: PENDIENTE → ACEPTADO → EN_PROCESO → TERMINADO → ENTREGADO.
+ */
 data class Pedido(
     val id: String = "",
-    val clientUid: String = "",                          // quién lo creó
+
+    // ---- Número de pedido (contador global) ----
+    val numeroSecuencial: Long = 0L,
+
+    // ---- Cliente ----
+    val clientUid: String = "",
+    val clienteNombre: String = "",
+
+    // ---- Carpintero ----
+    val carpenterUid: String? = null,                    // null = libre
+    val carpinteroNombre: String? = null,
 
     // ---- Datos del pedido ----
     val titulo: String = "",
-    val categoria: String = "",                          // Muebles, Puertas, etc.
-    val tipoMadera: String = "",                         // Pino, Roble, etc.
-    val anchoCm: Double? = null,                         // medidas en cm
+    val categoria: String = "",
+    val tipoMadera: String = "",
+    val anchoCm: Double? = null,
     val altoCm: Double? = null,
     val profundidadCm: Double? = null,
     val descripcion: String = "",
-    val fechaEstimada: Long? = null,                     // timestamp de la fecha deseada
-    val presupuestoMax: Double? = null,                  // presupuesto máximo opcional
+    val fechaEstimada: Long? = null,
+    val presupuestoMax: Double? = null,
+
+    // ---- Imágenes de referencia (hasta 3) ----
+    val imagenesUrls: List<String> = emptyList(),
 
     // ---- Estado ----
     val status: EstadoPedido = EstadoPedido.PENDIENTE,
-
-    // ---- Carpintero asignado
-    val carpenterUid: String? = null,                    // null hasta que se asigne
-
-    // ---- Imágenes
-    val imagenReferenciaUrl: String? = null,
 
     // ---- Metadata ----
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 ) {
 
-    // Texto de medidas formateado. Ej: "120 x 75 x 80 cm", Si no hay medidas, devuelve null.
+    // PROPIEDADES CALCULADAS
 
+    /** ¿Está libre (sin carpintero asignado)? */
+    val isLibre: Boolean
+        get() = carpenterUid.isNullOrBlank()
+
+    /** ¿Tiene imágenes de referencia? */
+    val tieneImagenes: Boolean
+        get() = imagenesUrls.isNotEmpty()
+
+    /** Cantidad de imágenes (máx 3) */
+    val cantidadImagenes: Int
+        get() = imagenesUrls.size.coerceAtMost(3)
+
+    /**
+     * Texto de medidas formateado.
+     * Ej: "120 x 75 x 80 cm"
+     */
     val medidasTexto: String?
         get() {
             val partes = listOfNotNull(
@@ -48,18 +75,35 @@ data class Pedido(
             return if (partes.isEmpty()) null else "${partes.joinToString(" x ")} cm"
         }
 
-    // Presupuesto formateado. Ej: "S/ 500"
-
+    /**
+     * Presupuesto formateado.
+     * Ej: "S/ 500"
+     */
     val presupuestoTexto: String?
         get() = presupuestoMax?.let { "S/ ${"%.0f".format(it)}" }
 
-    // ID público formateado para mostrar. Ej: "#MD-1042" Los primeros 6 caracteres del ID en mayúsculas.
-
+    /**
+     * Número de pedido formateado.
+     *
+     * Formato: P + inicial del cliente + número con 2 dígitos.
+     * Ejemplos:
+     *  - María, número 1  → "PM01"
+     *  - Juan, número 2   → "PJ02"
+     *  - Ana, número 10   → "PA10"
+     */
     val numeroPedido: String
-        get() = if (id.length >= 6) "#${id.take(6).uppercase()}" else "#$id"
+        get() {
+            val inicial = clienteNombre
+                .trim()
+                .take(1)
+                .uppercase()
+                .ifBlank { "X" }
+            return "P$inicial${numeroSecuencial.toString().padStart(2, '0')}"
+        }
 }
 
-// Estados posibles de un pedido.
+// ESTADOS DE UN PEDIDO
+
 enum class EstadoPedido {
     PENDIENTE,      // Recién creado, esperando aceptación
     ACEPTADO,       // El carpintero lo aceptó
@@ -82,8 +126,6 @@ enum class EstadoPedido {
     }
 
     fun toFirestoreValue(): String = name
-
-    // Texto legible para mostrar en UI.
 
     fun toDisplayText(): String = when (this) {
         PENDIENTE -> "Pendiente"

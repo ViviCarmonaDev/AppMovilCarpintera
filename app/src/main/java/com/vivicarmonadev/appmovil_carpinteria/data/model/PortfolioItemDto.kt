@@ -32,9 +32,8 @@ data class PortfolioItemDto(
 
     val tipoPrecio: String = "A_TRATAR",
 
-    val fotoUrl1: String? = null,
-
-    val fotoUrl2: String? = null,
+    // ---- Imágenes (hasta 3) ----
+    val imagenesUrls: List<String> = emptyList(),   // 👈 NUEVO (reemplaza fotoUrl1/fotoUrl2)
 
     @ServerTimestamp
     val createdAt: Date? = null,
@@ -44,6 +43,7 @@ data class PortfolioItemDto(
 )
 
 // CONVERSORES
+
 fun PortfolioItemDto.toDomain(): PortfolioItem {
     return PortfolioItem(
         id = id,
@@ -54,8 +54,7 @@ fun PortfolioItemDto.toDomain(): PortfolioItem {
         material = material,
         precioReferencial = precioReferencial,
         tipoPrecio = TipoPrecio.fromString(tipoPrecio),
-        fotoUrl1 = fotoUrl1,
-        fotoUrl2 = fotoUrl2,
+        imagenesUrls = imagenesUrls,                 // 👈 NUEVO
         createdAt = createdAt?.time ?: 0L,
         updatedAt = updatedAt?.time ?: 0L
     )
@@ -71,8 +70,7 @@ fun PortfolioItem.toDto(): PortfolioItemDto {
         material = material,
         precioReferencial = precioReferencial,
         tipoPrecio = tipoPrecio.toFirestoreValue(),
-        fotoUrl1 = fotoUrl1,
-        fotoUrl2 = fotoUrl2,
+        imagenesUrls = imagenesUrls,                 // 👈 NUEVO
         createdAt = if (createdAt > 0) Date(createdAt) else null,
         updatedAt = if (updatedAt > 0) Date(updatedAt) else null
     )

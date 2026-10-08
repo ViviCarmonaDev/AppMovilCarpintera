@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.compareTo
 
 /**
  * ViewModel para CREAR un trabajo nuevo del portafolio.
@@ -122,8 +123,6 @@ class CreatePortfolioViewModel(
                 material = state.material.trim(),
                 precioReferencial = precioDouble,
                 tipoPrecio = state.tipoPrecio?: TipoPrecio.A_TRATAR,
-                fotoUrl1 = null,
-                fotoUrl2 = null
             )
 
             val result = portfolioRepository.createPortfolioItem(item)
@@ -185,6 +184,24 @@ class CreatePortfolioViewModel(
             message.contains("PERMISSION_DENIED", ignoreCase = true) ->
                 "No tienes permiso para realizar esta acción"
             else -> message
+        }
+    }
+
+    // IMÁGENES
+
+    fun onAgregarImagen(url: String) {
+        _uiState.update { state ->
+            if (state.imagenesUrls.size >= 3) state
+            else state.copy(imagenesUrls = state.imagenesUrls + url)
+        }
+    }
+
+    fun onEliminarImagen(index: Int) {
+        _uiState.update { state ->
+            val nuevas = state.imagenesUrls.toMutableList().apply {
+                if (index in indices) removeAt(index)
+            }
+            state.copy(imagenesUrls = nuevas)
         }
     }
 }

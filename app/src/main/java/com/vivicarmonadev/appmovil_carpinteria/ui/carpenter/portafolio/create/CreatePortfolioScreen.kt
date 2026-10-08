@@ -18,9 +18,6 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.component
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaDiscardDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEditHeader
 
-/**
- * Pantalla para CREAR un trabajo nuevo del portafolio.
- */
 @Composable
 fun CreatePortfolioScreen(
     viewModel: CreatePortfolioViewModel,
@@ -29,7 +26,6 @@ fun CreatePortfolioScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Cuando guarda exitosamente, volvemos
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             viewModel.resetSuccess()
@@ -44,7 +40,6 @@ fun CreatePortfolioScreen(
             .systemBarsPadding()
     ) {
 
-        // ---- HEADER ----
         MervetaEditHeader(
             title = "Nuevo trabajo",
             onBack = {
@@ -53,7 +48,6 @@ fun CreatePortfolioScreen(
             }
         )
 
-        // ---- CONTENIDO ----
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,6 +70,8 @@ fun CreatePortfolioScreen(
                 isLoading = uiState.isLoading,
                 isFormValid = uiState.isFormValid,
                 buttonText = "Publicar",
+                imagenesUrls = uiState.imagenesUrls,
+
                 onTituloChange = { viewModel.onTituloChange(it) },
                 onDescripcionChange = { viewModel.onDescripcionChange(it) },
                 onCategoriaChange = { viewModel.onCategoriaChange(it) },
@@ -83,11 +79,11 @@ fun CreatePortfolioScreen(
                 onTipoPrecioChange = { viewModel.onTipoPrecioChange(it) },
                 onPrecioChange = { viewModel.onPrecioChange(it) },
                 onImagenClick = { /* TODO: abrir galería */ },
-                onSubmit = { viewModel.save() }
+                onEliminarImagen = { index -> viewModel.onEliminarImagen(index) },
+                onSubmit = { viewModel.save() },
             )
         }
 
-        // ---- DIÁLOGO DE DESCARTAR ----
         if (uiState.showDiscardDialog) {
             MervetaDiscardDialog(
                 onConfirm = {

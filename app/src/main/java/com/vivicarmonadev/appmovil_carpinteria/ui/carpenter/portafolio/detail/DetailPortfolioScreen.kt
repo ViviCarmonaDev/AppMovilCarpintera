@@ -5,10 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,17 +14,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Chair
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Forest
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -40,18 +37,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.Chair
-import androidx.compose.material.icons.filled.Forest
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaConfirmDialog
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaTag
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaImagesSection
 
 /**
  * Pantalla de detalle de un trabajo.
  * Diseño tipo "producto": imagen grande arriba, card con info abajo superpuesta.
  */
-
 @Composable
 fun DetailPortfolioScreen(
     viewModel: DetailPortfolioViewModel,
@@ -109,72 +103,21 @@ fun DetailPortfolioScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
 
-                    // IMAGEN GRANDE ARRIBA (con scroll horizontal)
+                    // ============================================
+                    // GALERÍA DE IMÁGENES
+                    // ============================================
+                    MervetaImagesSection(
+                        imagenes = item.imagenesUrls,
+                        aspectRatio = 1f   // o 4f/3f si quieres más ancha
+                    )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(380.dp)
-                    ) {
-                        LazyRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.spacedBy(0.dp)
-                        ) {
-                            items(3) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillParentMaxWidth()
-                                        .fillMaxSize()
-                                        .background(Color(0xFFF5EFE7)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Image,
-                                            contentDescription = null,
-                                            tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
-                                            modifier = Modifier.size(72.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "Imagen ${index + 1}",
-                                            fontSize = 13.sp,
-                                            color = Color(0xFF6B6B6B)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Indicadores de página (puntitos) - opcional
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 32.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            repeat(3) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(if (index == 0) 8.dp else 6.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (index == 0) Color(0xFFFFFFFF)
-                                            else Color(0xFFFFFFFF).copy(alpha = 0.5f)
-                                        )
-                                )
-                            }
-                        }
-                    }
-
+                    // ============================================
                     // CARD CON INFO (superpuesto a la imagen)
-
+                    // ============================================
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-16).dp)   //  sube para superponerse
+                            .offset(y = (-24).dp)   //  sube para superponerse
                             .clip(
                                 RoundedCornerShape(
                                     topStart = 32.dp,
@@ -185,12 +128,11 @@ fun DetailPortfolioScreen(
                             .padding(
                                 start = 24.dp,
                                 end = 24.dp,
-                                top = 36.dp,
+                                top = 32.dp,
                                 bottom = 32.dp
                             )
                     ) {
-                        // Título + Precio
-
+                        // ---- TÍTULO ----
                         Text(
                             text = item.titulo,
                             fontSize = 28.sp,
@@ -198,9 +140,9 @@ fun DetailPortfolioScreen(
                             color = Color(0xFF2C2C2C)
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        // Descripción
+                        // ---- DESCRIPCIÓN ----
                         if (item.descripcion.isNotBlank()) {
                             Text(
                                 text = item.descripcion,
@@ -208,14 +150,13 @@ fun DetailPortfolioScreen(
                                 lineHeight = 22.sp,
                                 color = Color(0xFF4A4A4A)
                             )
+                            Spacer(modifier = Modifier.height(28.dp))
                         }
 
-                        Spacer(modifier = Modifier.height(36.dp))
-
-                        // Precio + etiqueta en la misma línea
+                        // ---- PRECIO + ETIQUETA ----
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(20.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
                                 text = item.precioTexto,
@@ -232,7 +173,7 @@ fun DetailPortfolioScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
 
                         // ---- CATEGORÍA + MATERIAL ----
                         Row(
@@ -242,7 +183,7 @@ fun DetailPortfolioScreen(
                             // Categoría
                             if (item.categoria.isNotBlank()) {
                                 Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally //centra texto
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         text = "Categoría",
@@ -261,7 +202,7 @@ fun DetailPortfolioScreen(
                             // Material
                             if (item.material.isNotBlank()) {
                                 Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally  // centra texto
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         text = "Material",
@@ -278,7 +219,7 @@ fun DetailPortfolioScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(110.dp))
+                        Spacer(modifier = Modifier.height(40.dp))
 
                         // ---- ACCIONES (solo carpintero) ----
                         if (uiState.isCarpenter) {
@@ -286,6 +227,7 @@ fun DetailPortfolioScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
+                                // Botón Editar
                                 Row(
                                     modifier = Modifier
                                         .weight(1f)
@@ -311,6 +253,7 @@ fun DetailPortfolioScreen(
                                     )
                                 }
 
+                                // Botón Eliminar
                                 Box(
                                     modifier = Modifier
                                         .size(56.dp)
@@ -333,8 +276,9 @@ fun DetailPortfolioScreen(
                     }
                 }
 
+                // ============================================
                 // BOTÓN ATRÁS FLOTANTE
-
+                // ============================================
                 Box(
                     modifier = Modifier
                         .padding(top = 40.dp, start = 16.dp)
@@ -368,7 +312,9 @@ fun DetailPortfolioScreen(
     }
 }
 
-// ETIQUETA DE TIPO DE PRECIO
+// ============================================
+// ETIQUETA DE TIPO DE PRECIO (FIJO / A TRATAR)
+// ============================================
 
 @Composable
 private fun TipoPrecioTag(texto: String, tipo: TipoPrecio) {
@@ -393,7 +339,9 @@ private fun TipoPrecioTag(texto: String, tipo: TipoPrecio) {
     }
 }
 
+// ============================================
 // CHIP CON ÍCONO (categoría, material)
+// ============================================
 
 @Composable
 private fun FeatureChip(

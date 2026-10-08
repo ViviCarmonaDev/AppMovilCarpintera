@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaImagePickerBox
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaGalleryPicker
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
 
 /**
@@ -56,6 +56,11 @@ fun PortfolioItemFormContent(
     // ---- Configuración ----
     buttonText: String,
 
+    // ---- Imágenes ----
+    imagenesUrls: List<String>,
+    onImagenClick: () -> Unit,
+    onEliminarImagen: (Int) -> Unit,
+
     // ---- Callbacks ----
     onTituloChange: (String) -> Unit,
     onDescripcionChange: (String) -> Unit,
@@ -63,13 +68,19 @@ fun PortfolioItemFormContent(
     onMaterialChange: (String) -> Unit,
     onTipoPrecioChange: (TipoPrecio) -> Unit,
     onPrecioChange: (String) -> Unit,
-    onImagenClick: () -> Unit,
+
     onSubmit: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
 
-        // ---- IMAGEN ----
-        MervetaImagePickerBox(onClick = onImagenClick)
+        // ---- IMÁGENES ----
+        MervetaGalleryPicker(
+            imagenes = imagenesUrls,
+            label = "Imágenes del trabajo",
+            maxImagenes = 3,
+            onAgregarClick = onImagenClick,
+            onEliminarClick = onEliminarImagen
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 

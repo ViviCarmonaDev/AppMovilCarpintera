@@ -51,15 +51,17 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit.Edit
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.HomeViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.PedidosScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.PedidosViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit.EditPedidoScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit.EditPedidoViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.view.PedidosScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.view.PedidosViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedidoScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedidoViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoScreen
 import androidx.compose.material.icons.filled.Inbox
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.components.DeletePortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioScreen
-
 object Routes {
     const val WELCOME_1 = "welcome_1"
     const val WELCOME_2 = "welcome_2"
@@ -78,7 +80,9 @@ object Routes {
     const val PORTFOLIO_ITEM_DETAIL = "portfolio_item_detail"
     const val CARPENTER_PUBLIC_PROFILE = "carpenter_public_profile"
     const val PEDIDOS = "pedidos"
+    const val CREATE_PEDIDO = "create_pedido"
     const val EDIT_PEDIDO = "edit_pedido"
+    const val PEDIDO_DETAIL = "pedido_detail"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -334,7 +338,7 @@ fun AppNavigation(
                 HomeScreen(
                     viewModel = homeViewModel,
                     onCarpenterClick = { uid -> navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid") },
-                    onPortfolioItemClick = { itemId -> navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$itemId") },
+                    onPortfolioItemClick = { itemId -> navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/$itemId") },
                     onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
                     onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
                     onOrderClick = { pedidoId -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$pedidoId") },
@@ -464,7 +468,6 @@ fun AppNavigation(
             }
         }
 
-        // --- PEDIDOS (Centro de Pedidos) ---
         composable(Routes.PEDIDOS) {
             val pedidosViewModel = remember { PedidosViewModel() }
 
@@ -475,13 +478,48 @@ fun AppNavigation(
                 PedidosScreen(
                     viewModel = pedidosViewModel,
                     onCreateClick = {
-                        navController.navigate(Routes.EDIT_PEDIDO)
+                        navController.navigate(Routes.CREATE_PEDIDO)
                     },
-                    onEditClick = { pedido ->
-                        navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=${pedido.id}")
+                    onItemClick = { pedido ->
+                        //  va al DETALLE
+                        navController.navigate("${Routes.PEDIDO_DETAIL}/${pedido.id}")
                     }
                 )
             }
+        }
+
+        // --- DETALLE DE PEDIDO ---
+        composable(
+            route = "${Routes.PEDIDO_DETAIL}/{pedidoId}",
+            arguments = listOf(
+                navArgument("pedidoId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+            val detailViewModel = remember { DetailPedidoViewModel() }
+
+            DetailPedidoScreen(
+                viewModel = detailViewModel,
+                pedidoId = pedidoId,
+                onBack = { navController.popBackStack() },
+                onEditClick = { id ->
+                    navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$id")
+                },
+                onActionSuccess = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- CREAR PEDIDO ---
+        composable(Routes.CREATE_PEDIDO) {
+            val createViewModel = remember { CreatePedidoViewModel() }
+
+            CreatePedidoScreen(
+                viewModel = createViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
         }
 
         // --- CREAR/EDITAR PEDIDO ---
@@ -490,24 +528,24 @@ fun AppNavigation(
             arguments = listOf(
                 navArgument("pedidoId") {
                     type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
+                    nullable = false
                 }
             )
         ) { backStackEntry ->
-            val pedidoId = backStackEntry.arguments?.getString("pedidoId")
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: return@composable
 
             val editPedidoViewModel = remember {
-                EditPedidoViewModel().apply {
-                    if (pedidoId.isNullOrBlank()) {
-                        initializeCreate()
-                    } else {
-                        initializeEdit(pedidoId)
+                EditPedidoViewModel()
+                    .apply {
+                        if (pedidoId.isNullOrBlank()) {
+                            initializeEdit(pedidoId)
+                        } else {
+                            initializeEdit(pedidoId)
+                        }
                     }
-                }
             }
 
-            EditPedidoScreen(
+        EditPedidoScreen(
                 viewModel = editPedidoViewModel,
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }

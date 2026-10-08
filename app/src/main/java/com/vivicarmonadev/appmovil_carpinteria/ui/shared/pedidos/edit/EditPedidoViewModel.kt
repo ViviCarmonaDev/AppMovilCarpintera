@@ -1,9 +1,12 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.client.pedidos.edit
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.PedidoRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpinteroResumen
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,13 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
- * ViewModel de "Crear/Editar pedido".
-
- * Maneja dos casos:
- *  - Crear: formulario vacío. Al guardar, crea nuevo pedido con estado PENDIENTE.
- *  - Editar: formulario pre-llenado. Al guardar, actualiza el pedido.
+ * ViewModel de EDICIÓN de pedido.
  */
 class EditPedidoViewModel(
     private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl(),
@@ -27,25 +27,7 @@ class EditPedidoViewModel(
     private val _uiState = MutableStateFlow(EditPedidoUiState())
     val uiState: StateFlow<EditPedidoUiState> = _uiState.asStateFlow()
 
-    // INICIALIZAR — CREAR (formulario vacío)
-
-    fun initializeCreate() {
-        viewModelScope.launch {
-            authRepository.currentUser.collect { user ->
-                if (user != null) {
-                    _uiState.update {
-                        it.copy(
-                            clientUid = user.uid,
-                            isEditMode = false,
-                            isLoading = false
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    // INICIALIZAR — EDITAR (pre-llenado)
+    // INICIALIZAR — EDITAR
 
     fun initializeEdit(pedidoId: String) {
         viewModelScope.launch {
@@ -57,15 +39,11 @@ class EditPedidoViewModel(
                 onSuccess = { pedido ->
                     if (pedido == null) {
                         _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = "El pedido no existe"
-                            )
+                            it.copy(isLoading = false, errorMessage = "El pedido no existe")
                         }
                         return@fold
                     }
 
-                    // Validar que se pueda editar (solo PENDIENTE)
                     if (pedido.status != EstadoPedido.PENDIENTE) {
                         _uiState.update {
                             it.copy(
@@ -84,7 +62,9 @@ class EditPedidoViewModel(
                     _uiState.update {
                         it.copy(
                             id = pedido.id,
+                            numeroSecuencial = pedido.numeroSecuencial,
                             clientUid = pedido.clientUid,
+                            clienteNombre = pedido.clienteNombre,
                             titulo = pedido.titulo,
                             categoria = pedido.categoria,
                             tipoMadera = pedido.tipoMadera,
@@ -94,9 +74,13 @@ class EditPedidoViewModel(
                             descripcion = pedido.descripcion,
                             fechaEstimada = pedido.fechaEstimada,
                             presupuestoMax = presupuestoStr,
-                            isEditMode = true,
+                            imagenesUrls = pedido.imagenesUrls,
+                            carpenterUid = pedido.carpenterUid,
+                            carpinteroNombre = pedido.carpinteroNombre,
+                            status = pedido.status,
                             isLoading = false,
-                            // Guardar originales
+
+                            // Originales
                             originalTitulo = pedido.titulo,
                             originalCategoria = pedido.categoria,
                             originalTipoMadera = pedido.tipoMadera,
@@ -105,9 +89,13 @@ class EditPedidoViewModel(
                             originalProfundidadCm = profStr,
                             originalDescripcion = pedido.descripcion,
                             originalFechaEstimada = pedido.fechaEstimada,
-                            originalPresupuestoMax = presupuestoStr
+                            originalPresupuestoMax = presupuestoStr,
+                            originalImagenesUrls = pedido.imagenesUrls,
+                            originalCarpenterUid = pedido.carpenterUid
                         )
                     }
+
+                    cargarCarpinterosDisponibles()
                 },
                 onFailure = { exception ->
                     _uiState.update {
@@ -136,18 +124,15 @@ class EditPedidoViewModel(
     }
 
     fun onAnchoChange(value: String) {
-        val filtered = filtrarNumero(value)
-        _uiState.update { it.copy(anchoCm = filtered, anchoTouched = true, errorMessage = null) }
+        _uiState.update { it.copy(anchoCm = filtrarNumero(value), anchoTouched = true, errorMessage = null) }
     }
 
     fun onAltoChange(value: String) {
-        val filtered = filtrarNumero(value)
-        _uiState.update { it.copy(altoCm = filtered, altoTouched = true, errorMessage = null) }
+        _uiState.update { it.copy(altoCm = filtrarNumero(value), altoTouched = true, errorMessage = null) }
     }
 
     fun onProfundidadChange(value: String) {
-        val filtered = filtrarNumero(value)
-        _uiState.update { it.copy(profundidadCm = filtered, profundidadTouched = true, errorMessage = null) }
+        _uiState.update { it.copy(profundidadCm = filtrarNumero(value), profundidadTouched = true, errorMessage = null) }
     }
 
     fun onDescripcionChange(value: String) {
@@ -155,28 +140,69 @@ class EditPedidoViewModel(
     }
 
     fun onPresupuestoChange(value: String) {
-        val filtered = filtrarNumero(value)
-        _uiState.update { it.copy(presupuestoMax = filtered, presupuestoTouched = true, errorMessage = null) }
+        _uiState.update { it.copy(presupuestoMax = filtrarNumero(value), presupuestoTouched = true, errorMessage = null) }
     }
 
-    // FECHA ESTIMADA (DatePicker)
-
-    fun openDatePicker() {
-        _uiState.update { it.copy(showDatePicker = true) }
+    fun onCarpinteroChange(carpenterUid: String?, carpinteroNombre: String?) {
+        _uiState.update {
+            it.copy(carpenterUid = carpenterUid, carpinteroNombre = carpinteroNombre)
+        }
     }
 
-    fun closeDatePicker() {
-        _uiState.update { it.copy(showDatePicker = false) }
+    // IMÁGENES
+
+    fun onAgregarImagen(url: String) {
+        _uiState.update { state ->
+            if (state.imagenesUrls.size >= 3) state
+            else state.copy(imagenesUrls = state.imagenesUrls + url)
+        }
     }
+
+    fun onEliminarImagen(index: Int) {
+        _uiState.update { state ->
+            val nuevas = state.imagenesUrls.toMutableList().apply {
+                if (index in indices) removeAt(index)
+            }
+            state.copy(imagenesUrls = nuevas)
+        }
+    }
+
+    // CARGAR CARPINTEROS
+
+    private fun cargarCarpinterosDisponibles() {
+        viewModelScope.launch {
+            try {
+                val snapshot = Firebase.firestore
+                    .collection("users")
+                    .whereEqualTo("role", "carpenter")
+                    .get()
+                    .await()
+
+                val carpinteros = snapshot.documents.mapNotNull { doc ->
+                    val uid = doc.id
+                    val nombres = doc.getString("nombres") ?: ""
+                    val apellidos = doc.getString("apellidos") ?: ""
+                    val nombreCompleto = "$nombres $apellidos".trim()
+
+                    if (nombreCompleto.isBlank()) null
+                    else CarpinteroResumen(uid = uid, nombre = nombreCompleto)
+                }
+
+                _uiState.update { it.copy(carpinterosDisponibles = carpinteros) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(carpinterosDisponibles = emptyList()) }
+            }
+        }
+    }
+
+    // FECHA
+
+    fun openDatePicker() { _uiState.update { it.copy(showDatePicker = true) } }
+    fun closeDatePicker() { _uiState.update { it.copy(showDatePicker = false) } }
 
     fun onFechaSeleccionada(timestamp: Long?) {
         _uiState.update {
-            it.copy(
-                fechaEstimada = timestamp,
-                fechaTouched = true,
-                showDatePicker = false,
-                errorMessage = null
-            )
+            it.copy(fechaEstimada = timestamp, fechaTouched = true, showDatePicker = false, errorMessage = null)
         }
     }
 
@@ -184,21 +210,17 @@ class EditPedidoViewModel(
         _uiState.update { it.copy(fechaEstimada = null, fechaTouched = true) }
     }
 
-    // GUARDAR (crear o actualizar)
+    // GUARDAR
 
     fun save() {
         val state = _uiState.value
 
-        // Marcar todo como tocado
         _uiState.update {
             it.copy(
                 tituloTouched = true,
                 categoriaTouched = true,
                 tipoMaderaTouched = true,
                 descripcionTouched = true,
-                anchoTouched = true,
-                altoTouched = true,
-                profundidadTouched = true,
                 presupuestoTouched = true
             )
         }
@@ -218,7 +240,9 @@ class EditPedidoViewModel(
 
             val pedido = Pedido(
                 id = state.id,
+                numeroSecuencial = state.numeroSecuencial,
                 clientUid = state.clientUid,
+                clienteNombre = state.clienteNombre,
                 titulo = state.titulo.trim(),
                 categoria = state.categoria.trim(),
                 tipoMadera = state.tipoMadera.trim(),
@@ -228,20 +252,17 @@ class EditPedidoViewModel(
                 descripcion = state.descripcion.trim(),
                 fechaEstimada = state.fechaEstimada,
                 presupuestoMax = state.presupuestoMax.toDoubleOrNull(),
-                status = EstadoPedido.PENDIENTE
+                imagenesUrls = state.imagenesUrls,
+                carpenterUid = state.carpenterUid,
+                carpinteroNombre = state.carpinteroNombre,
+                status = state.status
             )
 
-            val result = if (state.isEditMode) {
-                pedidoRepository.updatePedido(pedido)
-            } else {
-                pedidoRepository.createPedido(pedido)
-            }
+            val result = pedidoRepository.updatePedido(pedido)
 
             result.fold(
                 onSuccess = {
-                    _uiState.update {
-                        it.copy(isLoading = false, isSuccess = true, errorMessage = null)
-                    }
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
                 },
                 onFailure = { exception ->
                     _uiState.update {
@@ -256,66 +277,39 @@ class EditPedidoViewModel(
         }
     }
 
-    // DESCARTAR CAMBIOS
+    // DESCARTAR
 
     fun onBackClick(): Boolean {
-        val state = _uiState.value
-        return if (state.hasChanges && state.isFormValid) {
+        return if (_uiState.value.hasChanges && _uiState.value.isFormValid) {
             _uiState.update { it.copy(showDiscardDialog = true) }
             false
-        } else {
-            true
-        }
+        } else true
     }
 
-    fun onDiscardCancel() {
-        _uiState.update { it.copy(showDiscardDialog = false) }
-    }
-
-    fun onDiscardConfirm() {
-        _uiState.update { it.copy(showDiscardDialog = false) }
-    }
+    fun onDiscardCancel() { _uiState.update { it.copy(showDiscardDialog = false) } }
+    fun onDiscardConfirm() { _uiState.update { it.copy(showDiscardDialog = false) } }
+    fun resetSuccess() { _uiState.update { it.copy(isSuccess = false) } }
+    fun clearError() { _uiState.update { it.copy(errorMessage = null) } }
 
     // UTILIDADES
 
-    fun resetSuccess() {
-        _uiState.update { it.copy(isSuccess = false) }
-    }
-
-    fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
-
-    /**
-     * Filtra solo dígitos y un punto decimal.
-     */
     private fun filtrarNumero(value: String): String {
         val filtered = value.filter { it.isDigit() || it == '.' }
-        return if (filtered.count { it == '.' } > 1) {
+        return if (filtered.count { it == '.' } > 1)
             filtered.substring(0, filtered.lastIndexOf('.'))
-        } else {
-            filtered
-        }
+        else filtered
     }
 
-    /**
-     * Formatea un Double a String. Si es entero, sin decimales.
-     */
     private fun formatNumero(value: Double): String {
-        return if (value % 1.0 == 0.0) {
-            value.toInt().toString()
-        } else {
-            "%.2f".format(value)
-        }
+        return if (value % 1.0 == 0.0) value.toInt().toString()
+        else "%.2f".format(value)
     }
 
     private fun mapErrorToMessage(exception: Throwable): String {
         val message = exception.message ?: return "Error desconocido"
         return when {
-            message.contains("network", ignoreCase = true) ->
-                "Sin conexión. Revisa tu internet"
-            message.contains("PERMISSION_DENIED", ignoreCase = true) ->
-                "No tienes permiso para realizar esta acción"
+            message.contains("network", ignoreCase = true) -> "Sin conexión. Revisa tu internet"
+            message.contains("PERMISSION_DENIED", ignoreCase = true) -> "No tienes permiso para realizar esta acción"
             else -> message
         }
     }

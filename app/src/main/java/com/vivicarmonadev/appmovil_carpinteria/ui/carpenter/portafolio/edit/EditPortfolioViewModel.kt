@@ -61,8 +61,11 @@ class EditPortfolioViewModel(
                             material = item.material,
                             precioReferencial = precioStr,
                             tipoPrecio = item.tipoPrecio,
-                            fotoUrl1 = item.fotoUrl1,
-                            fotoUrl2 = item.fotoUrl2,
+
+                            // Imágenes
+                            imagenesUrls = item.imagenesUrls,
+                            originalImagenesUrls = item.imagenesUrls,
+
                             isEditMode = true,
                             isLoading = false,
                             // Guardar originales para detectar cambios
@@ -173,8 +176,7 @@ class EditPortfolioViewModel(
                 material = state.material.trim(),
                 precioReferencial = precioDouble,
                 tipoPrecio = state.tipoPrecio,
-                fotoUrl1 = state.fotoUrl1,
-                fotoUrl2 = state.fotoUrl2
+                imagenesUrls = state.imagenesUrls,
             )
 
             val result = if (state.isEditMode) {
@@ -251,6 +253,25 @@ class EditPortfolioViewModel(
             message.contains("PERMISSION_DENIED", ignoreCase = true) ->
                 "No tienes permiso para realizar esta acción"
             else -> message
+        }
+    }
+
+    // IMÁGENES
+
+
+    fun onAgregarImagen(url: String) {
+        _uiState.update { state ->
+            if (state.imagenesUrls.size >= 3) state
+            else state.copy(imagenesUrls = state.imagenesUrls + url)
+        }
+    }
+
+    fun onEliminarImagen(index: Int) {
+        _uiState.update { state ->
+            val nuevas = state.imagenesUrls.toMutableList().apply {
+                if (index in indices) removeAt(index)
+            }
+            state.copy(imagenesUrls = nuevas)
         }
     }
 }

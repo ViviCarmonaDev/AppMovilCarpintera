@@ -95,7 +95,9 @@ fun EditPortfolioItemScreen(
                     onMaterialChange = { viewModel.onMaterialChange(it) },
                     onTipoPrecioChange = { viewModel.onTipoPrecioChange(it) },
                     onPrecioChange = { viewModel.onPrecioChange(it) },
+                    imagenesUrls = uiState.imagenesUrls,
                     onImagenClick = { /* TODO: abrir galería */ },
+                    onEliminarImagen = { index -> viewModel.onEliminarImagen(index)},
                     onSubmit = { viewModel.save() }
                 )
             }
