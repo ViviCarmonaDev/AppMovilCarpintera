@@ -1,9 +1,9 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -30,9 +30,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.EstadoPedidoBadge
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.HomeEmptyHint
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
@@ -42,21 +46,24 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.Portfol
 fun CarpenterHomeScreen(
     userName: String,
     portfolioItems: List<PortfolioItem>,
+    pedidos: List<Pedido>,
     onPortfolioItemClick: (String) -> Unit,
-    onSeeAllPortfolioClick: () -> Unit
+    onSeeAllPortfolioClick: () -> Unit,
+    onPedidoClick: (String) -> Unit,
+    onSeeAllPedidosClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ---- HEADER (componente compartido) ----
+        // Header
         MervetaHeader(
             title = "Hola, $userName",
             subtitle = "Gestiona tus proyectos de hoy"
         )
 
-        // ---- MÉTRICAS ----
+        // Métricas
         MetricsRow(
             portfolioCount = portfolioItems.size,
             modifier = Modifier
@@ -64,25 +71,37 @@ fun CarpenterHomeScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
-        // ---- PEDIDOS ACTIVOS ----
+        // Pedidos activos
         SectionTitle(
             title = "Pedidos activos",
             actionText = "Ver todos →",
-            onActionClick = { /* TODO: ir a pedidos */ },
+            onActionClick = onSeeAllPedidosClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
 
-        HomeEmptyHint(
-            icon = Icons.Filled.Schedule,
-            title = "Sin pedidos por ahora",
-            subtitle = "Cuando un cliente te contacte, aparecerá acá",
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
+        if (pedidos.isEmpty()) {
+            HomeEmptyHint(
+                icon = Icons.Filled.Schedule,
+                title = "Sin pedidos por ahora",
+                subtitle = "Cuando un cliente te contacte, aparecerá acá",
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+        } else {
+            MervetaHorizontalList(
+                items = pedidos,
+                key = { it.id }
+            ) { pedido ->
+                PedidoMiniCard(
+                    pedido = pedido,
+                    onClick = { onPedidoClick(pedido.id) }
+                )
+            }
+        }
 
-        // ---- MI PORTAFOLIO ----
+        // Mi portafolio
         SectionTitle(
             title = "Mi portafolio",
-            actionText =  "Ver todos →",
+            actionText = "Ver todos →",
             onActionClick = onSeeAllPortfolioClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -95,16 +114,14 @@ fun CarpenterHomeScreen(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(portfolioItems.take(5), key = { it.id }) { item ->
-                    PortfolioMiniCard(
-                        item = item,
-                        onClick = { onPortfolioItemClick(item.id) }
-                    )
-                }
+            MervetaHorizontalList(
+                items = portfolioItems,
+                key = { it.id }
+            ) { item ->
+                PortfolioMiniCard(
+                    item = item,
+                    onClick = { onPortfolioItemClick(item.id) }
+                )
             }
         }
 
@@ -112,7 +129,74 @@ fun CarpenterHomeScreen(
     }
 }
 
-// MÉTRICAS (solo carpintero por ahora)
+// CARD COMPACTO DE PEDIDO
+
+@Composable
+private fun PedidoMiniCard(
+    pedido: Pedido,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .width(220.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFFF5EFE7))
+            .clickable(onClick = onClick)
+            .padding(14.dp)
+    ) {
+        // Número + badge
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = pedido.numeroPedido,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF8B5A2B),
+                letterSpacing = 0.5.sp
+            )
+            EstadoPedidoBadge(estado = pedido.status)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Cliente
+        if (pedido.clienteNombre.isNotBlank()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = Color(0xFF8B5A2B),
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = pedido.clienteNombre,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF8B5A2B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        // Título
+        Text(
+            text = pedido.titulo,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C2C2C),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+// MÉTRICAS
 
 @Composable
 private fun MetricsRow(
@@ -138,7 +222,7 @@ private fun MetricsRow(
         MetricCard(
             icon = Icons.Filled.Folder,
             value = "$portfolioCount",
-            label = "Trabajos",
+            label = "Proyectois",
             modifier = Modifier.weight(1f)
         )
     }

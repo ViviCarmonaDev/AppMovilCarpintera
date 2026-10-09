@@ -39,8 +39,11 @@ fun HomeScreen(
             UserRole.CARPENTER -> CarpenterHomeScreen(
                 userName = user.nombres.ifBlank { "Usuario" },
                 portfolioItems = uiState.myPortfolioItems,
+                pedidos = uiState.recentOrders,
                 onPortfolioItemClick = onPortfolioItemClick,
-                onSeeAllPortfolioClick = onSeeAllPortfolioClick
+                onSeeAllPortfolioClick = onSeeAllPortfolioClick,
+                onPedidoClick = onOrderClick,
+                onSeeAllPedidosClick = onSeeAllOrdersClick
             )
 
             UserRole.CLIENT -> ClientHomeScreen(

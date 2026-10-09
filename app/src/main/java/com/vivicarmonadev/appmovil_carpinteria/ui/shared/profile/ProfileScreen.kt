@@ -53,7 +53,7 @@ fun ProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFAF6F1)),
+                .background(Color(0xFFFFFFFF)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color(0xFF8B5A2B))
@@ -66,7 +66,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF6F1))
+            .background(Color(0xFFFFFFFF))
             .verticalScroll(rememberScrollState())
     ) {
         // ---- HEADER ----
@@ -220,7 +220,7 @@ private fun StatCard(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFFFFF))
+            .background(Color(0xFFFAF6F1))
             .padding(vertical = 16.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -269,7 +269,7 @@ private fun InfoCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFFFFF))
+            .background(Color(0xFFFAF6F1))
             .padding(vertical = 8.dp)
     ) {
         rows.forEachIndexed { index, (label, value) ->

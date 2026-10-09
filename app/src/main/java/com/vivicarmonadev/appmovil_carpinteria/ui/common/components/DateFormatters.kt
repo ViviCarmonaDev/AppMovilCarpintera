@@ -20,8 +20,8 @@ fun tiempoRelativo(timestamp: Long): String {
 
     return when {
         minutos < 1 -> "Ahora"
-        minutos < 60 -> "Hace ${minutos}m"
-        horas < 24 -> "Hace ${horas}h"
+        minutos < 60 -> "Hace ${minutos} m"
+        horas < 24 -> "Hace ${horas} h"
         dias == 1L -> "Ayer"
         dias < 7 -> "Hace $dias días"
         dias < 30 -> "Hace ${dias / 7} semanas"
@@ -30,10 +30,10 @@ fun tiempoRelativo(timestamp: Long): String {
 }
 
 /**
- * Formatea una fecha a "15 Nov".
+ * Formatea una fecha a "15 Noviembre".
  */
 fun fechaCorta(timestamp: Long): String {
-    val sdf = SimpleDateFormat("dd MMM", Locale("es", "PE"))
+    val sdf = SimpleDateFormat("dd 'de' MMMM", Locale("es", "PE"))
     return sdf.format(Date(timestamp))
 }
 

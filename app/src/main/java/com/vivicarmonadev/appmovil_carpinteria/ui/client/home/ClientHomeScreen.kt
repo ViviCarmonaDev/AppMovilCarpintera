@@ -3,9 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.client.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,8 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,13 +33,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.tiempoRelativo
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpenterProfile
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.home.components.CarpenterCard
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.home.components.RecentOrderCard
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.CarpenterCard
+import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.RecentOrderCard
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.HomeEmptyHint
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
@@ -68,20 +66,20 @@ fun ClientHomeScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ---- HEADER (componente compartido) ----
+        // Header
         MervetaHeader(
             title = "Hola, $userName",
             subtitle = "¿Qué vas a construir hoy?"
         )
 
-        // ---- BÚSQUEDA ----
+        // Buscador
         SearchBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
-        // ---- CATEGORÍAS ----
+        // Categorías
         SectionTitle(
             title = "Categorías",
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
@@ -91,10 +89,10 @@ fun ClientHomeScreen(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
 
-        // ---- PEDIDOS RECIENTES ----
+        // Pedidos recientes
         SectionTitle(
             title = "Pedidos recientes",
-            actionText = if (recentOrders.isNotEmpty()) "Ver todos →" else null,
+            actionText = "Ver todos →",
             onActionClick = onSeeAllOrdersClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -107,26 +105,24 @@ fun ClientHomeScreen(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         } else {
-            Column(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                recentOrders.forEach { pedido ->
-                    RecentOrderCard(
-                        titulo = pedido.titulo,
-                        estadoTexto = pedido.status.toDisplayText().uppercase(),
-                        estadoColor = estadoColorPara(pedido.status),
-                        tiempoTexto = "Hace poco",
-                        onClick = { onOrderClick(pedido.id) }
-                    )
-                }
+            MervetaHorizontalList(
+                items = recentOrders,
+                key = { it.id }
+            ) { pedido ->
+                RecentOrderCard(
+                    titulo = pedido.titulo,
+                    estadoTexto = pedido.status.toDisplayText().uppercase(),
+                    estadoColor = estadoColorPara(pedido.status),
+                    tiempoTexto = tiempoRelativo(pedido.createdAt),
+                    onClick = { onOrderClick(pedido.id) }
+                )
             }
         }
 
-        // ---- CARPINTEROS DESTACADOS ----
+        // Carpinteros destacados
         SectionTitle(
             title = "Carpinteros destacados",
-            actionText = if (carpenters.isNotEmpty()) "Ver más →" else null,
+            actionText = "Ver más →",
             onActionClick = onSeeAllCarpentersClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -139,24 +135,22 @@ fun ClientHomeScreen(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         } else {
-            Column(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                carpenters.take(3).forEach { (user, profile) ->
-                    CarpenterCard(
-                        user = user,
-                        profile = profile,
-                        onClick = { onCarpenterClick(user.uid) }
-                    )
-                }
+            MervetaHorizontalList(
+                items = carpenters,
+                key = { it.first.uid }
+            ) { (user, profile) ->
+                CarpenterCard(
+                    user = user,
+                    profile = profile,
+                    onClick = { onCarpenterClick(user.uid) }
+                )
             }
         }
 
-        // ---- TRABAJOS RECIENTES ----
+        // Trabajos recientes
         SectionTitle(
             title = "Trabajos recientes",
-            actionText = if (recentPortfolioItems.isNotEmpty()) "Ver más →" else null,
+            actionText = "Ver más →",
             onActionClick = onSeeAllPortfolioClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -169,24 +163,20 @@ fun ClientHomeScreen(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(recentPortfolioItems.take(6), key = { it.id }) { item ->
-                    PortfolioMiniCard(
-                        item = item,
-                        onClick = { onPortfolioItemClick(item.id) }
-                    )
-                }
+            MervetaHorizontalList(
+                items = recentPortfolioItems,
+                key = { it.id }
+            ) { item ->
+                PortfolioMiniCard(
+                    item = item,
+                    onClick = { onPortfolioItemClick(item.id) }
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
-
-// BÚSQUEDA (solo cliente)
 
 @Composable
 private fun SearchBar(modifier: Modifier = Modifier) {
@@ -212,8 +202,6 @@ private fun SearchBar(modifier: Modifier = Modifier) {
         )
     }
 }
-
-// CATEGORÍAS (solo cliente)
 
 @Composable
 private fun CategoriesRow(modifier: Modifier = Modifier) {
@@ -270,8 +258,6 @@ private fun CategoryChip(
         )
     }
 }
-
-// HELPERS
 
 private fun estadoColorPara(estado: EstadoPedido): Color = when (estado) {
     EstadoPedido.PENDIENTE -> Color(0xFFE0A458)

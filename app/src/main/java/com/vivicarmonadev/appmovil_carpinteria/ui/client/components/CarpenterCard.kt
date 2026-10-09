@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.client.home.components
+package com.vivicarmonadev.appmovil_carpinteria.ui.client.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,9 +42,9 @@ fun CarpenterCard(
 
     Row(
         modifier = modifier
-            .fillMaxWidth()
+            .width(260.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
+            .background(Color(0xFFF5EFE7))
             .clickable(onClick = onClick)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -109,19 +109,14 @@ fun CarpenterCard(
 
             // Skills (primeras 2)
             if (profile.skills.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     profile.skills.take(2).forEach { skill ->
                         SkillMiniChip(text = skill)
                     }
-                    if (profile.skills.size > 2) {
-                        Text(
-                            text = "+${profile.skills.size - 2}",
-                            fontSize = 11.sp,
-                            color = Color(0xFF8B5A2B),
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        profile.skills.take(2).forEach { skill ->
+                            SkillMiniChip(text = skill)
+                        }
                     }
                 }
             }
@@ -134,7 +129,7 @@ private fun SkillMiniChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFFF5EFE7))
+            .background(Color(0xFFFFFFFF))
             .padding(horizontal = 6.dp, vertical = 3.dp)
     ) {
         Text(

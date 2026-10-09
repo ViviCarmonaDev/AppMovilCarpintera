@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Chair
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Forest
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,18 +36,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Handshake
+import androidx.compose.material.icons.filled.Sell
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaConfirmDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaImagesSection
 
-/**
- * Pantalla de detalle de un trabajo.
- * Diseño tipo "producto": imagen grande arriba, card con info abajo superpuesta.
- */
 @Composable
 fun DetailPortfolioScreen(
     viewModel: DetailPortfolioViewModel,
@@ -102,37 +105,22 @@ fun DetailPortfolioScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-
-                    // ============================================
-                    // GALERÍA DE IMÁGENES
-                    // ============================================
+                    // Galería de imágenes
                     MervetaImagesSection(
                         imagenes = item.imagenesUrls,
-                        aspectRatio = 1f   // o 4f/3f si quieres más ancha
+                        aspectRatio = 1f
                     )
 
-                    // ============================================
-                    // CARD CON INFO (superpuesto a la imagen)
-                    // ============================================
+                    // Card blanco superpuesto
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-24).dp)   //  sube para superponerse
-                            .clip(
-                                RoundedCornerShape(
-                                    topStart = 32.dp,
-                                    topEnd = 32.dp
-                                )
-                            )
+                            .offset(y = (-24).dp)
+                            .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                             .background(Color(0xFFFFFFFF))
-                            .padding(
-                                start = 24.dp,
-                                end = 24.dp,
-                                top = 32.dp,
-                                bottom = 32.dp
-                            )
+                            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 24.dp)
                     ) {
-                        // ---- TÍTULO ----
+                        // Título
                         Text(
                             text = item.titulo,
                             fontSize = 28.sp,
@@ -140,31 +128,129 @@ fun DetailPortfolioScreen(
                             color = Color(0xFF2C2C2C)
                         )
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // ---- DESCRIPCIÓN ----
+                        // Descripción
                         if (item.descripcion.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = item.descripcion,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 lineHeight = 22.sp,
-                                color = Color(0xFF4A4A4A)
+                                color = Color(0xFF6B6B6B)
                             )
-                            Spacer(modifier = Modifier.height(28.dp))
                         }
 
-                        // ---- PRECIO + ETIQUETA ----
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                text = item.precioTexto,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF8B5A2B)
-                            )
+                        Spacer(modifier = Modifier.height(24.dp))
 
+                        // Card horizontal: Categoría + Material + Medidas
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFF5EFE7))
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Categoría
+                            if (item.categoria.isNotBlank()) {
+                                InfoColumn(
+                                    icon = Icons.Filled.Chair,
+                                    label = "Categoría",
+                                    value = item.categoria,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            // Separador
+                            if (item.material.isNotBlank() || item.medidasTexto != null) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .height(48.dp)
+                                        .background(Color(0xFFE0DCD7))
+                                )
+                            }
+
+                            // Material
+                            if (item.material.isNotBlank()) {
+                                InfoColumn(
+                                    icon = Icons.Filled.Forest,
+                                    label = "Material",
+                                    value = item.material,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            // Separador
+                            if (item.medidasTexto != null) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .height(48.dp)
+                                        .background(Color(0xFFE0DCD7))
+                                )
+
+                                // Medidas
+                                InfoColumn(
+                                    icon = Icons.Filled.Straighten,
+                                    label = "Medidas",
+                                    value = item.medidasTexto ?: "—",
+                                    modifier = Modifier.weight(1.3f)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Card de precio
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFEFEFE9))
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Ícono circular
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                            when (item.tipoPrecio) {
+                                                TipoPrecio.FIJO -> Color(0xFF8A9E7A)      // verde más fuerte
+                                                TipoPrecio.A_TRATAR -> Color(0xFFA8B89A)  // verde más claro
+                                            }
+                                    ),
+
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Sell,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF9F7F5 ),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Precio",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF6B6B6B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = item.precioTexto,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2C2C2C)
+                                )
+                            }
+
+                            // Etiqueta FIJO / A TRATAR
                             if (item.etiquetaPrecio != null) {
                                 TipoPrecioTag(
                                     texto = item.etiquetaPrecio!!,
@@ -173,61 +259,15 @@ fun DetailPortfolioScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(28.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                        // ---- CATEGORÍA + MATERIAL ----
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Categoría
-                            if (item.categoria.isNotBlank()) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Categoría",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF6B6B6B)
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    FeatureChip(
-                                        icon = Icons.Filled.Chair,
-                                        text = item.categoria
-                                    )
-                                }
-                            }
-
-                            // Material
-                            if (item.material.isNotBlank()) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Material",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF6B6B6B)
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    FeatureChip(
-                                        icon = Icons.Filled.Forest,
-                                        text = item.material
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(40.dp))
-
-                        // ---- ACCIONES (solo carpintero) ----
+                        // Acciones (solo carpintero)
                         if (uiState.isCarpenter) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // Botón Editar
+                                // Botón editar
                                 Row(
                                     modifier = Modifier
                                         .weight(1f)
@@ -253,7 +293,7 @@ fun DetailPortfolioScreen(
                                     )
                                 }
 
-                                // Botón Eliminar
+                                // Botón eliminar (cuadrado)
                                 Box(
                                     modifier = Modifier
                                         .size(56.dp)
@@ -271,14 +311,10 @@ fun DetailPortfolioScreen(
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
 
-                // ============================================
-                // BOTÓN ATRÁS FLOTANTE
-                // ============================================
+                // Botón atrás flotante
                 Box(
                     modifier = Modifier
                         .padding(top = 40.dp, start = 16.dp)
@@ -299,7 +335,7 @@ fun DetailPortfolioScreen(
         }
     }
 
-    // ---- DIÁLOGO DE ELIMINAR ----
+    // Diálogo de eliminar
     if (uiState.showDeleteDialog) {
         MervetaConfirmDialog(
             title = "Eliminar trabajo",
@@ -312,23 +348,35 @@ fun DetailPortfolioScreen(
     }
 }
 
-// ============================================
-// ETIQUETA DE TIPO DE PRECIO (FIJO / A TRATAR)
-// ============================================
-
 @Composable
 private fun TipoPrecioTag(texto: String, tipo: TipoPrecio) {
-    val (bgColor, textColor) = when (tipo) {
-        TipoPrecio.FIJO -> Color(0xFF8B5A2B) to Color(0xFFF9F7F5)
-        TipoPrecio.A_TRATAR -> Color(0xFFD4E0D9) to Color(0xFF2E4A3E)
+    val (bgColor, textColor, icon) = when (tipo) {
+        TipoPrecio.FIJO -> Triple(
+            Color(0xFF4A5D3E),
+            Color(0xFFF9F7F5),
+            Icons.Filled.Lock )
+
+        TipoPrecio.A_TRATAR -> Triple(
+            Color(0xFF6B7F5C),
+            Color(0xFFF9F7F5),
+            Icons.Filled.Handshake
+        )
     }
 
-    Box(
+    Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(bgColor)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = textColor,
+            modifier = Modifier.size(14.dp)
+        )
         Text(
             text = texto,
             fontSize = 11.sp,
@@ -339,35 +387,49 @@ private fun TipoPrecioTag(texto: String, tipo: TipoPrecio) {
     }
 }
 
-// ============================================
-// CHIP CON ÍCONO (categoría, material)
-// ============================================
-
 @Composable
-private fun FeatureChip(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String,
+private fun InfoColumn(
+    icon: ImageVector,
+    label: String,
+    value: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFF5EFE7))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color(0xFF8B5A2B),
-            modifier = Modifier.size(18.dp)
-        )
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFFFFF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color(0xFF8B5A2B),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
         Text(
-            text = text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF2C2C2C)
+            text = label,
+            fontSize = 11.sp,
+            color = Color(0xFF6B6B6B)
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C2C2C),
+            maxLines = 2,
+            textAlign = TextAlign.Center
         )
     }
 }

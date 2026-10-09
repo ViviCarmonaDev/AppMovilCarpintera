@@ -3,8 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 
 /**
- * Estado de la UI para CREAR un trabajo nuevo.
- * Formulario vacío por defecto.
+ * Estado de la UI para CREAR un trabajo nuevo. Formulario vacío por defecto.
  */
 data class CreatePortfolioUiState(
     // ---- Datos del formulario ----
@@ -12,6 +11,9 @@ data class CreatePortfolioUiState(
     val descripcion: String = "",
     val categoria: String = "",
     val material: String = "",
+    val anchoCm: String = "",
+    val altoCm: String = "",
+    val profundidadCm: String = "",
     val precioReferencial: String = "",
     val tipoPrecio: TipoPrecio? = null,
     val imagenesUrls: List<String> = emptyList(),
@@ -21,6 +23,9 @@ data class CreatePortfolioUiState(
     val descripcionTouched: Boolean = false,
     val categoriaTouched: Boolean = false,
     val materialTouched: Boolean = false,
+    val anchoTouched: Boolean = false,
+    val altoTouched: Boolean = false,
+    val profundidadTouched: Boolean = false,
     val precioTouched: Boolean = false,
 
     // ---- Estado general ----
@@ -31,7 +36,6 @@ data class CreatePortfolioUiState(
 ) {
 
     // ---- VALIDACIONES ----
-
     val tituloError: String?
         get() = when {
             !tituloTouched -> null
@@ -97,5 +101,8 @@ data class CreatePortfolioUiState(
                 descripcion.isNotBlank() ||
                 categoria.isNotBlank() ||
                 material.isNotBlank() ||
+                anchoCm.isNotBlank() ||
+                altoCm.isNotBlank() ||
+                profundidadCm.isNotBlank() ||
                 precioReferencial.isNotBlank()
 }

@@ -28,13 +28,17 @@ data class PortfolioItemDto(
 
     val material: String = "",
 
+    // ---- Medidas ----
+    val anchoCm: Double? = null,
+    val altoCm: Double? = null,
+    val profundidadCm: Double? = null,
+
     val precioReferencial: Double? = null,
 
     val tipoPrecio: String = "A_TRATAR",
 
     // ---- Imágenes (hasta 3) ----
-    val imagenesUrls: List<String> = emptyList(),   // 👈 NUEVO (reemplaza fotoUrl1/fotoUrl2)
-
+    val imagenesUrls: List<String> = emptyList(),
     @ServerTimestamp
     val createdAt: Date? = null,
 
@@ -52,9 +56,12 @@ fun PortfolioItemDto.toDomain(): PortfolioItem {
         descripcion = descripcion,
         categoria = categoria,
         material = material,
+        anchoCm = anchoCm,
+        altoCm = altoCm,
+        profundidadCm = profundidadCm,
         precioReferencial = precioReferencial,
         tipoPrecio = TipoPrecio.fromString(tipoPrecio),
-        imagenesUrls = imagenesUrls,                 // 👈 NUEVO
+        imagenesUrls = imagenesUrls,
         createdAt = createdAt?.time ?: 0L,
         updatedAt = updatedAt?.time ?: 0L
     )
@@ -68,9 +75,12 @@ fun PortfolioItem.toDto(): PortfolioItemDto {
         descripcion = descripcion,
         categoria = categoria,
         material = material,
+        anchoCm = anchoCm,
+        altoCm = altoCm,
+        profundidadCm = profundidadCm,
         precioReferencial = precioReferencial,
         tipoPrecio = tipoPrecio.toFirestoreValue(),
-        imagenesUrls = imagenesUrls,                 // 👈 NUEVO
+        imagenesUrls = imagenesUrls,
         createdAt = if (createdAt > 0) Date(createdAt) else null,
         updatedAt = if (updatedAt > 0) Date(updatedAt) else null
     )

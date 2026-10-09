@@ -341,7 +341,7 @@ fun AppNavigation(
                     onPortfolioItemClick = { itemId -> navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/$itemId") },
                     onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
                     onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
-                    onOrderClick = { pedidoId -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$pedidoId") },
+                    onOrderClick = { pedidoId -> navController.navigate("${Routes.PEDIDO_DETAIL}/$pedidoId") },
                     onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
                 )
             }

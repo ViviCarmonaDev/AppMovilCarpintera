@@ -5,7 +5,7 @@ package com.vivicarmonadev.appmovil_carpinteria.domain.model
 
  * Representa un trabajo realizado que el carpintero publica para
  * mostrar su experiencia y atraer clientes.
- *
+
  * Este modelo NO depende de Firebase.
  */
 
@@ -16,6 +16,9 @@ data class PortfolioItem(
     val descripcion: String = "",
     val categoria: String = "",
     val material: String = "",
+    val anchoCm: Double? = null,
+    val altoCm: Double? = null,
+    val profundidadCm: Double? = null,
     val precioReferencial: Double? = null,
     val tipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
 
@@ -42,6 +45,16 @@ data class PortfolioItem(
     // ¿Tiene imágenes?
     val tieneImagenes: Boolean
         get() = imagenesUrls.isNotEmpty()
+
+    val medidasTexto: String?
+        get() {
+            val partes = listOfNotNull(
+                anchoCm?.let { "%.0f".format(it) },
+                altoCm?.let { "%.0f".format(it) },
+                profundidadCm?.let { "%.0f".format(it) }
+            )
+            return if (partes.isEmpty()) null else "${partes.joinToString(" x ")} cm"
+        }
 }
 
 // Tipo de precio de un trabajo: FIJO o A_TRATAR

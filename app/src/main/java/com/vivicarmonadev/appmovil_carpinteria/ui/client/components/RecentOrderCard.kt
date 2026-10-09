@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.client.home.components
+package com.vivicarmonadev.appmovil_carpinteria.ui.client.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,10 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
 
 /**
  * Tarjeta de pedido reciente para el Home del cliente.
- *
+
  * Por ahora es un placeholder con datos de ejemplo hasta que
  * implementemos el sistema completo de pedidos.
  */
@@ -39,9 +40,9 @@ fun RecentOrderCard(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .width(240.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
+            .background(Color(0xFFF5EFE7))
             .clickable(onClick = onClick)
             .padding(14.dp)
     ) {

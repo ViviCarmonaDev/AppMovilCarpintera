@@ -64,6 +64,30 @@ class CreatePortfolioViewModel(
         }
     }
 
+    fun onAnchoChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(anchoCm = filtered, anchoTouched = true, errorMessage = null) }
+    }
+
+    fun onAltoChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(altoCm = filtered, altoTouched = true, errorMessage = null) }
+    }
+
+    fun onProfundidadChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(profundidadCm = filtered, profundidadTouched = true, errorMessage = null) }
+    }
+
+    private fun filtrarNumero(value: String): String {
+        val filtered = value.filter { it.isDigit() || it == '.' }
+        return if (filtered.count { it == '.' } > 1) {
+            filtered.substring(0, filtered.lastIndexOf('.'))
+        } else {
+            filtered
+        }
+    }
+
     fun onPrecioChange(value: String) {
         // Solo permitir dígitos y un punto decimal
         val filtered = value.filter { it.isDigit() || it == '.' }
@@ -84,7 +108,6 @@ class CreatePortfolioViewModel(
     }
 
     // ---- GUARDAR ----
-
     fun save() {
         // Marcar todos los campos como tocados
         _uiState.update {
@@ -121,6 +144,9 @@ class CreatePortfolioViewModel(
                 descripcion = state.descripcion.trim(),
                 categoria = state.categoria.trim(),
                 material = state.material.trim(),
+                anchoCm = state.anchoCm.toDoubleOrNull(),
+                altoCm = state.altoCm.toDoubleOrNull(),
+                profundidadCm = state.profundidadCm.toDoubleOrNull(),
                 precioReferencial = precioDouble,
                 tipoPrecio = state.tipoPrecio?: TipoPrecio.A_TRATAR,
             )

@@ -16,6 +16,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.vivicarmonadev.appmovil_carpinteria.data.model.UserDto
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -147,7 +148,23 @@ class HomeViewModel(
                 }
             }
         }
+
+        // Pedidos asignados + libres
+        viewModelScope.launch {
+            combine(
+                pedidoRepository.getPedidosAsignadosAMi(uid),
+                pedidoRepository.getPedidosLibres()
+            ) { asignados, libres ->
+                // Combinamos: primero los asignados, luego los libres (sin duplicados)
+                (asignados + libres).distinctBy { it.id }
+            }.collect { pedidos ->
+                _uiState.update {
+                    it.copy(recentOrders = pedidos)
+                }
+            }
+        }
     }
+
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }

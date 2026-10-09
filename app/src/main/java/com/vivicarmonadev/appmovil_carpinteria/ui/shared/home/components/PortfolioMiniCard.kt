@@ -39,7 +39,7 @@ fun PortfolioMiniCard(
 ) {
     Column(
         modifier = modifier
-            .width(200.dp)
+            .width(210.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(Color(0xFFF5EFE7))
             .clickable(onClick = onClick)

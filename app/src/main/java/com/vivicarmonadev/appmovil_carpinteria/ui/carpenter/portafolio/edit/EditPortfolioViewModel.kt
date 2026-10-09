@@ -14,11 +14,11 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 
 /**
  * ViewModel de "Crear/Editar trabajo".
- *
+
  * Maneja dos casos:
  *  - Crear: formulario vacío. Al guardar, crea nuevo item.
  *  - Editar: formulario pre-llenado. Al guardar, actualiza el item.
- *
+
  * El flag `isEditMode` indica en qué modo está.
  */
 class EditPortfolioViewModel(
@@ -50,6 +50,9 @@ class EditPortfolioViewModel(
                     }
 
                     val precioStr = item.precioReferencial?.let { formatPrecio(it) } ?: ""
+                    val anchoStr = item.anchoCm?.let { formatPrecio(it) } ?: ""
+                    val altoStr = item.altoCm?.let { formatPrecio(it) } ?: ""
+                    val profStr = item.profundidadCm?.let { formatPrecio(it) } ?: ""
 
                     _uiState.update {
                         it.copy(
@@ -59,20 +62,25 @@ class EditPortfolioViewModel(
                             descripcion = item.descripcion,
                             categoria = item.categoria,
                             material = item.material,
+                            anchoCm = anchoStr,
+                            altoCm = altoStr,
+                            profundidadCm = profStr,
                             precioReferencial = precioStr,
                             tipoPrecio = item.tipoPrecio,
-
                             // Imágenes
                             imagenesUrls = item.imagenesUrls,
                             originalImagenesUrls = item.imagenesUrls,
-
                             isEditMode = true,
                             isLoading = false,
+
                             // Guardar originales para detectar cambios
                             originalTitulo = item.titulo,
                             originalDescripcion = item.descripcion,
                             originalCategoria = item.categoria,
                             originalMaterial = item.material,
+                            originalAnchoCm = anchoStr,
+                            originalAltoCm = altoStr,
+                            originalProfundidadCm = profStr,
                             originalPrecio = precioStr,
                             originalTipoPrecio = item.tipoPrecio
                         )
@@ -174,6 +182,9 @@ class EditPortfolioViewModel(
                 descripcion = state.descripcion.trim(),
                 categoria = state.categoria.trim(),
                 material = state.material.trim(),
+                anchoCm = state.anchoCm.toDoubleOrNull(),
+                altoCm = state.altoCm.toDoubleOrNull(),
+                profundidadCm = state.profundidadCm.toDoubleOrNull(),
                 precioReferencial = precioDouble,
                 tipoPrecio = state.tipoPrecio,
                 imagenesUrls = state.imagenesUrls,
@@ -256,8 +267,16 @@ class EditPortfolioViewModel(
         }
     }
 
-    // IMÁGENES
+    private fun filtrarNumero(value: String): String {
+        val filtered = value.filter { it.isDigit() || it == '.' }
+        return if (filtered.count { it == '.' } > 1) {
+            filtered.substring(0, filtered.lastIndexOf('.'))
+        } else {
+            filtered
+        }
+    }
 
+    // IMÁGENES
 
     fun onAgregarImagen(url: String) {
         _uiState.update { state ->
@@ -273,5 +292,22 @@ class EditPortfolioViewModel(
             }
             state.copy(imagenesUrls = nuevas)
         }
+    }
+
+    // MEDIDAS
+
+    fun onAnchoChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(anchoCm = filtered, anchoTouched = true, errorMessage = null) }
+    }
+
+    fun onAltoChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(altoCm = filtered, altoTouched = true, errorMessage = null) }
+    }
+
+    fun onProfundidadChange(value: String) {
+        val filtered = filtrarNumero(value)
+        _uiState.update { it.copy(profundidadCm = filtered, profundidadTouched = true, errorMessage = null) }
     }
 }

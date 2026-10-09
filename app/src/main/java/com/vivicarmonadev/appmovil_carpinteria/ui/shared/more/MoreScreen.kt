@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.Store
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
 import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
@@ -66,16 +68,18 @@ fun MoreScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF6F1))
+            .background(Color(0xFFFFFFFF))
             .verticalScroll(rememberScrollState())
     ) {
 
-        UserHeader(
-            userName = displayName,
-            userEmail = displayEmail,
-            onEditProfile = onEditProfile
+        // Header compartido
+        MervetaHeader(
+            title = "Más",
+            subtitle = "Configuración y opciones",
+            avatarIcon = Icons.Filled.MoreHoriz,
+            verticalPadding = 40.dp,
+            bottomPadding = 20.dp
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
         SectionTitleText(text = "Cuenta")
@@ -298,7 +302,7 @@ private fun LogoutButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFFFFFFF))
+            .background(Color(0xFFFAF6F1))
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.Center,

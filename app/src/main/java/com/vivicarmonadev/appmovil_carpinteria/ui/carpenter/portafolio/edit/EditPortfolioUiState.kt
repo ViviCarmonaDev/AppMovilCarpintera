@@ -12,24 +12,31 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
  * El flag `isEditMode` diferencia entre los dos casos.
  */
 data class EditPortfolioUiState(
-    // ---- Datos del formulario ----
+    //  Datos del formulario
     val id: String = "",
     val uid: String = "",
     val titulo: String = "",
     val descripcion: String = "",
     val categoria: String = "",
     val material: String = "",
+    // Medidas
+    val anchoCm: String = "",
+    val altoCm: String = "",
+    val profundidadCm: String = "",
     val precioReferencial: String = "",
     val tipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
 
-    // ---- Imágenes (hasta 3) ----
+    //  Imágenes (hasta 3)
     val imagenesUrls: List<String> = emptyList(),
 
-    // ---- Valores originales (para detectar cambios en modo edición) ----
+    //  Valores originales (para detectar cambios en modo edición) ----
     val originalTitulo: String = "",
     val originalDescripcion: String = "",
     val originalCategoria: String = "",
     val originalMaterial: String = "",
+    val originalAnchoCm: String = "",
+    val originalAltoCm: String = "",
+    val originalProfundidadCm: String = "",
     val originalPrecio: String = "",
     val originalTipoPrecio: TipoPrecio = TipoPrecio.A_TRATAR,
     val originalImagenesUrls: List<String> = emptyList(),
@@ -39,6 +46,9 @@ data class EditPortfolioUiState(
     val descripcionTouched: Boolean = false,
     val categoriaTouched: Boolean = false,
     val materialTouched: Boolean = false,
+    val anchoTouched: Boolean = false,
+    val altoTouched: Boolean = false,
+    val profundidadTouched: Boolean = false,
     val precioTouched: Boolean = false,
     val tipoPrecioTouched: Boolean = false,
 
@@ -116,6 +126,9 @@ data class EditPortfolioUiState(
                 descripcion != originalDescripcion ||
                 categoria != originalCategoria ||
                 material != originalMaterial ||
+                anchoCm != originalAnchoCm ||
+                altoCm != originalAltoCm ||
+                profundidadCm != originalProfundidadCm ||
                 precioReferencial != originalPrecio ||
                 tipoPrecio != originalTipoPrecio ||
                 imagenesUrls != originalImagenesUrls
