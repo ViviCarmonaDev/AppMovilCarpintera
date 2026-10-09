@@ -1,6 +1,7 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail
 
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
 
 /**
  * Estado de la UI para la pantalla de detalle de un pedido.
@@ -13,6 +14,12 @@ data class DetailPedidoUiState(
     val pedido: Pedido? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    val cotizaciones: List<Cotizacion> = emptyList(),
+    val isLoadingCotizaciones: Boolean = false,
+    val cotizacionAAceptar: Cotizacion? = null,
+    val cotizacionARechazar: Cotizacion? = null,
+    val isProcesandoCotizacion: Boolean = false,
+    val cotizacionSuccessMessage: String? = null,
 
     // ---- Rol del usuario actual ----
     val isCarpenter: Boolean = false,

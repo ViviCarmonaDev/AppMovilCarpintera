@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,11 +22,13 @@ import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.RequestQuote
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,11 +41,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.Store
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
-import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
+import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
 
 @Composable
 fun MoreScreen(
@@ -58,12 +58,10 @@ fun MoreScreen(
     onTerms: () -> Unit = {},
     onInvite: () -> Unit = {},
     onVouchers: () -> Unit = {},
+    onVerCotizaciones: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
-
-    val displayName = user?.fullName?.ifBlank { "Usuario" } ?: "Usuario"
-    val displayEmail = user?.email?.ifBlank { "Sin correo" } ?: "Sin correo"
 
     Column(
         modifier = Modifier
@@ -71,7 +69,6 @@ fun MoreScreen(
             .background(Color(0xFFFFFFFF))
             .verticalScroll(rememberScrollState())
     ) {
-
         // Header compartido
         MervetaHeader(
             title = "Más",
@@ -80,8 +77,10 @@ fun MoreScreen(
             verticalPadding = 40.dp,
             bottomPadding = 20.dp
         )
+
         Spacer(modifier = Modifier.height(8.dp))
 
+        // ---- CUENTA ----
         SectionTitleText(text = "Cuenta")
 
         MoreItem(
@@ -91,8 +90,7 @@ fun MoreScreen(
             onClick = onEditProfile
         )
 
-        // Solo para carpinteros: acceso al perfil del taller
-
+        // Solo para carpinteros
         if (user?.role == UserRole.CARPENTER) {
             MoreItem(
                 icon = Icons.Filled.Store,
@@ -101,12 +99,14 @@ fun MoreScreen(
                 onClick = onEditCarpenterProfile
             )
         }
+
         MoreItem(
             icon = Icons.Filled.Settings,
             title = "Configuración",
             subtitle = "Notificaciones y preferencias",
             onClick = onSettings
         )
+
         MoreItem(
             icon = Icons.Filled.Language,
             title = "Idioma",
@@ -116,6 +116,7 @@ fun MoreScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // ---- RECOMPENSAS ----
         SectionTitleText(text = "Recompensas")
 
         MoreItem(
@@ -124,6 +125,7 @@ fun MoreScreen(
             subtitle = "Descuentos y promociones",
             onClick = onVouchers
         )
+
         MoreItem(
             icon = Icons.Filled.Star,
             title = "Invitar amigos",
@@ -131,8 +133,16 @@ fun MoreScreen(
             onClick = onInvite
         )
 
+        MoreItem(
+            icon = Icons.Filled.RequestQuote,
+            title = "Mis cotizaciones",
+            subtitle = "Gestiona las cotizaciones enviadas",
+            onClick = onVerCotizaciones
+        )
+
         Spacer(modifier = Modifier.height(8.dp))
 
+        // ---- AYUDA E INFORMACIÓN ----
         SectionTitleText(text = "Ayuda e información")
 
         MoreItem(
@@ -141,12 +151,14 @@ fun MoreScreen(
             subtitle = "Preguntas frecuentes y soporte",
             onClick = onHelp
         )
+
         MoreItem(
             icon = Icons.Filled.PrivacyTip,
             title = "Política de privacidad",
             subtitle = "Cómo usamos tus datos",
             onClick = onPrivacy
         )
+
         MoreItem(
             icon = Icons.Filled.PrivacyTip,
             title = "Términos y condiciones",
@@ -156,77 +168,14 @@ fun MoreScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ---- CERRAR SESIÓN ----
         LogoutButton(onClick = onLogout)
 
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
-// ============================================
-// HEADER CON DATOS DEL USUARIO
-// ============================================
-@Composable
-private fun UserHeader(
-    userName: String,
-    userEmail: String,
-    onEditProfile: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF8B5A2B))
-            .padding(horizontal = 20.dp, vertical = 28.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFF9F7F5)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Person,
-                contentDescription = null,
-                tint = Color(0xFF8B5A2B),
-                modifier = Modifier.size(32.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = userName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFF9F7F5)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = userEmail,
-                fontSize = 13.sp,
-                color = Color(0xFFF9F7F5).copy(alpha = 0.75f)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFF9F7F5).copy(alpha = 0.2f))
-                .clickable(onClick = onEditProfile),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Editar",
-                tint = Color(0xFFF9F7F5),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
+// SECCIÓN
 
 @Composable
 private fun SectionTitleText(text: String) {
@@ -239,6 +188,8 @@ private fun SectionTitleText(text: String) {
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
     )
 }
+
+// ITEM
 
 @Composable
 private fun MoreItem(
@@ -295,6 +246,8 @@ private fun MoreItem(
     }
 }
 
+// CERRAR SESIÓN
+
 @Composable
 private fun LogoutButton(onClick: () -> Unit) {
     Row(
@@ -302,7 +255,7 @@ private fun LogoutButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFFAF6F1))
+            .background(Color(0xFFF5EFE7))
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.Center,

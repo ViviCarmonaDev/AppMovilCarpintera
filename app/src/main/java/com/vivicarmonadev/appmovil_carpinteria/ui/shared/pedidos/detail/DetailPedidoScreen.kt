@@ -20,15 +20,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Chair
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Straighten
-import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.filled.RequestQuote
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,18 +41,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.fechaCorta
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoCotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.EstadoPedidoBadge
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaActionButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaConfirmDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaImagesSection
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.fechaLarga
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaInfoCard
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.fechaCorta
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.tiempoRelativo
 
 @Composable
@@ -61,7 +63,8 @@ fun DetailPedidoScreen(
     pedidoId: String,
     onBack: () -> Unit,
     onEditClick: (String) -> Unit,
-    onActionSuccess: () -> Unit
+    onActionSuccess: () -> Unit,
+    onCrearCotizacion: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -112,36 +115,22 @@ fun DetailPedidoScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-
-                    // GALERÍA DE IMÁGENES
-
+                    // Galería de imágenes
                     MervetaImagesSection(
                         imagenes = pedido.imagenesUrls,
                         aspectRatio = 1f
                     )
 
-                    // CARD BLANCO SUPERPUESTO
-
+                    // Card blanco superpuesto
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .offset(y = (-24).dp)
-                            .clip(
-                                RoundedCornerShape(
-                                    topStart = 32.dp,
-                                    topEnd = 32.dp
-                                )
-                            )
+                            .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                             .background(Color(0xFFFFFFFF))
-                            .padding(
-                                start = 20.dp,
-                                end = 20.dp,
-                                top = 28.dp,
-                                bottom = 24.dp
-                            )
+                            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 40.dp) // Espaciado inferior
                     ) {
-
-                        // ---- FILA SUPERIOR: número + tiempo + badge ----
+                        // Fila superior: número + tiempo + badge
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,7 +140,6 @@ fun DetailPedidoScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // Número de pedido en chip beige
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
@@ -165,8 +153,6 @@ fun DetailPedidoScreen(
                                         color = Color(0xFF8B5A2B)
                                     )
                                 }
-
-                                // Tiempo relativo
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -191,7 +177,7 @@ fun DetailPedidoScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // ---- TÍTULO ----
+                        // Título
                         Text(
                             text = pedido.titulo,
                             fontSize = 28.sp,
@@ -199,7 +185,7 @@ fun DetailPedidoScreen(
                             color = Color(0xFF2C2C2C)
                         )
 
-                        // ---- DESCRIPCIÓN ----
+                        // Descripción
                         if (pedido.descripcion.isNotBlank()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -210,9 +196,34 @@ fun DetailPedidoScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        // ---- CARD HORIZONTAL: Tipo + Medidas + Entrega ----
+                        // Info del cliente (si soy carpintero)
+                        if (uiState.isCarpenter && pedido.clienteNombre.isNotBlank()) {
+                            MervetaInfoCard(
+                                icon = Icons.Filled.Person,
+                                label = "Cliente",
+                                value = pedido.clienteNombre
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // Info del carpintero (si soy cliente)
+                        if (!uiState.isCarpenter) {
+                            MervetaInfoCard(
+                                icon = Icons.Filled.Person,
+                                label = "Carpintero",
+                                value = if (pedido.isLibre) {
+                                    "Esperando carpintero"
+                                } else {
+                                    pedido.carpinteroNombre ?: "Carpintero asignado"
+                                },
+                                isMuted = pedido.isLibre
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // Card horizontal: Tipo + Medidas + Entrega
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -222,15 +233,13 @@ fun DetailPedidoScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Tipo (material)
                             InfoColumn(
-                                icon = Icons.Filled.Park,
-                                label = "Material",
+                                icon = Icons.Filled.Chair,
+                                label = "Tipo",
                                 value = pedido.tipoMadera.ifBlank { "—" },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(0.9f)
                             )
 
-                            // Separador
                             Box(
                                 modifier = Modifier
                                     .width(1.dp)
@@ -238,15 +247,13 @@ fun DetailPedidoScreen(
                                     .background(Color(0xFFE0DCD7))
                             )
 
-                            // Medidas
                             InfoColumn(
                                 icon = Icons.Filled.Straighten,
                                 label = "Medidas",
                                 value = pedido.medidasTexto ?: "—",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1.3f)
                             )
 
-                            // Separador
                             Box(
                                 modifier = Modifier
                                     .width(1.dp)
@@ -254,7 +261,6 @@ fun DetailPedidoScreen(
                                     .background(Color(0xFFE0DCD7))
                             )
 
-                            // Entrega
                             InfoColumn(
                                 icon = Icons.Filled.CalendarToday,
                                 label = "Entrega",
@@ -263,138 +269,26 @@ fun DetailPedidoScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // ---- CARD DEL CARPINTERO ----
-                        if (!uiState.isCarpenter) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFF5EFE7))
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF8B5A2B)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Person,
-                                        contentDescription = null,
-                                        tint = Color(0xFFF9F7F5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Carpintero",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF6B6B6B)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (pedido.isLibre) {
-                                            "Esperando carpintero"
-                                        } else {
-                                            pedido.carpinteroNombre ?: "Carpintero asignado"
-                                        },
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (pedido.isLibre) Color(0xFF8A8A8A) else Color(0xFF2C2C2C)
-                                    )
-                                }
-
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                    tint = Color(0xFF8B5A2B),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // ---- CARD DEL CLIENTE (si soy carpintero) ----
-                        if (uiState.isCarpenter && pedido.clienteNombre.isNotBlank()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFF5EFE7))
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF8B5A2B)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Person,
-                                        contentDescription = null,
-                                        tint = Color(0xFFF9F7F5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Cliente",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF6B6B6B)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = pedido.clienteNombre,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF2C2C2C)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // ---- PRESUPUESTO ----
+                        // Card de presupuesto
                         if (pedido.presupuestoTexto != null) {
+                            Spacer(modifier = Modifier.height(16.dp))
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(Color(0xFFEFEFE9))
-                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Ícono circular verde
                                 Box(
                                     modifier = Modifier
                                         .size(44.dp)
                                         .clip(CircleShape)
-                                        .background(
-                                            when (pedido.status) {
-                                                EstadoPedido.PENDIENTE -> Color(0xFFA8B89A)  // verde claro (pendiente)
-                                                EstadoPedido.ACEPTADO -> Color(0xFF8A9E7A)   // verde medio (aceptado)
-                                                EstadoPedido.EN_PROCESO -> Color(0xFF8A9E7A)
-                                                EstadoPedido.TERMINADO -> Color(0xFF8A9E7A)
-                                                EstadoPedido.ENTREGADO -> Color(0xFF8A9E7A)
-                                                EstadoPedido.CANCELADO -> Color(0xFFA8B89A)
-                                            }
-                                        ),
+                                        .background(Color(0xFF8A9E7A)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Sell,
+                                        imageVector = Icons.Filled.Payments,
                                         contentDescription = null,
                                         tint = Color(0xFFF9F7F5),
                                         modifier = Modifier.size(22.dp)
@@ -418,10 +312,36 @@ fun DetailPedidoScreen(
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(24.dp))
                         }
 
+                        // COTIZACIONES RECIBIDAS (solo para el cliente)
+
+                        if (!uiState.isCarpenter && uiState.cotizaciones.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Text(
+                                text = "Cotizaciones recibidas",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2C2C2C)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            uiState.cotizaciones.forEach { cotizacion ->
+                                CotizacionRecibidaCard(
+                                    cotizacion = cotizacion,
+                                    onAceptar = { viewModel.onAceptarCotizacionClick(cotizacion) },
+                                    onRechazar = { viewModel.onRechazarCotizacionClick(cotizacion) }
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
                         // ACCIONES SEGÚN ROL
+
                         // ---- CLIENTE ----
                         if (!uiState.isCarpenter) {
                             when (pedido.status) {
@@ -452,28 +372,26 @@ fun DetailPedidoScreen(
                                             modifier = Modifier
                                                 .size(56.dp)
                                                 .clip(RoundedCornerShape(14.dp))
-                                                .background(Color(0xFFFADBD8))
+                                                .background(Color(0xFFC5544A))
                                                 .clickable { viewModel.onEliminarClick() },
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Filled.Delete,
                                                 contentDescription = "Eliminar",
-                                                tint = Color(0xFFC5544A),
+                                                tint = Color(0xFFF9F7F5),
                                                 modifier = Modifier.size(22.dp)
                                             )
                                         }
                                     }
                                 }
 
-
-
                                 EstadoPedido.CANCELADO -> {
                                     MervetaActionButton(
                                         text = "Eliminar pedido",
                                         icon = Icons.Filled.Delete,
-                                        backgroundColor = Color(0xFFFADBD8),
-                                        contentColor = Color(0xFFC5544A),
+                                        backgroundColor = Color(0xFFC5544A),
+                                        contentColor = Color(0xFFF9F7F5),
                                         onClick = { viewModel.onEliminarClick() },
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -483,25 +401,16 @@ fun DetailPedidoScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
-
                         // ---- CARPINTERO ----
                         if (uiState.isCarpenter) {
                             when (pedido.status) {
                                 EstadoPedido.PENDIENTE -> {
-                                    if (pedido.isLibre) {
-                                        MervetaActionButton(
-                                            text = "Tomar pedido",
-                                            onClick = { viewModel.onTomarPedido() },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    } else if (pedido.carpenterUid == uiState.currentUid) {
-                                        MervetaActionButton(
-                                            text = "Aceptar pedido",
-                                            onClick = { viewModel.onCambiarEstado(EstadoPedido.ACEPTADO) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
+                                    MervetaActionButton(
+                                        text = "Crear cotización",
+                                        icon = Icons.Filled.RequestQuote,
+                                        onClick = { onCrearCotizacion(pedido.id) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
 
                                 EstadoPedido.ACEPTADO -> {
@@ -535,9 +444,7 @@ fun DetailPedidoScreen(
                     }
                 }
 
-                // ============================================
-                // BOTÓN ATRÁS FLOTANTE
-                // ============================================
+                // Botón atrás flotante
                 Box(
                     modifier = Modifier
                         .padding(top = 40.dp, start = 16.dp)
@@ -558,7 +465,8 @@ fun DetailPedidoScreen(
         }
     }
 
-    // Diálogos
+    // DIÁLOGOS
+
     if (uiState.showCancelDialog) {
         MervetaConfirmDialog(
             title = "Cancelar pedido",
@@ -582,13 +490,157 @@ fun DetailPedidoScreen(
             onCancel = { viewModel.onEliminarCancel() }
         )
     }
+
+    if (uiState.cotizacionAAceptar != null) {
+        MervetaConfirmDialog(
+            title = "Aceptar cotización",
+            message = "¿Confirmas la cotización de ${uiState.cotizacionAAceptar?.carpinteroNombre} por ${uiState.cotizacionAAceptar?.costoTotalTexto}?",
+            confirmText = "Aceptar",
+            cancelText = "Cancelar",
+            isLoading = uiState.isProcesandoCotizacion,
+            onConfirm = { viewModel.onAceptarCotizacionConfirm() },
+            onCancel = { viewModel.onAceptarCotizacionCancel() }
+        )
+    }
+
+    if (uiState.cotizacionARechazar != null) {
+        MervetaConfirmDialog(
+            title = "Rechazar cotización",
+            message = "¿Estás seguro de que quieres rechazar la cotización de ${uiState.cotizacionARechazar?.carpinteroNombre}?",
+            confirmText = "Rechazar",
+            cancelText = "Cancelar",
+            isLoading = uiState.isProcesandoCotizacion,
+            onConfirm = { viewModel.onRechazarCotizacionConfirm() },
+            onCancel = { viewModel.onRechazarCotizacionCancel() }
+        )
+    }
 }
 
-// COLUMNA DE INFO CON ÍCONO (para el card horizontal)
+// CARD DE COTIZACIÓN RECIBIDA
 
 @Composable
+private fun CotizacionRecibidaCard(
+    cotizacion: Cotizacion,
+    onAceptar: () -> Unit,
+    onRechazar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF5EFE7))
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = cotizacion.carpinteroNombre,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C2C2C)
+            )
+            EstadoCotizacionBadge(estado = cotizacion.estado)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = cotizacion.costoTotalTexto,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF8B5A2B)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Schedule,
+                contentDescription = null,
+                tint = Color(0xFF6B6B6B),
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = cotizacion.tiempoEstimadoTexto,
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B)
+            )
+        }
+
+        if (cotizacion.comentarios.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = cotizacion.comentarios,
+                fontSize = 13.sp,
+                color = Color(0xFF4A4A4A),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (cotizacion.estado == EstadoCotizacion.PENDIENTE) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MervetaActionButton(
+                    text = "Aceptar",
+                    backgroundColor = Color(0xFF4A5D3E),
+                    contentColor = Color(0xFFF9F7F5),
+                    onClick = onAceptar,
+                    modifier = Modifier.weight(1f)
+                )
+                MervetaActionButton(
+                    text = "Rechazar",
+                    backgroundColor = Color(0xFFFADBD8),
+                    contentColor = Color(0xFFC5544A),
+                    onClick = onRechazar,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+// BADGE DE COTIZACIÓN
+
+@Composable
+private fun EstadoCotizacionBadge(estado: EstadoCotizacion) {
+    val (bgColor, textColor) = when (estado) {
+        EstadoCotizacion.PENDIENTE -> Color(0xFFFCEBD0) to Color(0xFF8B5A2B)
+        EstadoCotizacion.ACEPTADA -> Color(0xFFD4E0D9) to Color(0xFF2E4A3E)
+        EstadoCotizacion.RECHAZADA -> Color(0xFFFADBD8) to Color(0xFFC5544A)
+        EstadoCotizacion.ANULADA -> Color(0xFFE0DCD7) to Color(0xFF6B6B6B)
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(bgColor)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = estado.toDisplayText().uppercase(),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.5.sp,
+            color = textColor
+        )
+    }
+}
+
+// COLUMNA DE INFO CON ÍCONO
+@Composable
 private fun InfoColumn(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier

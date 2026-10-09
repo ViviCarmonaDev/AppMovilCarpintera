@@ -58,6 +58,10 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedido
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoScreen
 import androidx.compose.material.icons.filled.Inbox
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.view.CotizacionesScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.view.CotizacionesViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.create.CreateCotizacionScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.create.CreateCotizacionViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioViewModel
@@ -83,6 +87,8 @@ object Routes {
     const val CREATE_PEDIDO = "create_pedido"
     const val EDIT_PEDIDO = "edit_pedido"
     const val PEDIDO_DETAIL = "pedido_detail"
+    const val CREATE_COTIZACION = "create_cotizacion"
+    const val COTIZACIONES = "cotizaciones"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -342,7 +348,8 @@ fun AppNavigation(
                     onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
                     onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
                     onOrderClick = { pedidoId -> navController.navigate("${Routes.PEDIDO_DETAIL}/$pedidoId") },
-                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
+                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) },
+
                 )
             }
         }
@@ -438,9 +445,8 @@ fun AppNavigation(
                 MoreScreen(
                     mainViewModel = mainViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
-                    onEditCarpenterProfile = {
-                        navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true")
-                    },
+                    onEditCarpenterProfile = { navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true") },
+                    onVerCotizaciones = { navController.navigate(Routes.COTIZACIONES) },
                     onLogout = {
                         moreViewModel.logout {
                             navController.navigate(Routes.WELCOME_1) {
@@ -488,29 +494,6 @@ fun AppNavigation(
             }
         }
 
-        // --- DETALLE DE PEDIDO ---
-        composable(
-            route = "${Routes.PEDIDO_DETAIL}/{pedidoId}",
-            arguments = listOf(
-                navArgument("pedidoId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
-            val detailViewModel = remember { DetailPedidoViewModel() }
-
-            DetailPedidoScreen(
-                viewModel = detailViewModel,
-                pedidoId = pedidoId,
-                onBack = { navController.popBackStack() },
-                onEditClick = { id ->
-                    navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$id")
-                },
-                onActionSuccess = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
         // --- CREAR PEDIDO ---
         composable(Routes.CREATE_PEDIDO) {
             val createViewModel = remember { CreatePedidoViewModel() }
@@ -545,8 +528,65 @@ fun AppNavigation(
                     }
             }
 
-        EditPedidoScreen(
+            EditPedidoScreen(
                 viewModel = editPedidoViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // --- DETALLE DE PEDIDO ---
+        composable(
+            route = "${Routes.PEDIDO_DETAIL}/{pedidoId}",
+            arguments = listOf(
+                navArgument("pedidoId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+            val detailViewModel = remember { DetailPedidoViewModel() }
+
+            DetailPedidoScreen(
+                viewModel = detailViewModel,
+                pedidoId = pedidoId,
+                onBack = { navController.popBackStack() },
+                onEditClick = { id -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$id") },
+                onActionSuccess = { navController.popBackStack() },
+                onCrearCotizacion = { id -> navController.navigate("${Routes.CREATE_COTIZACION}/$id")
+                }
+            )
+        }
+
+        // --- COTIZACIONES ---
+        composable(Routes.COTIZACIONES) {
+            val cotizacionesViewModel = remember { CotizacionesViewModel() }
+
+            MainScaffold(
+                currentRoute = Routes.COTIZACIONES,
+                navController = navController
+            ) {
+                CotizacionesScreen(
+                    viewModel = cotizacionesViewModel,
+                    onCotizacionClick = { cotizacion ->
+                        // TODO: navegar al detalle de cotización
+                        // navController.navigate("${Routes.COTIZACION_DETAIL}/${cotizacion.id}")
+                    }
+                )
+            }
+        }
+
+        // --- CREAR COTIZACIÓN ---
+        composable(
+            route = "${Routes.CREATE_COTIZACION}/{pedidoId}",
+            arguments = listOf(
+                navArgument("pedidoId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+            val createViewModel = remember { CreateCotizacionViewModel() }
+
+            CreateCotizacionScreen(
+                viewModel = createViewModel,
+                pedidoId = pedidoId,
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )

@@ -11,23 +11,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.CotizacionRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoCotizacion
+import kotlinx.coroutines.Job
 
 /**
  * ViewModel para la pantalla de detalle de un pedido.
- *
+
  * Carga el pedido por ID, permite:
  *  - Cliente: editar, cancelar.
  *  - Carpintero: tomar pedido, avanzar estado.
  */
 class DetailPedidoViewModel(
     private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl(),
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+    private val cotizacionRepository: CotizacionRepositoryImpl = CotizacionRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailPedidoUiState())
     val uiState: StateFlow<DetailPedidoUiState> = _uiState.asStateFlow()
 
     private var currentPedidoId: String = ""
+    private var cotizacionesJob: Job? = null
 
     // INICIALIZAR
 
@@ -47,10 +53,10 @@ class DetailPedidoViewModel(
                         )
                     }
                 }
-
                 cargarPedido()
             }
         }
+        cargarCotizaciones(pedidoId)
     }
 
     private suspend fun cargarPedido() {
@@ -82,8 +88,16 @@ class DetailPedidoViewModel(
         )
     }
 
-    // ACCIONES DEL CLIENTE
+    private fun cargarCotizaciones(pedidoId: String) {
+        cotizacionesJob?.cancel()
+        cotizacionesJob = viewModelScope.launch {
+            cotizacionRepository.getCotizacionesByPedido(pedidoId).collect { lista ->
+                _uiState.update { it.copy(cotizaciones = lista) }
+            }
+        }
+    }
 
+    // ACCIONES DEL CLIENTE
     fun onCancelarClick() {
         _uiState.update { it.copy(showCancelDialog = true) }
     }
@@ -233,13 +247,114 @@ class DetailPedidoViewModel(
         }
     }
 
+    // ACEPTAR / RECHAZAR COTIZACIÓN (cliente)
+
+    fun onAceptarCotizacionClick(cotizacion: Cotizacion) {
+        _uiState.update { it.copy(cotizacionAAceptar = cotizacion) }
+    }
+
+    fun onAceptarCotizacionCancel() {
+        _uiState.update { it.copy(cotizacionAAceptar = null) }
+    }
+
+    fun onAceptarCotizacionConfirm() {
+        val cotizacion = _uiState.value.cotizacionAAceptar ?: return
+        val pedido = _uiState.value.pedido ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcesandoCotizacion = true) }
+
+            // 1. Marcar la cotización elegida como ACEPTADA
+            cotizacionRepository.aceptarCotizacion(cotizacion.id)
+
+            // 2. Asignar el carpintero al pedido
+            val asignarResult = pedidoRepository.asignarCarpintero(
+                pedidoId = pedido.id,
+                carpenterUid = cotizacion.carpinteroUid,
+                carpinteroNombre = cotizacion.carpinteroNombre
+            )
+
+            // 3. Cambiar el pedido a ACEPTADO
+            pedidoRepository.updatePedidoStatus(pedido.id, EstadoPedido.ACEPTADO)
+
+            // 4. Rechazar las demás cotizaciones pendientes
+            _uiState.value.cotizaciones
+                .filter { it.id != cotizacion.id && it.estado == EstadoCotizacion.PENDIENTE }
+                .forEach { otra ->
+                    cotizacionRepository.rechazarCotizacion(otra.id)
+                }
+            asignarResult.fold(
+                onSuccess = {
+                    cargarPedido()
+                    _uiState.update {
+                        it.copy(
+                            isProcesandoCotizacion = false,
+                            cotizacionAAceptar = null,
+                            cotizacionSuccessMessage = "Cotización aceptada"
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isProcesandoCotizacion = false,
+                            cotizacionAAceptar = null,
+                            errorMessage = "Error: ${exception.message}"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun onRechazarCotizacionClick(cotizacion: Cotizacion) {
+        _uiState.update { it.copy(cotizacionARechazar = cotizacion) }
+    }
+
+    fun onRechazarCotizacionCancel() {
+        _uiState.update { it.copy(cotizacionARechazar = null) }
+    }
+
+    fun onRechazarCotizacionConfirm() {
+        val cotizacion = _uiState.value.cotizacionARechazar ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcesandoCotizacion = true) }
+
+            val result = cotizacionRepository.rechazarCotizacion(cotizacion.id)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(
+                            isProcesandoCotizacion = false,
+                            cotizacionARechazar = null,
+                            cotizacionSuccessMessage = "Cotización rechazada"
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isProcesandoCotizacion = false,
+                            cotizacionARechazar = null,
+                            errorMessage = "Error: ${exception.message}"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
     // MENSAJES
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
-
     fun clearActionSuccess() {
         _uiState.update { it.copy(actionSuccess = false) }
+    }
+    fun clearCotizacionSuccessMessage() {
+        _uiState.update { it.copy(cotizacionSuccessMessage = null) }
     }
 }
