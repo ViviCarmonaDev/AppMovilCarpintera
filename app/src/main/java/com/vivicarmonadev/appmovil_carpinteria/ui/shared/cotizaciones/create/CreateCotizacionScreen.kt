@@ -352,9 +352,8 @@ fun CreateCotizacionScreen(
     }
 }
 
-// ============================================
 // ITEM DE MATERIAL
-// ============================================
+
 @Composable
 private fun MaterialItem(
     material: ItemCotizacion,

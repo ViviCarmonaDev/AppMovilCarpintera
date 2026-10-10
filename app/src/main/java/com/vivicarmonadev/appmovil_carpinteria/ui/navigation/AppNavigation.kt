@@ -58,6 +58,10 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedido
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoScreen
 import androidx.compose.material.icons.filled.Inbox
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.view.TallerScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.view.TallerViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.edit.EditTallerScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.edit.EditTallerViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.view.CotizacionesScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.view.CotizacionesViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.create.CreateCotizacionScreen
@@ -74,6 +78,8 @@ object Routes {
     const val REGISTER_CREDENTIALS = "register_credentials"
     const val COMPLETE_PROFILE = "complete_profile"
     const val CARPENTER_PROFILE = "carpenter_profile"
+    const val TALLER = "taller"
+    const val EDIT_TALLER = "edit_taller"
     const val HOME = "home"
     const val PORTFOLIO = "projects"
     const val MORE = "more"
@@ -310,6 +316,37 @@ fun AppNavigation(
             )
         }
 
+        // --- VER TALLER ---
+        composable(Routes.TALLER) {
+            val tallerViewModel = remember { TallerViewModel() }
+            val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+
+            MainScaffold(
+                currentRoute = Routes.TALLER,
+                navController = navController
+            ) {
+                TallerScreen(
+                    viewModel = tallerViewModel,
+                    uid = currentUser?.uid ?: "",
+                    onBack = { navController.popBackStack() },
+                    onEditClick = { navController.navigate(Routes.EDIT_TALLER) }
+                )
+            }
+        }
+
+        // --- EDITAR TALLER ---
+        composable(Routes.EDIT_TALLER) {
+            val editTallerViewModel = remember { EditTallerViewModel() }
+            val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+
+            EditTallerScreen(
+                viewModel = editTallerViewModel,
+                uid = currentUser?.uid ?: "",
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
         // --- PERFIL PÚBLICO DEL CARPINTERO (vista del cliente) ---
         composable(
             route = "${Routes.CARPENTER_PUBLIC_PROFILE}/{uid}",
@@ -445,7 +482,7 @@ fun AppNavigation(
                 MoreScreen(
                     mainViewModel = mainViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
-                    onEditCarpenterProfile = { navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true") },
+                    onEditCarpenterProfile = { navController.navigate(Routes.TALLER) },
                     onVerCotizaciones = { navController.navigate(Routes.COTIZACIONES) },
                     onLogout = {
                         moreViewModel.logout {
@@ -467,9 +504,7 @@ fun AppNavigation(
                 ProfileScreen(
                     mainViewModel = mainViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
-                    onEditCarpenterProfile = {
-                        navController.navigate("${Routes.CARPENTER_PROFILE}?fromEdit=true")
-                    }
+                    onEditCarpenterProfile = { navController.navigate(Routes.TALLER)},
                 )
             }
         }
