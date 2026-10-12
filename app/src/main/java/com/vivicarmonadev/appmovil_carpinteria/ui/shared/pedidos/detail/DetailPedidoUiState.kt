@@ -20,6 +20,9 @@ data class DetailPedidoUiState(
     val cotizacionARechazar: Cotizacion? = null,
     val isProcesandoCotizacion: Boolean = false,
     val cotizacionSuccessMessage: String? = null,
+    val cotizacionAAnular: Cotizacion? = null,
+    val isAnulandoCotizacion: Boolean = false,
+    val cotizacionAnularSuccessMessage: String? = null,
 
     // ---- Rol del usuario actual ----
     val isCarpenter: Boolean = false,
@@ -32,5 +35,9 @@ data class DetailPedidoUiState(
     val isProcessing: Boolean = false,
 
     // ---- Resultado ----
-    val actionSuccess: Boolean = false
-)
+    val actionSuccess: Boolean = false,
+){
+    // ¿El carpintero actual ya tiene una cotización para este pedido?
+    val miCotizacion: Cotizacion?
+        get() = cotizaciones.find { it.carpinteroUid == currentUid }
+}

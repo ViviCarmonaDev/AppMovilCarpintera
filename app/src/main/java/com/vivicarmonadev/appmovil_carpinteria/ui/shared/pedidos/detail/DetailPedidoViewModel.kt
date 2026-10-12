@@ -307,6 +307,53 @@ class DetailPedidoViewModel(
         }
     }
 
+    // ============================================
+// ANULAR COTIZACIÓN (carpintero)
+// ============================================
+
+    fun onAnularCotizacionClick(cotizacion: Cotizacion) {
+        _uiState.update { it.copy(cotizacionAAnular = cotizacion) }
+    }
+
+    fun onAnularCotizacionCancel() {
+        _uiState.update { it.copy(cotizacionAAnular = null) }
+    }
+
+    fun onAnularCotizacionConfirm() {
+        val cotizacion = _uiState.value.cotizacionAAnular ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAnulandoCotizacion = true) }
+
+            val result = cotizacionRepository.anularCotizacion(cotizacion.id)
+
+            result.fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(
+                            isAnulandoCotizacion = false,
+                            cotizacionAAnular = null,
+                            cotizacionAnularSuccessMessage = "Cotización anulada"
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isAnulandoCotizacion = false,
+                            cotizacionAAnular = null,
+                            errorMessage = "Error al anular: ${exception.message}"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun clearCotizacionAnularSuccessMessage() {
+        _uiState.update { it.copy(cotizacionAnularSuccessMessage = null) }
+    }
+
     fun onRechazarCotizacionClick(cotizacion: Cotizacion) {
         _uiState.update { it.copy(cotizacionARechazar = cotizacion) }
     }

@@ -40,7 +40,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.Merveta
 @Composable
 fun CotizacionesScreen(
     viewModel: CotizacionesViewModel,
-    onCotizacionClick: (Cotizacion) -> Unit
+    onCotizacionClick: (Cotizacion) -> Unit,
+    onCreateClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

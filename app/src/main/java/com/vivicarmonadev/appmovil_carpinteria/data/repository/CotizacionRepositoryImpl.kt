@@ -78,4 +78,7 @@ class CotizacionRepositoryImpl(
     override suspend fun rechazarCotizacion(cotizacionId: String): Result<Unit> {
         return dataSource.updateEstado(cotizacionId, "RECHAZADA")
     }
+    override suspend fun anularCotizacion(cotizacionId: String): Result<Unit> {
+        return dataSource.updateEstado(cotizacionId, "ANULADA")
+    }
 }

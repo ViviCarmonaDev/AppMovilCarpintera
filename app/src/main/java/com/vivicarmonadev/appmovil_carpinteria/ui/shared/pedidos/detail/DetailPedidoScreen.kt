@@ -64,7 +64,8 @@ fun DetailPedidoScreen(
     onBack: () -> Unit,
     onEditClick: (String) -> Unit,
     onActionSuccess: () -> Unit,
-    onCrearCotizacion: (String) -> Unit
+    onCrearCotizacion: (String) -> Unit,
+    onEditarCotizacion: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -128,7 +129,7 @@ fun DetailPedidoScreen(
                             .offset(y = (-24).dp)
                             .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                             .background(Color(0xFFFFFFFF))
-                            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 40.dp) // Espaciado inferior
+                            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 40.dp)
                     ) {
                         // Fila superior: número + tiempo + badge
                         Row(
@@ -314,17 +315,37 @@ fun DetailPedidoScreen(
                             }
                         }
 
+                        // ============================================
                         // COTIZACIONES RECIBIDAS (solo para el cliente)
-
+                        // ============================================
                         if (!uiState.isCarpenter && uiState.cotizaciones.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            Text(
-                                text = "Cotizaciones recibidas",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2C2C2C)
-                            )
+                            // Título + badge con cantidad
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Cotizaciones recibidas",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2C2C2C)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF8B5A2B))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "${uiState.cotizaciones.size}",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFF9F7F5)
+                                    )
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -338,9 +359,35 @@ fun DetailPedidoScreen(
                             }
                         }
 
+                        // Mensaje cuando no hay cotizaciones
+                        if (!uiState.isCarpenter &&
+                            uiState.cotizaciones.isEmpty() &&
+                            pedido.status == EstadoPedido.PENDIENTE
+                        ) {
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFFF5EFE7))
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Aún no has recibido cotizaciones. Los carpinteros están revisando tu pedido.",
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF6B6B6B),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // ============================================
                         // ACCIONES SEGÚN ROL
+                        // ============================================
 
                         // ---- CLIENTE ----
                         if (!uiState.isCarpenter) {
@@ -405,12 +452,125 @@ fun DetailPedidoScreen(
                         if (uiState.isCarpenter) {
                             when (pedido.status) {
                                 EstadoPedido.PENDIENTE -> {
-                                    MervetaActionButton(
-                                        text = "Crear cotización",
-                                        icon = Icons.Filled.RequestQuote,
-                                        onClick = { onCrearCotizacion(pedido.id) },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    val miCotizacion = uiState.miCotizacion
+
+                                    if (miCotizacion != null) {
+                                        when (miCotizacion.estado) {
+                                            EstadoCotizacion.PENDIENTE -> {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clip(RoundedCornerShape(14.dp))
+                                                        .background(Color(0xFFF5EFE7))
+                                                        .padding(vertical = 16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.Schedule,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFF8B5A2B),
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                        Text(
+                                                            text = "Esperando respuesta del cliente",
+                                                            fontSize = 14.sp,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = Color(0xFF8B5A2B)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(10.dp))
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    MervetaActionButton(
+                                                        text = "Editar",
+                                                        icon = Icons.Filled.Edit,
+                                                        backgroundColor = Color(0xFF8B5A2B),
+                                                        contentColor = Color(0xFFF9F7F5),
+                                                        onClick = { onEditarCotizacion(miCotizacion.id) },
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(56.dp)
+                                                            .clip(RoundedCornerShape(14.dp))
+                                                            .background(Color(0xFFC5544A).copy(alpha = 0.1f))
+                                                            .clickable { viewModel.onAnularCotizacionClick(miCotizacion) },
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.Delete,
+                                                            contentDescription = "Anular",
+                                                            tint = Color(0xFFC5544A),
+                                                            modifier = Modifier.size(22.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            EstadoCotizacion.ACEPTADA -> {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clip(RoundedCornerShape(14.dp))
+                                                        .background(Color(0xFFD4E0D9))
+                                                        .padding(vertical = 16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "✓ Cotización aceptada",
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFF2E4A3E)
+                                                    )
+                                                }
+                                            }
+
+                                            EstadoCotizacion.RECHAZADA -> {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clip(RoundedCornerShape(14.dp))
+                                                        .background(Color(0xFFFADBD8))
+                                                        .padding(vertical = 16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "✗ Cotización rechazada",
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFC5544A)
+                                                    )
+                                                }
+                                            }
+
+                                            EstadoCotizacion.ANULADA -> {
+                                                MervetaActionButton(
+                                                    text = "Crear nueva cotización",
+                                                    icon = Icons.Filled.RequestQuote,
+                                                    onClick = { onCrearCotizacion(pedido.id) },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        MervetaActionButton(
+                                            text = "Crear cotización",
+                                            icon = Icons.Filled.RequestQuote,
+                                            onClick = { onCrearCotizacion(pedido.id) },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
                                 }
 
                                 EstadoPedido.ACEPTADO -> {
@@ -465,8 +625,9 @@ fun DetailPedidoScreen(
         }
     }
 
+    // ============================================
     // DIÁLOGOS
-
+    // ============================================
     if (uiState.showCancelDialog) {
         MervetaConfirmDialog(
             title = "Cancelar pedido",
@@ -514,10 +675,21 @@ fun DetailPedidoScreen(
             onCancel = { viewModel.onRechazarCotizacionCancel() }
         )
     }
+
+    if (uiState.cotizacionAAnular != null) {
+        MervetaConfirmDialog(
+            title = "Anular cotización",
+            message = "¿Estás seguro de que quieres anular esta cotización? El cliente ya no podrá verla ni aceptarla.",
+            confirmText = "Anular",
+            cancelText = "Cancelar",
+            isLoading = uiState.isAnulandoCotizacion,
+            onConfirm = { viewModel.onAnularCotizacionConfirm() },
+            onCancel = { viewModel.onAnularCotizacionCancel() }
+        )
+    }
 }
 
-// CARD DE COTIZACIÓN RECIBIDA
-
+// CARD DE COTIZACIÓN RECIBIDA (cliente)
 @Composable
 private fun CotizacionRecibidaCard(
     cotizacion: Cotizacion,
@@ -638,6 +810,7 @@ private fun EstadoCotizacionBadge(estado: EstadoCotizacion) {
 }
 
 // COLUMNA DE INFO CON ÍCONO
+
 @Composable
 private fun InfoColumn(
     icon: ImageVector,

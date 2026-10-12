@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,7 +58,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedido
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.edit.EditPedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.detail.DetailPedidoScreen
-import androidx.compose.material.icons.filled.Inbox
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.edit.EditCotizacionScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.edit.EditCotizacionViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.view.TallerScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.view.TallerViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.edit.EditTallerScreen
@@ -69,7 +71,10 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.create.Cre
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create.CreatePedidoViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioScreen
+
 object Routes {
     const val WELCOME_1 = "welcome_1"
     const val WELCOME_2 = "welcome_2"
@@ -94,7 +99,9 @@ object Routes {
     const val EDIT_PEDIDO = "edit_pedido"
     const val PEDIDO_DETAIL = "pedido_detail"
     const val CREATE_COTIZACION = "create_cotizacion"
+    const val EDIT_COTIZACION = "edit_cotizacion"
     const val COTIZACIONES = "cotizaciones"
+    const val COTIZACION_DETAIL = "cotizacion_detail"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -106,17 +113,13 @@ fun AppNavigation(
     val registerViewModel = remember { RegisterViewModel() }
     val mainViewModel = remember { MainViewModel() }
 
-    // Observamos el usuario actual para saber si tiene el perfil completo
     val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
     val tieneCarpenterProfile by mainViewModel.tieneCarpenterProfile.collectAsStateWithLifecycle()
 
-    // Auto-navegación: si el usuario está logueado pero no completó el perfil,
-    // lo mandamos a Completar Perfil (solo si NO estamos en pantallas de auth).
     LaunchedEffect(currentUser, tieneCarpenterProfile) {
         val user = currentUser ?: return@LaunchedEffect
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
-        // Rutas de autenticación donde NO hay que redirigir
         val rutasQueNoRedirigen = listOf(
             Routes.WELCOME_1,
             Routes.WELCOME_2,
@@ -127,7 +130,6 @@ fun AppNavigation(
             Routes.CARPENTER_PROFILE
         )
 
-        // Caso 1: perfil básico incompleto → COMPLETE_PROFILE
         if (!user.profileCompleted && currentRoute !in rutasQueNoRedirigen) {
             navController.navigate(Routes.COMPLETE_PROFILE) {
                 popUpTo(0) { inclusive = true }
@@ -135,7 +137,6 @@ fun AppNavigation(
             return@LaunchedEffect
         }
 
-        // Caso 2: carpintero sin perfil de taller → CARPENTER_PROFILE
         if (user.role == UserRole.CARPENTER &&
             tieneCarpenterProfile == false &&
             currentRoute !in rutasQueNoRedirigen
@@ -144,9 +145,6 @@ fun AppNavigation(
                 popUpTo(0) { inclusive = true }
             }
         }
-
-        // Caso 3: usuario logueado y estamos en WELCOME → ir al destino correcto
-        // (para sesión persistente: cierra la app y al volver va directo)
 
         if (currentRoute == Routes.WELCOME_1 || currentRoute == Routes.WELCOME_2) {
             if (user.profileCompleted) {
@@ -172,9 +170,7 @@ fun AppNavigation(
     ) {
         // --- WELCOME ---
         composable(Routes.WELCOME_1) {
-            WelcomeScreen(
-                onNext = { navController.navigate(Routes.WELCOME_2) }
-            )
+            WelcomeScreen(onNext = { navController.navigate(Routes.WELCOME_2) })
         }
 
         composable(Routes.WELCOME_2) {
@@ -200,8 +196,6 @@ fun AppNavigation(
                 viewModel = loginViewModel,
                 serverClientId = WEB_CLIENT_ID,
                 onLoginSuccess = { user ->
-                    // Navegamos a HOME. El LaunchedEffect(currentUser, tieneCarpenterProfile)
-                    // va a redirigir si el perfil está incompleto.
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.WELCOME_1) { inclusive = true }
                     }
@@ -228,7 +222,6 @@ fun AppNavigation(
             RegisterCredentialsScreen(
                 viewModel = registerViewModel,
                 onRegisterSuccess = {
-                    // Chequear el rol para decidir a dónde ir
                     val user = currentUser
                     val destination = if (user?.role == UserRole.CARPENTER) {
                         Routes.CARPENTER_PROFILE
@@ -251,27 +244,23 @@ fun AppNavigation(
         composable(Routes.COMPLETE_PROFILE) {
             val completeProfileViewModel = remember { completeProfileGoogleViewModel() }
 
-            // Inicializamos con los datos del usuario actual (de Google)
             LaunchedEffect(currentUser) {
                 currentUser?.let { completeProfileViewModel.initialize(it) }
             }
             CompleteProfileScreen(
                 viewModel = completeProfileViewModel,
                 onBack = {
-                    // Cerrar sesión y volver al Welcome
                     navController.navigate(Routes.WELCOME_1) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
                 onCompleteSuccess = {
-                    // Chequear el rol para decidir a dónde ir
                     val user = currentUser
                     val destination = if (user?.role == UserRole.CARPENTER) {
                         Routes.CARPENTER_PROFILE
                     } else {
                         Routes.HOME
                     }
-
                     navController.navigate(destination) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -279,7 +268,7 @@ fun AppNavigation(
             )
         }
 
-        // --- PERFIL DEL TALLER (solo para carpinteros) ---
+        // --- PERFIL DEL TALLER (registro inicial) ---
         composable(
             route = "${Routes.CARPENTER_PROFILE}?fromEdit={fromEdit}",
             arguments = listOf(
@@ -290,7 +279,6 @@ fun AppNavigation(
             )
         ) { backStackEntry ->
             val fromEdit = backStackEntry.arguments?.getBoolean("fromEdit") ?: false
-
             val carpenterViewModel = remember { completeProfileTallerViewModel() }
 
             LaunchedEffect(currentUser) {
@@ -299,15 +287,11 @@ fun AppNavigation(
 
             CarpenterProfileScreen(
                 viewModel = carpenterViewModel,
-                onBack = {
-                    navController.popBackStack()
-                },
+                onBack = { navController.popBackStack() },
                 onSaveSuccess = {
                     if (fromEdit) {
-                        // Vino desde "Más" o "Perfil" → volver atrás
                         navController.popBackStack()
                     } else {
-                        // Vino del registro → ir al Home
                         navController.navigate(Routes.HOME) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -319,7 +303,7 @@ fun AppNavigation(
         // --- VER TALLER ---
         composable(Routes.TALLER) {
             val tallerViewModel = remember { TallerViewModel() }
-            val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+            val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
 
             MainScaffold(
                 currentRoute = Routes.TALLER,
@@ -327,7 +311,7 @@ fun AppNavigation(
             ) {
                 TallerScreen(
                     viewModel = tallerViewModel,
-                    uid = currentUser?.uid ?: "",
+                    uid = user?.uid ?: "",
                     onBack = { navController.popBackStack() },
                     onEditClick = { navController.navigate(Routes.EDIT_TALLER) }
                 )
@@ -337,30 +321,25 @@ fun AppNavigation(
         // --- EDITAR TALLER ---
         composable(Routes.EDIT_TALLER) {
             val editTallerViewModel = remember { EditTallerViewModel() }
-            val currentUser by mainViewModel.currentUser.collectAsStateWithLifecycle()
+            val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
 
             EditTallerScreen(
                 viewModel = editTallerViewModel,
-                uid = currentUser?.uid ?: "",
+                uid = user?.uid ?: "",
                 onBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )
         }
 
-        // --- PERFIL PÚBLICO DEL CARPINTERO (vista del cliente) ---
+        // --- PERFIL PÚBLICO DEL CARPINTERO ---
         composable(
             route = "${Routes.CARPENTER_PUBLIC_PROFILE}/{uid}",
             arguments = listOf(
-                navArgument("uid") {
-                    type = NavType.StringType
-                }
+                navArgument("uid") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val uid = backStackEntry.arguments?.getString("uid") ?: ""
-
-            val publicProfileViewModel = remember {
-                CarpenterPublicProfileViewModel()
-            }
+            val publicProfileViewModel = remember { CarpenterPublicProfileViewModel() }
 
             CarpenterPublicProfileScreen(
                 viewModel = publicProfileViewModel,
@@ -377,7 +356,6 @@ fun AppNavigation(
                 currentRoute = Routes.HOME,
                 navController = navController
             ) {
-
                 HomeScreen(
                     viewModel = homeViewModel,
                     onCarpenterClick = { uid -> navController.navigate("${Routes.CARPENTER_PUBLIC_PROFILE}/$uid") },
@@ -385,14 +363,12 @@ fun AppNavigation(
                     onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
                     onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
                     onOrderClick = { pedidoId -> navController.navigate("${Routes.PEDIDO_DETAIL}/$pedidoId") },
-                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) },
-
+                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
                 )
             }
         }
 
-        // --- PROJECTS ---
-
+        // --- PORTFOLIO ---
         composable(Routes.PORTFOLIO) {
             val portfolioViewModel = remember { PortfolioViewModel() }
             MainScaffold(
@@ -401,12 +377,8 @@ fun AppNavigation(
             ) {
                 PortfolioScreen(
                     viewModel = portfolioViewModel,
-                    onCreateClick = {
-                        navController.navigate(Routes.CREATE_PORTFOLIO_ITEM)
-                    },
-                    onItemClick = { item ->
-                        navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/${item.id}")  // ✅
-                    }
+                    onCreateClick = { navController.navigate(Routes.CREATE_PORTFOLIO_ITEM) },
+                    onItemClick = { item -> navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/${item.id}") }
                 )
             }
         }
@@ -435,9 +407,7 @@ fun AppNavigation(
             val itemId = backStackEntry.arguments?.getString("itemId")
             val editViewModel = remember {
                 EditPortfolioViewModel().apply {
-                    if (itemId != null) {
-                        initializeEdit(itemId)
-                    }
+                    if (itemId != null) initializeEdit(itemId)
                 }
             }
             EditPortfolioItemScreen(
@@ -447,29 +417,22 @@ fun AppNavigation(
             )
         }
 
-
         // --- DETALLE DE TRABAJO ---
-    composable(
-        route = "${Routes.PORTFOLIO_ITEM_DETAIL}/{itemId}",
-        arguments = listOf(
-            navArgument("itemId") { type = NavType.StringType }
-        )
-    ) { backStackEntry ->
-        val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
-        val detailViewModel = remember { DetailPortfolioViewModel() }
+        composable(
+            route = "${Routes.PORTFOLIO_ITEM_DETAIL}/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            val detailViewModel = remember { DetailPortfolioViewModel() }
 
-        DetailPortfolioScreen(
-            viewModel = detailViewModel,
-            itemId = itemId,
-            onBack = { navController.popBackStack() },
-            onEditClick = { id ->
-                navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$id")
-            },
-            onDeleteSuccess = {
-                navController.popBackStack()
-            }
-        )
-    }
+            DetailPortfolioScreen(
+                viewModel = detailViewModel,
+                itemId = itemId,
+                onBack = { navController.popBackStack() },
+                onEditClick = { id -> navController.navigate("${Routes.EDIT_PORTFOLIO_ITEM}?itemId=$id") },
+                onDeleteSuccess = { navController.popBackStack() }
+            )
+        }
 
         // --- MORE ---
         composable(Routes.MORE) {
@@ -504,11 +467,12 @@ fun AppNavigation(
                 ProfileScreen(
                     mainViewModel = mainViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
-                    onEditCarpenterProfile = { navController.navigate(Routes.TALLER)},
+                    onEditCarpenterProfile = { navController.navigate(Routes.TALLER) }
                 )
             }
         }
 
+        // --- PEDIDOS ---
         composable(Routes.PEDIDOS) {
             val pedidosViewModel = remember { PedidosViewModel() }
 
@@ -518,13 +482,8 @@ fun AppNavigation(
             ) {
                 PedidosScreen(
                     viewModel = pedidosViewModel,
-                    onCreateClick = {
-                        navController.navigate(Routes.CREATE_PEDIDO)
-                    },
-                    onItemClick = { pedido ->
-                        //  va al DETALLE
-                        navController.navigate("${Routes.PEDIDO_DETAIL}/${pedido.id}")
-                    }
+                    onCreateClick = { navController.navigate(Routes.CREATE_PEDIDO) },
+                    onItemClick = { pedido -> navController.navigate("${Routes.PEDIDO_DETAIL}/${pedido.id}") }
                 )
             }
         }
@@ -540,7 +499,7 @@ fun AppNavigation(
             )
         }
 
-        // --- CREAR/EDITAR PEDIDO ---
+        // --- EDITAR PEDIDO ---
         composable(
             route = "${Routes.EDIT_PEDIDO}?pedidoId={pedidoId}",
             arguments = listOf(
@@ -553,14 +512,7 @@ fun AppNavigation(
             val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: return@composable
 
             val editPedidoViewModel = remember {
-                EditPedidoViewModel()
-                    .apply {
-                        if (pedidoId.isNullOrBlank()) {
-                            initializeEdit(pedidoId)
-                        } else {
-                            initializeEdit(pedidoId)
-                        }
-                    }
+                EditPedidoViewModel().apply { initializeEdit(pedidoId) }
             }
 
             EditPedidoScreen(
@@ -573,9 +525,7 @@ fun AppNavigation(
         // --- DETALLE DE PEDIDO ---
         composable(
             route = "${Routes.PEDIDO_DETAIL}/{pedidoId}",
-            arguments = listOf(
-                navArgument("pedidoId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
         ) { backStackEntry ->
             val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
             val detailViewModel = remember { DetailPedidoViewModel() }
@@ -586,7 +536,9 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() },
                 onEditClick = { id -> navController.navigate("${Routes.EDIT_PEDIDO}?pedidoId=$id") },
                 onActionSuccess = { navController.popBackStack() },
-                onCrearCotizacion = { id -> navController.navigate("${Routes.CREATE_COTIZACION}/$id")
+                onCrearCotizacion = { id -> navController.navigate("${Routes.CREATE_COTIZACION}/$id") },
+                onEditarCotizacion = { cotizacionId ->
+                    navController.navigate("${Routes.EDIT_COTIZACION}/$cotizacionId")
                 }
             )
         }
@@ -601,10 +553,8 @@ fun AppNavigation(
             ) {
                 CotizacionesScreen(
                     viewModel = cotizacionesViewModel,
-                    onCotizacionClick = { cotizacion ->
-                        // TODO: navegar al detalle de cotización
-                        // navController.navigate("${Routes.COTIZACION_DETAIL}/${cotizacion.id}")
-                    }
+                    onCotizacionClick = { cotizacion -> navController.navigate("${Routes.COTIZACION_DETAIL}/${cotizacion.id}") },
+                    onCreateClick = { navController.navigate(Routes.PEDIDOS) }
                 )
             }
         }
@@ -612,9 +562,7 @@ fun AppNavigation(
         // --- CREAR COTIZACIÓN ---
         composable(
             route = "${Routes.CREATE_COTIZACION}/{pedidoId}",
-            arguments = listOf(
-                navArgument("pedidoId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
         ) { backStackEntry ->
             val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
             val createViewModel = remember { CreateCotizacionViewModel() }
@@ -627,12 +575,48 @@ fun AppNavigation(
             )
         }
 
+        // --- EDITAR COTIZACIÓN ---
+        composable(
+            route = "${Routes.EDIT_COTIZACION}/{cotizacionId}",
+            arguments = listOf(navArgument("cotizacionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val cotizacionId = backStackEntry.arguments?.getString("cotizacionId") ?: ""
+            val editViewModel = remember { EditCotizacionViewModel() }
+
+            EditCotizacionScreen(
+                viewModel = editViewModel,
+                cotizacionId = cotizacionId,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // --- DETALLE DE COTIZACIÓN ---
+        composable(
+            route = "${Routes.COTIZACION_DETAIL}/{cotizacionId}",
+            arguments = listOf(
+                navArgument("cotizacionId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val cotizacionId = backStackEntry.arguments?.getString("cotizacionId") ?: ""
+            val detailViewModel = remember { DetailCotizacionViewModel() }
+
+            DetailCotizacionScreen(
+                viewModel = detailViewModel,
+                cotizacionId = cotizacionId,
+                onBack = { navController.popBackStack() },
+                onEditClick = { id ->
+                    navController.navigate("${Routes.EDIT_COTIZACION}/$id")
+                },
+                onAnularSuccess = { navController.popBackStack() }
+            )
+        }
+
         // --- EDIT PROFILE ---
         composable(Routes.EDIT_PROFILE) {
             val editProfileViewModel = remember { EditProfileViewModel() }
             val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
 
-            // Cuando carga el usuario, inicializamos el ViewModel con sus datos
             LaunchedEffect(user) {
                 user?.let { editProfileViewModel.initialize(it) }
             }
@@ -640,10 +624,7 @@ fun AppNavigation(
             EditProfileScreen(
                 viewModel = editProfileViewModel,
                 onBack = { navController.popBackStack() },
-                onSaveSuccess = {
-                    // Volvemos a la pantalla anterior (Perfil o Más)
-                    navController.popBackStack()
-                }
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
     }

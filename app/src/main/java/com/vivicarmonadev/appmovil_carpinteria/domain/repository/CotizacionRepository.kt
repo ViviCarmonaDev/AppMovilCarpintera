@@ -54,4 +54,6 @@ interface CotizacionRepository {
     // Rechaza una cotización.
 
     suspend fun rechazarCotizacion(cotizacionId: String): Result<Unit>
+
+    suspend fun anularCotizacion(cotizacionId: String): Result<Unit>
 }
