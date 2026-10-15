@@ -18,9 +18,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chair
 import androidx.compose.material.icons.filled.DoorBack
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -42,7 +44,7 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.CarpenterCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.RecentOrderCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitleWithButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.HomeEmptyHint
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.PortfolioMiniCard
@@ -69,7 +71,9 @@ fun ClientHomeScreen(
         // Header
         MervetaHeader(
             title = "Hola, $userName",
-            subtitle = "¿Qué vas a construir hoy?"
+            subtitle = "Encuentra a tu carpintero ideal",
+            onNotificationClick = { /* ... */ },
+            onSettingsClick = { /* ... */ }
         )
 
         // Buscador
@@ -79,27 +83,19 @@ fun ClientHomeScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
-        // Categorías
-        SectionTitle(
-            title = "Categorías",
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
-
-        CategoriesRow(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-        )
-
         // Pedidos recientes
-        SectionTitle(
+        SectionTitleWithButton(
+            icon = Icons.Filled.Schedule,
             title = "Pedidos recientes",
-            actionText = "Ver todos →",
+            subtitle = "Tus pedidos en curso",
+            actionText = "Ver todos",
             onActionClick = onSeeAllOrdersClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
         if (recentOrders.isEmpty()) {
             HomeEmptyHint(
-                icon = Icons.Filled.Search,
+                icon = Icons.Filled.Schedule,
                 title = "Aún no tienes pedidos",
                 subtitle = "Solicita tu primer mueble a un carpintero",
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -120,9 +116,11 @@ fun ClientHomeScreen(
         }
 
         // Carpinteros destacados
-        SectionTitle(
+        SectionTitleWithButton(
+            icon = Icons.Filled.Person,
             title = "Carpinteros destacados",
-            actionText = "Ver más →",
+            subtitle = "Profesionales cerca de ti",
+            actionText = "Ver más",
             onActionClick = onSeeAllCarpentersClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -148,16 +146,18 @@ fun ClientHomeScreen(
         }
 
         // Trabajos recientes
-        SectionTitle(
+        SectionTitleWithButton(
+            icon = Icons.Filled.Folder,
             title = "Trabajos recientes",
-            actionText = "Ver más →",
+            subtitle = "Explora los últimos trabajos",
+            actionText = "Ver más",
             onActionClick = onSeeAllPortfolioClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
         if (recentPortfolioItems.isEmpty()) {
             HomeEmptyHint(
-                icon = Icons.Filled.Search,
+                icon = Icons.Filled.Folder,
                 title = "Aún no hay trabajos publicados",
                 subtitle = "Explorá los trabajos cuando haya disponibles",
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -183,7 +183,7 @@ private fun SearchBar(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5EFE7))
+            .background(Color(0xFFFBF1E8))
             .clickable { /* TODO: ir a búsqueda */ }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically

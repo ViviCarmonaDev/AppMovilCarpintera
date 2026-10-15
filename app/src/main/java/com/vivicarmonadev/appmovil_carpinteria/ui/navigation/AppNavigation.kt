@@ -49,8 +49,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create.Cr
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.view.PortfolioViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit.EditPortfolioItemScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit.EditPortfolioViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.CarpenterPublicProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfil.CarpenterPublicProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfil.CarpenterPublicProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.HomeViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.view.PedidosScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.view.PedidosViewModel
@@ -74,6 +74,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.De
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioScreen
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -102,6 +104,7 @@ object Routes {
     const val EDIT_COTIZACION = "edit_cotizacion"
     const val COTIZACIONES = "cotizaciones"
     const val COTIZACION_DETAIL = "cotizacion_detail"
+    const val CARPENTER_PORTFOLIO = "carpenter_portfolio"  //portafolio desde la vista de cliente
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -344,7 +347,32 @@ fun AppNavigation(
             CarpenterPublicProfileScreen(
                 viewModel = publicProfileViewModel,
                 uid = uid,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onSeeAllPortfolioClick = { carpinteroUid ->
+                    navController.navigate("${Routes.CARPENTER_PORTFOLIO}/$carpinteroUid") },
+                onPortfolioItemClick = { itemId ->
+                    navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/$itemId")
+                }
+            )
+        }
+
+        // --- PORTAFOLIO COMPLETO DEL CARPINTERO ---
+        composable(
+            route = "${Routes.CARPENTER_PORTFOLIO}/{uid}",
+            arguments = listOf(
+                navArgument("uid") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid") ?: ""
+            val portfolioViewModel = remember { CarpenterPortfolioViewModel() }
+
+            CarpenterPortfolioScreen(
+                viewModel = portfolioViewModel,
+                carpinteroUid = uid,
+                onBack = { navController.popBackStack() },
+                onItemClick = { item ->
+                    navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/${item.id}")
+                }
             )
         }
 

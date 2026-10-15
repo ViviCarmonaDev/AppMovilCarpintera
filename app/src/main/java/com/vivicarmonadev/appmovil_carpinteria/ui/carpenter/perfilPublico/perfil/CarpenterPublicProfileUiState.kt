@@ -1,7 +1,8 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico
+package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfil
 
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpenterProfile
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Review
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 
 /**
@@ -19,6 +20,7 @@ data class CarpenterPublicProfileUiState(
     val user: User? = null,
     val profile: CarpenterProfile? = null,
     val portfolioItems: List<PortfolioItem> = emptyList(),
+    val reviews: List<Review> = emptyList(),
 
     // ---- Estado ----
     val isLoading: Boolean = true,

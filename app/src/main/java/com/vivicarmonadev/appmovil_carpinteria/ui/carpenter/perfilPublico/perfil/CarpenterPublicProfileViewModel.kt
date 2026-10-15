@@ -1,19 +1,21 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico
+package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.CarpenterRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.PortfolioRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.ReviewRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
 
 /**
  * ViewModel del perfil público del carpintero.
- *
+
  * Carga 3 fuentes de datos en paralelo:
  *  - User (datos básicos)
  *  - CarpenterProfile (datos del taller)
@@ -22,7 +24,8 @@ import kotlinx.coroutines.launch
 class CarpenterPublicProfileViewModel(
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
     private val carpenterRepository: CarpenterRepositoryImpl = CarpenterRepositoryImpl(),
-    private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl()
+    private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl(),
+    private val reviewRepository: ReviewRepositoryImpl = ReviewRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CarpenterPublicProfileUiState())
@@ -94,7 +97,7 @@ class CarpenterPublicProfileViewModel(
         val nombreTaller = profile.nombreTaller.ifBlank { "tu taller" }
         val mensaje = "Hola! Vi $nombreTaller en Merveta y me gustaría consultarte sobre tus servicios."
 
-        val mensajeEncoded = java.net.URLEncoder.encode(mensaje, "UTF-8")
+        val mensajeEncoded = URLEncoder.encode(mensaje, "UTF-8")
 
         return "https://wa.me/$numeroConCodigo?text=$mensajeEncoded"
     }

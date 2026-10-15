@@ -3,6 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,11 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
@@ -33,11 +37,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.offset
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitleWithButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.EstadoPedidoBadge
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitle
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.HomeEmptyHint
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.MervetaHeader
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.PortfolioMiniCard
@@ -60,21 +66,28 @@ fun CarpenterHomeScreen(
         // Header
         MervetaHeader(
             title = "Hola, $userName",
-            subtitle = "Gestiona tus proyectos de hoy"
+            subtitle = "Gestiona tus proyectos de hoy",
+            onNotificationClick = { /* Acción para la campana */ },
+            onSettingsClick = { /* Acción para el engranaje */ }
         )
 
         // Métricas
         MetricsRow(
             portfolioCount = portfolioItems.size,
+            onPedidosClick = onSeeAllPedidosClick,
+            onIngresosClick = { /* Acción para Ingresos */ },
+            onTrabajosClick = onSeeAllPortfolioClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         )
 
         // Pedidos activos
-        SectionTitle(
+        SectionTitleWithButton(
+            icon = Icons.Filled.Schedule,
             title = "Pedidos activos",
-            actionText = "Ver todos →",
+            subtitle = "Estos son tus pedidos en curso",
+            actionText = "Ver todos",
             onActionClick = onSeeAllPedidosClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
@@ -99,9 +112,11 @@ fun CarpenterHomeScreen(
         }
 
         // Mi portafolio
-        SectionTitle(
+        SectionTitleWithButton(
+            icon = Icons.Filled.Folder,
             title = "Mi portafolio",
-            actionText = "Ver todos →",
+            subtitle = "Tus trabajos publicados",
+            actionText = "Ver todos",
             onActionClick = onSeeAllPortfolioClick,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         )
@@ -130,7 +145,6 @@ fun CarpenterHomeScreen(
 }
 
 // CARD COMPACTO DE PEDIDO
-
 @Composable
 private fun PedidoMiniCard(
     pedido: Pedido,
@@ -196,33 +210,39 @@ private fun PedidoMiniCard(
         )
     }
 }
-// MÉTRICAS
 
+// MÉTRICAS (3 CARDS DE ARRIBA)
 @Composable
 private fun MetricsRow(
     portfolioCount: Int,
+    onPedidosClick: () -> Unit,
+    onIngresosClick: () -> Unit,
+    onTrabajosClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         MetricCard(
             icon = Icons.Filled.Assignment,
             value = "0",
             label = "Pedidos",
+            onClick = onPedidosClick,
             modifier = Modifier.weight(1f)
         )
         MetricCard(
             icon = Icons.Filled.AttachMoney,
-            value = "$0",
+            value = "S/.0",
             label = "Ingresos",
+            onClick = onIngresosClick,
             modifier = Modifier.weight(1f)
         )
         MetricCard(
             icon = Icons.Filled.Folder,
             value = "$portfolioCount",
-            label = "Proyectois",
+            label = "Trabajos",
+            onClick = onTrabajosClick,
             modifier = Modifier.weight(1f)
         )
     }
@@ -233,33 +253,112 @@ private fun MetricCard(
     icon: ImageVector,
     value: String,
     label: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF5EFE7))
-            .padding(vertical = 16.dp, horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .height(130.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clipToBounds()     // recorta los círculos que se salgan
+            .background(Color(0xFFFBF1E8)) // Fondo beige claro
+            .clickable(onClick = onClick)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color(0xFF8B5A2B),
-            modifier = Modifier.size(22.dp)
+        // --- ONDAS DECORATIVAS DE FONDO ---
+        // Círculo grande arriba a la derecha
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 30.dp, y = (-30).dp)     // LO MOVEMOS FUERA DEL CARD
+                .size(90.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF3E1D0).copy(alpha = 0.6f))
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = value,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF2C2C2C)
+        // Círculo pequeño abajo a la izquierda
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = (-25).dp, y = 25.dp)     //LO MOVEMOS FUERA DEL CARD
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF3E1D0).copy(alpha = 0.5f))
         )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = Color(0xFF6B6B6B)
-        )
+
+        // --- CONTENIDO ---
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            // Fila superior: Icono + Flecha
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icono en cuadro marrón
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF8B5A2B)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Flecha circular clickeable
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF3E1D0))
+                        .clickable(onClick = onClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = "Ver más",
+                        tint = Color(0xFF8B5A2B),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Valor grande
+            Text(
+                text = value,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C2C2C)
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Label
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = Color(0xFF6B6B6B)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Barra de progreso decorativa
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f) // 60% del ancho
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Color(0xFFF3E1D0))
+            )
+        }
     }
 }

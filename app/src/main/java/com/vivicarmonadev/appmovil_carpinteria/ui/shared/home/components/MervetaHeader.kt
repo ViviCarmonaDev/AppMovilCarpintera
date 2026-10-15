@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
 
 /**
  * Header estándar de Merveta.
@@ -40,6 +42,8 @@ fun MervetaHeader(
     modifier: Modifier = Modifier,
     avatarIcon: ImageVector = Icons.Filled.Person,
     onAvatarClick: (() -> Unit)? = null,
+    onNotificationClick: (() -> Unit)? = null,
+    onSettingsClick: (() -> Unit)? = null,
     verticalPadding: Dp = 60.dp,
     bottomPadding: Dp = 28.dp
 ) {
@@ -101,6 +105,56 @@ fun MervetaHeader(
                     fontSize = 13.sp,
                     color = Color(0xFFF9F7F5).copy(alpha = 0.85f)
                 )
+            }
+
+            // Iconos Derecha (Notificaciones y Configuración)
+            if (onNotificationClick != null || onSettingsClick != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onNotificationClick != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .clickable(onClick = onNotificationClick),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Notifications,
+                                contentDescription = "Notificaciones",
+                                tint = Color(0xFFF9F7F5),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            // Punto rojo de notificación
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFF5252))
+                            )
+                        }
+                    }
+                    if (onSettingsClick != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .clickable(onClick = onSettingsClick),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = "Configuración",
+                                tint = Color(0xFFF9F7F5),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
