@@ -26,7 +26,6 @@ class PortfolioRepositoryImpl(
 ) : PortfolioRepository {
 
     // FLUJOS REACTIVOS
-
     override fun getAllPortfolioItems(): Flow<List<PortfolioItem>> {
         return dataSource.getAllItemsFlow().map { list ->
             list.map { it.toDomain() }

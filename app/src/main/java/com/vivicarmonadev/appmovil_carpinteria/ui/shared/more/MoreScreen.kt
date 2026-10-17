@@ -107,37 +107,23 @@ fun MoreScreen(
             onClick = onSettings
         )
 
-        MoreItem(
-            icon = Icons.Filled.Language,
-            title = "Idioma",
-            subtitle = "Español",
-            onClick = onLanguage
-        )
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ---- RECOMPENSAS ----
-        SectionTitleText(text = "Recompensas")
-
-        MoreItem(
-            icon = Icons.Filled.CardGiftcard,
-            title = "Mis cupones",
-            subtitle = "Descuentos y promociones",
-            onClick = onVouchers
-        )
-
-        MoreItem(
-            icon = Icons.Filled.Star,
-            title = "Invitar amigos",
-            subtitle = "Gana recompensas por referidos",
-            onClick = onInvite
-        )
+        // ---- Gestiones y Beneficios ----
+        SectionTitleText(text = "Gestiones y Beneficios")
 
         MoreItem(
             icon = Icons.Filled.RequestQuote,
             title = "Mis cotizaciones",
             subtitle = "Gestiona las cotizaciones enviadas",
             onClick = onVerCotizaciones
+        )
+
+        MoreItem(
+            icon = Icons.Filled.CardGiftcard,
+            title = "Mis cupones",
+            subtitle = "Descuentos y promociones",
+            onClick = onVouchers
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -150,13 +136,6 @@ fun MoreScreen(
             title = "Ayuda",
             subtitle = "Preguntas frecuentes y soporte",
             onClick = onHelp
-        )
-
-        MoreItem(
-            icon = Icons.Filled.PrivacyTip,
-            title = "Política de privacidad",
-            subtitle = "Cómo usamos tus datos",
-            onClick = onPrivacy
         )
 
         MoreItem(
@@ -209,7 +188,7 @@ private fun MoreItem(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF5EFE7)),
+                .background(Color(0xFFFBF1E8)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -255,7 +234,7 @@ private fun LogoutButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5EFE7))
+            .background(Color(0xFFFBF1E8))
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.Center,

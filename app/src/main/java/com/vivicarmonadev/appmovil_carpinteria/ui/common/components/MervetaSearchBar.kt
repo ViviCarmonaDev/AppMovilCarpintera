@@ -70,8 +70,8 @@ fun MervetaSearchBar(
             unfocusedBorderColor = Color.Transparent,
 
             // Fondo beige (mismo que los cards)
-            focusedContainerColor = Color(0xFFF5EFE7),
-            unfocusedContainerColor = Color(0xFFF5EFE7),
+            focusedContainerColor = Color(0xFFFBF1E8),
+            unfocusedContainerColor = Color(0xFFFBF1E8),
 
             //  Color del cursor y texto
             cursorColor = Color(0xFF8B5A2B),

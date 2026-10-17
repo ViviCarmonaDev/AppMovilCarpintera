@@ -1,5 +1,8 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,15 +15,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.components.PortfolioItemFormContent
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaDiscardDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEditHeader
-
-/**
- * Pantalla para CREAR un trabajo nuevo del portafolio.
- */
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.copiarUriACache
 @Composable
 fun CreatePortfolioScreen(
     viewModel: CreatePortfolioViewModel,
@@ -28,6 +29,19 @@ fun CreatePortfolioScreen(
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // LANZADOR DE GALERÍA
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val rutaSegura = copiarUriACache(context, uri)
+            if (rutaSegura != null) {
+                viewModel.onAgregarImagen(rutaSegura)
+            }
+        }
+    }
 
     // Cuando guarda exitosamente, volvemos
     LaunchedEffect(uiState.isSuccess) {
@@ -89,7 +103,7 @@ fun CreatePortfolioScreen(
                 onProfundidadChange = { viewModel.onProfundidadChange(it) },
                 onTipoPrecioChange = { viewModel.onTipoPrecioChange(it) },
                 onPrecioChange = { viewModel.onPrecioChange(it) },
-                onImagenClick = { /* TODO: abrir galería */ },
+                onImagenClick = { launcher.launch("image/*") },
                 onEliminarImagen = { index -> viewModel.onEliminarImagen(index) },
                 onSubmit = { viewModel.save() }
             )

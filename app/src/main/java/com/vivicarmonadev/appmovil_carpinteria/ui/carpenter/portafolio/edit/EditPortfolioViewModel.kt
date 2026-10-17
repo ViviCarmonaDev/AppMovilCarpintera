@@ -4,33 +4,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.PortfolioRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.data.remote.cloudinary.CloudinaryDataSource
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
-/**
- * ViewModel de "Crear/Editar trabajo".
-
- * Maneja dos casos:
- *  - Crear: formulario vacío. Al guardar, crea nuevo item.
- *  - Editar: formulario pre-llenado. Al guardar, actualiza el item.
-
- * El flag `isEditMode` indica en qué modo está.
- */
 class EditPortfolioViewModel(
     private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl(),
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+    private val cloudinaryDataSource: CloudinaryDataSource = CloudinaryDataSource() // ✅ NUEVO
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditPortfolioUiState())
     val uiState: StateFlow<EditPortfolioUiState> = _uiState.asStateFlow()
 
     // INICIALIZAR — EDITAR (pre-llenado)
-
     fun initializeEdit(itemId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -41,10 +35,7 @@ class EditPortfolioViewModel(
                 onSuccess = { item ->
                     if (item == null) {
                         _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = "El trabajo no existe"
-                            )
+                            it.copy(isLoading = false, errorMessage = "El trabajo no existe")
                         }
                         return@fold
                     }
@@ -67,13 +58,10 @@ class EditPortfolioViewModel(
                             profundidadCm = profStr,
                             precioReferencial = precioStr,
                             tipoPrecio = item.tipoPrecio,
-                            // Imágenes
                             imagenesUrls = item.imagenesUrls,
                             originalImagenesUrls = item.imagenesUrls,
                             isEditMode = true,
                             isLoading = false,
-
-                            // Guardar originales para detectar cambios
                             originalTitulo = item.titulo,
                             originalDescripcion = item.descripcion,
                             originalCategoria = item.categoria,
@@ -88,10 +76,7 @@ class EditPortfolioViewModel(
                 },
                 onFailure = { exception ->
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "Error al cargar: ${exception.message}"
-                        )
+                        it.copy(isLoading = false, errorMessage = "Error al cargar: ${exception.message}")
                     }
                 }
             )
@@ -99,35 +84,24 @@ class EditPortfolioViewModel(
     }
 
     // EVENTOS DE EDICIÓN
-
     fun onTituloChange(value: String) {
-        _uiState.update {
-            it.copy(titulo = value, tituloTouched = true, errorMessage = null)
-        }
+        _uiState.update { it.copy(titulo = value, tituloTouched = true, errorMessage = null) }
     }
 
     fun onDescripcionChange(value: String) {
-        _uiState.update {
-            it.copy(descripcion = value, descripcionTouched = true, errorMessage = null)
-        }
+        _uiState.update { it.copy(descripcion = value, descripcionTouched = true, errorMessage = null) }
     }
 
     fun onCategoriaChange(value: String) {
-        _uiState.update {
-            it.copy(categoria = value, categoriaTouched = true, errorMessage = null)
-        }
+        _uiState.update { it.copy(categoria = value, categoriaTouched = true, errorMessage = null) }
     }
 
     fun onMaterialChange(value: String) {
-        _uiState.update {
-            it.copy(material = value, materialTouched = true, errorMessage = null)
-        }
+        _uiState.update { it.copy(material = value, materialTouched = true, errorMessage = null) }
     }
 
     fun onPrecioChange(value: String) {
-        // Solo permitir dígitos y un punto decimal
         val filtered = value.filter { it.isDigit() || it == '.' }
-        // Solo un punto decimal
         val sanitized = if (filtered.count { it == '.' } > 1) {
             filtered.substring(0, filtered.lastIndexOf('.'))
         } else {
@@ -144,12 +118,10 @@ class EditPortfolioViewModel(
         }
     }
 
-    // GUARDAR (crear o actualizar)
-
+    // GUARDAR (con lógica de Cloudinary)
     fun save() {
         val state = _uiState.value
 
-        // Marcar todos los campos como tocados
         _uiState.update {
             it.copy(
                 tituloTouched = true,
@@ -173,10 +145,45 @@ class EditPortfolioViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+            // 1. Separar imágenes locales (content://) de las remotas (https://)
+            val urlsFinales = mutableListOf<String>()
+            val imagenesLocales = state.imagenesUrls.filter {
+                it.startsWith("content://") || it.startsWith("file://")
+            }
+
+            // 2. Subir las imágenes locales a Cloudinary
+            var errorSubida: String? = null
+            for (uriLocal in imagenesLocales) {
+                val url = suspendCancellableCoroutine<String?> { continuation ->
+                    cloudinaryDataSource.subirImagen(
+                        uriLocal = uriLocal,
+                        carpeta = "portafolio",
+                        onSuccess = { if (continuation.isActive) continuation.resume(it) },
+                        onError = { if (continuation.isActive) continuation.resume(null) }
+                    )
+                }
+                if (url != null) {
+                    urlsFinales.add(url)
+                } else {
+                    errorSubida = "Error al subir una de las imágenes"
+                    break
+                }
+            }
+
+            if (errorSubida != null) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = errorSubida) }
+                return@launch
+            }
+
+            // 3. Agregar las imágenes que ya eran remotas (no se tocan)
+            val imagenesRemotas = state.imagenesUrls.filter { it.startsWith("http") }
+            urlsFinales.addAll(imagenesRemotas)
+
+            // 4. Crear el item con las URLs finales
             val precioDouble = state.precioReferencial.toDoubleOrNull()
 
             val item = PortfolioItem(
-                id = state.id,                       // vacío si es nuevo
+                id = state.id,
                 uid = state.uid,
                 titulo = state.titulo.trim(),
                 descripcion = state.descripcion.trim(),
@@ -187,7 +194,7 @@ class EditPortfolioViewModel(
                 profundidadCm = state.profundidadCm.toDoubleOrNull(),
                 precioReferencial = precioDouble,
                 tipoPrecio = state.tipoPrecio,
-                imagenesUrls = state.imagenesUrls,
+                imagenesUrls = urlsFinales,
             )
 
             val result = if (state.isEditMode) {
@@ -216,15 +223,12 @@ class EditPortfolioViewModel(
     }
 
     // DESCARTAR CAMBIOS
-
     fun onBackClick(): Boolean {
         val state = _uiState.value
         return if (state.hasChanges && state.isFormValid) {
-            // Hay cambios sin guardar → mostrar diálogo
             _uiState.update { it.copy(showDiscardDialog = true) }
             false
         } else {
-            // Sin cambios → puede salir directo
             true
         }
     }
@@ -235,11 +239,9 @@ class EditPortfolioViewModel(
 
     fun onDiscardConfirm() {
         _uiState.update { it.copy(showDiscardDialog = false) }
-        // El Screen llama a onBack después
     }
 
     // UTILIDADES
-
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
@@ -259,10 +261,8 @@ class EditPortfolioViewModel(
     private fun mapErrorToMessage(exception: Throwable): String {
         val message = exception.message ?: return "Error desconocido"
         return when {
-            message.contains("network", ignoreCase = true) ->
-                "Sin conexión. Revisa tu internet"
-            message.contains("PERMISSION_DENIED", ignoreCase = true) ->
-                "No tienes permiso para realizar esta acción"
+            message.contains("network", ignoreCase = true) -> "Sin conexión. Revisa tu internet"
+            message.contains("PERMISSION_DENIED", ignoreCase = true) -> "No tienes permiso para realizar esta acción"
             else -> message
         }
     }
@@ -277,7 +277,6 @@ class EditPortfolioViewModel(
     }
 
     // IMÁGENES
-
     fun onAgregarImagen(url: String) {
         _uiState.update { state ->
             if (state.imagenesUrls.size >= 3) state
@@ -295,7 +294,6 @@ class EditPortfolioViewModel(
     }
 
     // MEDIDAS
-
     fun onAnchoChange(value: String) {
         val filtered = filtrarNumero(value)
         _uiState.update { it.copy(anchoCm = filtered, anchoTouched = true, errorMessage = null) }

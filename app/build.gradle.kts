@@ -77,4 +77,7 @@ dependencies {
 
     // Coil para cargar imágenes desde URL
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // base de datos para imagenes
+    implementation("com.cloudinary:cloudinary-android:3.1.2")
 }

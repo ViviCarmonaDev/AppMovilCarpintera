@@ -17,16 +17,14 @@ import java.util.Date
 data class PortfolioItemDto(
     @DocumentId
     val id: String = "",
-
     val uid: String = "",
-
     val titulo: String = "",
-
     val descripcion: String = "",
-
     val categoria: String = "",
-
     val material: String = "",
+
+    val carpinteroNombre: String = "",
+    val nombreTaller: String = "",
 
     // ---- Medidas ----
     val anchoCm: Double? = null,
@@ -34,7 +32,6 @@ data class PortfolioItemDto(
     val profundidadCm: Double? = null,
 
     val precioReferencial: Double? = null,
-
     val tipoPrecio: String = "A_TRATAR",
 
     // ---- Imágenes (hasta 3) ----
@@ -56,6 +53,8 @@ fun PortfolioItemDto.toDomain(): PortfolioItem {
         descripcion = descripcion,
         categoria = categoria,
         material = material,
+        carpinteroNombre = carpinteroNombre,
+        nombreTaller = nombreTaller,
         anchoCm = anchoCm,
         altoCm = altoCm,
         profundidadCm = profundidadCm,
@@ -75,6 +74,8 @@ fun PortfolioItem.toDto(): PortfolioItemDto {
         descripcion = descripcion,
         categoria = categoria,
         material = material,
+        carpinteroNombre = carpinteroNombre,
+        nombreTaller = nombreTaller,
         anchoCm = anchoCm,
         altoCm = altoCm,
         profundidadCm = profundidadCm,

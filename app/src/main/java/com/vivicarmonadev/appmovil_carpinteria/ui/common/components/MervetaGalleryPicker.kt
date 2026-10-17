@@ -25,26 +25,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
 
-/**
- * Galería con imagen principal + miniaturas.
- *
- * - La imagen principal es grande (aspect ratio 1:1).
- * - Las miniaturas aparecen debajo en fila.
- * - Al tocar una miniatura, cambia la imagen principal.
- * - Se puede agregar hasta `maxImagenes`.
- *
- * Se usa en los formularios de crear/editar portafolio y pedidos.
- */
 @Composable
 fun MervetaGalleryPicker(
     imagenes: List<String>,
@@ -55,12 +49,31 @@ fun MervetaGalleryPicker(
     maxImagenes: Int = 3
 ) {
     var seleccionada by remember { mutableIntStateOf(0) }
+    var mostrarPantallaCompleta by remember { mutableStateOf(false) }
 
-    // Asegurar que el índice seleccionado no quede fuera de rango
     val indiceActual = seleccionada.coerceIn(0, (imagenes.size - 1).coerceAtLeast(0))
 
+    //  Diálogo de pantalla completa
+    if (mostrarPantallaCompleta && imagenes.isNotEmpty()) {
+        Dialog(onDismissRequest = { mostrarPantallaCompleta = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable { mostrarPantallaCompleta = false },
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = imagenes[indiceActual],
+                    contentDescription = "Imagen completa",
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
+
     Column(modifier = modifier.fillMaxWidth()) {
-        // ---- Etiqueta ----
         Text(
             text = "$label (${imagenes.size}/$maxImagenes)",
             fontSize = 15.sp,
@@ -70,29 +83,24 @@ fun MervetaGalleryPicker(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // ---- Imagen principal ----
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFFF5EFE7))
+
+                //  tocar abre pantalla completa
+                .clickable(enabled = imagenes.isNotEmpty()) { mostrarPantallaCompleta = true }
         ) {
             if (imagenes.isNotEmpty()) {
-                // TODO: AsyncImage(model = imagenes[indiceActual])
-                Box(
+                AsyncImage(
+                    model = imagenes[indiceActual],
+                    contentDescription = "Imagen seleccionada",
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Image,
-                        contentDescription = null,
-                        tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
-                        modifier = Modifier.size(72.dp)
-                    )
-                }
+                    contentScale = ContentScale.Crop
+                )
 
-                // Botón eliminar
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -111,16 +119,13 @@ fun MervetaGalleryPicker(
                     )
                 }
             } else {
-                // Sin imágenes → mostrar "+ Agregar"
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .clickable(onClick = onAgregarClick),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
@@ -147,14 +152,10 @@ fun MervetaGalleryPicker(
             }
         }
 
-        // ---- Miniaturas (debajo) ----
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Miniaturas de las imágenes existentes
-            imagenes.forEachIndexed { index, _ ->
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            imagenes.forEachIndexed { index, url ->
                 val isSelected = index == indiceActual
                 Box(
                     modifier = Modifier
@@ -169,28 +170,22 @@ fun MervetaGalleryPicker(
                         .clickable { seleccionada = index },
                     contentAlignment = Alignment.Center
                 ) {
-                    // TODO: AsyncImage(model = imagenes[index])
-                    Icon(
-                        imageVector = Icons.Filled.Image,
+                    AsyncImage(
+                        model = url,
                         contentDescription = null,
-                        tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
 
-            // Botón "+" para agregar (si no se alcanzó el máximo)
             if (imagenes.size < maxImagenes) {
                 Box(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFF5EFE7))
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFFE0DCD7),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                        .border(1.dp, Color(0xFFE0DCD7), RoundedCornerShape(12.dp))
                         .clickable(onClick = onAgregarClick),
                     contentAlignment = Alignment.Center
                 ) {

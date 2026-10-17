@@ -151,7 +151,6 @@ class PedidosViewModel(
             val q = query.trim().lowercase()
             resultado = resultado.filter { pedido ->
                 pedido.titulo.lowercase().contains(q) ||
-                        pedido.categoria.lowercase().contains(q) ||
                         pedido.tipoMadera.lowercase().contains(q) ||
                         pedido.descripcion.lowercase().contains(q) ||
                         pedido.clienteNombre.lowercase().contains(q) ||

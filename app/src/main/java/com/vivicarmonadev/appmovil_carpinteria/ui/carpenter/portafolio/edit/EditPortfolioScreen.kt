@@ -1,5 +1,8 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.edit
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,16 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.components.PortfolioItemFormContent
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaDiscardDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEditHeader
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.copiarUriACache
 
-/**
- * Pantalla para EDITAR un trabajo existente del portafolio.
- *
- * Formulario pre-llenado. Botón: "Guardar cambios".
- */
 @Composable
 fun EditPortfolioItemScreen(
     viewModel: EditPortfolioViewModel,
@@ -33,8 +33,20 @@ fun EditPortfolioItemScreen(
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    // Cuando guarda exitosamente, volvemos
+    // LANZADOR DE GALERÍA
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val rutaSegura = copiarUriACache(context, uri)
+            if (rutaSegura != null) {
+                viewModel.onAgregarImagen(rutaSegura)
+            }
+        }
+    }
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             viewModel.resetSuccess()
@@ -48,8 +60,6 @@ fun EditPortfolioItemScreen(
             .background(Color(0xFFFFFFFF))
             .systemBarsPadding()
     ) {
-
-        // ---- HEADER ----
         MervetaEditHeader(
             title = "Editar trabajo",
             onBack = {
@@ -58,7 +68,6 @@ fun EditPortfolioItemScreen(
             }
         )
 
-        // ---- CONTENIDO ----
         if (uiState.isLoading && uiState.titulo.isBlank()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -102,14 +111,13 @@ fun EditPortfolioItemScreen(
                     onTipoPrecioChange = { viewModel.onTipoPrecioChange(it) },
                     onPrecioChange = { viewModel.onPrecioChange(it) },
                     imagenesUrls = uiState.imagenesUrls,
-                    onImagenClick = { /* TODO: abrir galería */ },
-                    onEliminarImagen = { index -> viewModel.onEliminarImagen(index)},
+                    onImagenClick = { launcher.launch("image/*") },
+                    onEliminarImagen = { index -> viewModel.onEliminarImagen(index) },
                     onSubmit = { viewModel.save() }
                 )
             }
         }
 
-        // ---- DIÁLOGO DE DESCARTAR ----
         if (uiState.showDiscardDialog) {
             MervetaDiscardDialog(
                 onConfirm = {

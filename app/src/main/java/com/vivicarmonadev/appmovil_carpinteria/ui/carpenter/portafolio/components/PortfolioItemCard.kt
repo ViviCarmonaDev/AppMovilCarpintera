@@ -7,128 +7,215 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Handshake
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaTag
 
-/**
- * Tarjeta de un trabajo del portafolio.
- *
- * Se usa en la vista general (grid de 2 columnas).
- * Al tocarla, navega a la pantalla de detalle.
- */
 @Composable
 fun PortfolioItemCard(
     item: PortfolioItem,
+    isOwner: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val primeraImagen = item.imagenesUrls.firstOrNull()
+
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF5EFE7))
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFFFBF1E8))
             .clickable(onClick = onClick)
-            .padding(12.dp)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically   // Alinea imagen y texto al centro
     ) {
-        // ---- TÍTULO ----
-        Text(
-            text = item.titulo,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF2C2C2C),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // ---- TAG: CATEGORÍA ----
-        if (item.categoria.isNotBlank()) {
-            MervetaTag(
-                text = item.categoria,
-                textColor = Color(0xFF8B5A2B)
-            )
+        // Imagen (izquierda) — Tamaño fijo y cuadrado
+        Box(
+            modifier = Modifier
+                .size(100.dp)   // Vuelve a ser cuadrada y fija
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color(0xFFF5EFE7))
+        ) {
+            if (!primeraImagen.isNullOrBlank()) {
+                AsyncImage(
+                    model = primeraImagen,
+                    contentDescription = item.titulo,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Image,
+                        contentDescription = null,
+                        tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
 
-        // ---- TAG: MATERIAL ----
-        if (item.material.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            MervetaTag(
-                text = item.material,
-                textColor = Color(0xFF6B6B6B)
-            )
-        }
+        Spacer(modifier = Modifier.width(14.dp))
 
-        // ---- DESCRIPCIÓN ----
-        if (item.descripcion.isNotBlank()) {
-            Spacer(modifier = Modifier.height(10.dp))
+        // Info (derecha)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+
+            // VISTA CLIENTE (isOwner = false)
+
+            if (!isOwner) {
+                if (item.nombreTaller.isNotBlank()) {
+                    Text(
+                        text = item.nombreTaller,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF8B5A2B),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (item.carpinteroNombre.isNotBlank()) {
+                    Text(
+                        text = "Carpintero: ${item.carpinteroNombre}",
+                        fontSize = 11.sp,
+                        color = Color(0xFF6B6B6B),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            // Título (para ambos)
             Text(
-                text = item.descripcion,
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B),
+                text = item.titulo,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF2C2C2C),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-        }
 
-        Spacer(modifier = Modifier.height(10.dp))
+            // VISTA CARPINTERO (isOwner = true)
 
-        // ---- PRECIO + ETIQUETA ----
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = item.precioTexto,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF8B5A2B)
-            )
+            if (isOwner) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (item.categoria.isNotBlank()) {
+                        Chip(text = item.categoria)
+                    }
+                    if (item.material.isNotBlank()) {
+                        Chip(text = item.material)
+                    }
+                }
+            }
 
-            if (item.etiquetaPrecio != null) {
-                TipoPrecioTag(
-                    texto = item.etiquetaPrecio!!,
-                    tipo = item.tipoPrecio
+            // Precio (para ambos)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = item.precioTexto,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF8B5A2B)
                 )
+
+                if (item.etiquetaPrecio != null) {
+                    TipoPrecioChip(
+                        texto = item.etiquetaPrecio!!,
+                        tipo = item.tipoPrecio
+                    )
+                }
             }
         }
     }
 }
 
-// ETIQUETA DE TIPO DE PRECIO
 @Composable
-private fun TipoPrecioTag(texto: String, tipo: TipoPrecio) {
-    val (bgColor, textColor) = when (tipo) {
-        TipoPrecio.FIJO -> Color(0xFF8B5A2B) to Color(0xFFF9F7F5)
-        TipoPrecio.A_TRATAR -> Color(0xFFD4E0D9) to Color(0xFF2E4A3E)
-    }
-
+private fun Chip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(bgColor)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .background(Color(0xFFFFFFFF))
+            .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
+            text = text,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF8B5A2B),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun TipoPrecioChip(texto: String, tipo: TipoPrecio) {
+    val (bgColor, textColor, icon) = when (tipo) {
+        TipoPrecio.FIJO -> Triple(
+            Color(0xFF4A5D3E),
+            Color(0xFFF9F7F5),
+            Icons.Filled.Lock
+        )
+        TipoPrecio.A_TRATAR -> Triple(
+            Color(0xFF6B7F5C),
+            Color(0xFFF9F7F5),
+            Icons.Filled.Handshake
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(bgColor)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = textColor,
+            modifier = Modifier.size(10.dp)
+        )
+        Text(
             text = texto,
-            fontSize = 9.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
+            letterSpacing = 0.3.sp,
             color = textColor
         )
     }

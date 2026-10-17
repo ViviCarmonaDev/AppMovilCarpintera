@@ -177,7 +177,6 @@ class CreatePedidoViewModel(
                 clientUid = state.clientUid,
                 clienteNombre = state.clienteNombre,
                 titulo = state.titulo.trim(),
-                categoria = state.categoria.trim(),
                 tipoMadera = state.tipoMadera.trim(),
                 anchoCm = state.anchoCm.toDoubleOrNull(),
                 altoCm = state.altoCm.toDoubleOrNull(),

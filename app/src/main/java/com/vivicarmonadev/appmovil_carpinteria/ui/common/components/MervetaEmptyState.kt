@@ -43,7 +43,7 @@ fun MervetaEmptyState(
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF5EFE7)),
+                .background(Color(0xFFFBF1E8)),
             contentAlignment = Alignment.Center
         ) {
             Icon(

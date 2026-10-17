@@ -106,10 +106,7 @@ fun ClientHomeScreen(
                 key = { it.id }
             ) { pedido ->
                 RecentOrderCard(
-                    titulo = pedido.titulo,
-                    estadoTexto = pedido.status.toDisplayText().uppercase(),
-                    estadoColor = estadoColorPara(pedido.status),
-                    tiempoTexto = tiempoRelativo(pedido.createdAt),
+                    pedido = pedido,
                     onClick = { onOrderClick(pedido.id) }
                 )
             }

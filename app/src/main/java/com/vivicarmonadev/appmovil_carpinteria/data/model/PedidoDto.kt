@@ -29,7 +29,6 @@ data class PedidoDto(
 
     // ---- Datos del pedido ----
     val titulo: String = "",
-    val categoria: String = "",
     val tipoMadera: String = "",
 
     // ---- Medidas ----
@@ -65,7 +64,6 @@ fun PedidoDto.toDomain(): Pedido {
         clientUid = clientUid,
         clienteNombre = clienteNombre,
         titulo = titulo,
-        categoria = categoria,
         tipoMadera = tipoMadera,
         anchoCm = anchoCm,
         altoCm = altoCm,
@@ -89,7 +87,6 @@ fun Pedido.toDto(): PedidoDto {
         clientUid = clientUid,
         clienteNombre = clienteNombre,
         titulo = titulo,
-        categoria = categoria,
         tipoMadera = tipoMadera,
         anchoCm = anchoCm,
         altoCm = altoCm,

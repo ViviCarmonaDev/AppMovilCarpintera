@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
@@ -23,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.components.PortfolioItemCard
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaConfirmDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEmptyState
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaFloatingButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaSearchBar
@@ -41,7 +39,7 @@ fun PortfolioScreen(
 
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // ---- HEADER ----
+            // Header
             MervetaHeader(
                 title = if (uiState.isCarpenter) "Mis trabajos" else "Catálogo",
                 subtitle = if (uiState.isCarpenter)
@@ -53,7 +51,7 @@ fun PortfolioScreen(
                 bottomPadding = 20.dp
             )
 
-            // ---- BUSCADOR ----
+            // Buscador
             MervetaSearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -61,7 +59,7 @@ fun PortfolioScreen(
                 placeholder = "Buscar nombre, categoría o material ..."
             )
 
-            // ---- CONTENIDO ----
+            // Contenido
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     uiState.isLoading -> {
@@ -101,6 +99,7 @@ fun PortfolioScreen(
                     else -> {
                         ItemsList(
                             items = uiState.filteredItems,
+                            isOwner = uiState.isCarpenter,
                             onItemClick = onItemClick
                         )
                     }
@@ -108,7 +107,7 @@ fun PortfolioScreen(
             }
         }
 
-        // ---- FAB ----
+        // FAB
         if (uiState.isCarpenter && !uiState.isLoading && !uiState.isEmpty) {
             MervetaFloatingButton(
                 onClick = onCreateClick,
@@ -120,23 +119,22 @@ fun PortfolioScreen(
     }
 }
 
-// LISTA DE TRABAJOS (grid de 2 columnas)
-
+// Lista de trabajos (1 columna, cards horizontales)
 @Composable
 private fun ItemsList(
     items: List<PortfolioItem>,
+    isOwner: Boolean,
     onItemClick: (PortfolioItem) -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items, key = { it.id }) { item ->
             PortfolioItemCard(
                 item = item,
+                isOwner = isOwner,
                 onClick = { onItemClick(item) }
             )
         }

@@ -15,6 +15,8 @@ data class PortfolioItem(
     val titulo: String = "",
     val descripcion: String = "",
     val categoria: String = "",
+    val carpinteroNombre: String = "",
+    val nombreTaller: String = "",
     val material: String = "",
     val anchoCm: Double? = null,
     val altoCm: Double? = null,

@@ -27,7 +27,6 @@ data class Pedido(
 
     // ---- Datos del pedido ----
     val titulo: String = "",
-    val categoria: String = "",
     val tipoMadera: String = "",
     val anchoCm: Double? = null,
     val altoCm: Double? = null,

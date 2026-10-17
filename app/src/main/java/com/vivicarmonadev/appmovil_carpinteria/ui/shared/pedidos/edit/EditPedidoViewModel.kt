@@ -66,7 +66,6 @@ class EditPedidoViewModel(
                             clientUid = pedido.clientUid,
                             clienteNombre = pedido.clienteNombre,
                             titulo = pedido.titulo,
-                            categoria = pedido.categoria,
                             tipoMadera = pedido.tipoMadera,
                             anchoCm = anchoStr,
                             altoCm = altoStr,
@@ -82,7 +81,6 @@ class EditPedidoViewModel(
 
                             // Originales
                             originalTitulo = pedido.titulo,
-                            originalCategoria = pedido.categoria,
                             originalTipoMadera = pedido.tipoMadera,
                             originalAnchoCm = anchoStr,
                             originalAltoCm = altoStr,
@@ -244,7 +242,6 @@ class EditPedidoViewModel(
                 clientUid = state.clientUid,
                 clienteNombre = state.clienteNombre,
                 titulo = state.titulo.trim(),
-                categoria = state.categoria.trim(),
                 tipoMadera = state.tipoMadera.trim(),
                 anchoCm = state.anchoCm.toDoubleOrNull(),
                 altoCm = state.altoCm.toDoubleOrNull(),

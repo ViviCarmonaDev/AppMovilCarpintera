@@ -31,9 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 
 /**
  * Galería tipo "hero": una imagen a la vez, scroll horizontal con snap.
@@ -76,11 +78,12 @@ fun MervetaImagesSection(
                             .background(Color(0xFFF5EFE7)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Image,
+                        //  IMAGEN REAL CON COIL
+                        AsyncImage(
+                            model = url,
                             contentDescription = null,
-                            tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }

@@ -3,36 +3,46 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.create
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.AuthRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.CarpenterRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.data.repository.PortfolioRepositoryImpl
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.TipoPrecio
+import com.vivicarmonadev.appmovil_carpinteria.data.remote.cloudinary.CloudinaryDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.compareTo
+import kotlinx.coroutines.suspendCancellableCoroutine // ✅ NUEVO
+import kotlin.coroutines.resume // ✅ NUEVO
 
-/**
- * ViewModel para CREAR un trabajo nuevo del portafolio.
- * Formulario vacío. Al guardar, crea un nuevo item en Firestore.
- */
 class CreatePortfolioViewModel(
     private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl(),
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+    private val carpenterRepository: CarpenterRepositoryImpl = CarpenterRepositoryImpl(),
+    private val cloudinaryDataSource: CloudinaryDataSource = CloudinaryDataSource()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreatePortfolioUiState())
     val uiState: StateFlow<CreatePortfolioUiState> = _uiState.asStateFlow()
 
-    // Guardamos el uid del usuario actual
     private var currentUid: String = ""
+    private var currentUserNombre: String = ""
+    private var currentNombreTaller: String = ""
 
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 if (user != null) {
                     currentUid = user.uid
+                    currentUserNombre = user.fullName
+
+                    val profile = carpenterRepository
+                        .getCarpenterProfile(user.uid)
+                        .firstOrNull()
+
+                    currentNombreTaller = profile?.nombreTaller ?: ""
                 }
             }
         }
@@ -89,7 +99,6 @@ class CreatePortfolioViewModel(
     }
 
     fun onPrecioChange(value: String) {
-        // Solo permitir dígitos y un punto decimal
         val filtered = value.filter { it.isDigit() || it == '.' }
         val sanitized = if (filtered.count { it == '.' } > 1) {
             filtered.substring(0, filtered.lastIndexOf('.'))
@@ -108,8 +117,8 @@ class CreatePortfolioViewModel(
     }
 
     // ---- GUARDAR ----
+
     fun save() {
-        // Marcar todos los campos como tocados
         _uiState.update {
             it.copy(
                 tituloTouched = true,
@@ -135,22 +144,64 @@ class CreatePortfolioViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            val precioDouble = state.precioReferencial.toDoubleOrNull()
+            // 1. Subir imágenes a Cloudinary (si hay)
+            val urlsSubidas = mutableListOf<String>()
+            var errorSubida: String? = null
 
+            for (uriLocal in state.imagenesUrls) {
+                // Convertimos el callback de Cloudinary en una corrutina suspendida
+                val url = suspendCancellableCoroutine<String?> { continuation ->
+                    cloudinaryDataSource.subirImagen(
+                        uriLocal = uriLocal,
+                        carpeta = "portafolio",
+                        onSuccess = { urlPublica ->
+                            if (continuation.isActive) continuation.resume(urlPublica)
+                        },
+                        onError = { error ->
+                            if (continuation.isActive) continuation.resume(null)
+                        }
+                    )
+                }
+
+                if (url != null) {
+                    urlsSubidas.add(url)
+                } else {
+                    errorSubida = "Error al subir una de las imágenes"
+                    break // Detenemos si falla una
+                }
+            }
+
+            if (errorSubida != null) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = errorSubida) }
+                return@launch
+            }
+
+            // 2. Obtener datos extra del usuario
+            val precioDouble = state.precioReferencial.toDoubleOrNull()
+            val user = authRepository.currentUser.firstOrNull()
+            val nombre = user?.fullName ?: ""
+            val profile = carpenterRepository.getCarpenterProfile(currentUid).firstOrNull()
+            val taller = profile?.nombreTaller ?: ""
+
+            // 3. Crear el item con las URLs de Cloudinary
             val item = PortfolioItem(
-                id = "",                              // Firestore genera el ID
+                id = "",
                 uid = currentUid,
                 titulo = state.titulo.trim(),
                 descripcion = state.descripcion.trim(),
                 categoria = state.categoria.trim(),
                 material = state.material.trim(),
+                carpinteroNombre = nombre,
+                nombreTaller = taller,
                 anchoCm = state.anchoCm.toDoubleOrNull(),
                 altoCm = state.altoCm.toDoubleOrNull(),
                 profundidadCm = state.profundidadCm.toDoubleOrNull(),
                 precioReferencial = precioDouble,
-                tipoPrecio = state.tipoPrecio?: TipoPrecio.A_TRATAR,
+                tipoPrecio = state.tipoPrecio ?: TipoPrecio.A_TRATAR,
+                imagenesUrls = urlsSubidas // ✅ URLs de Cloudinary
             )
 
+            // 4. Guardar en Firestore
             val result = portfolioRepository.createPortfolioItem(item)
 
             result.fold(

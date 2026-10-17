@@ -1,7 +1,6 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.shared.pedidos.create
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -35,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -110,15 +107,6 @@ fun CreatePedidoScreen(
                 label = "Título del pedido",
                 placeholder = "Ej. Mesa de comedor a medida",
                 errorMessage = uiState.tituloError
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AuthTextField(
-                value = uiState.categoria,
-                onValueChange = { viewModel.onCategoriaChange(it) },
-                label = "Categoría de mueble",
-                placeholder = "Ej. Muebles, Puertas, Cocinas",
-                errorMessage = uiState.categoriaError
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -289,9 +277,7 @@ fun CreatePedidoScreen(
     }
 }
 
-// ============================================
 // DROPDOWN DE CARPINTERO
-// ============================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
