@@ -58,6 +58,23 @@ class FirestoreCotizacionDataSource {
         awaitClose { listener.remove() }
     }
 
+    fun getCotizacionesByClienteFlow(clienteUid: String): Flow<List<CotizacionDto>> = callbackFlow {
+        val listener = firestore.collection("cotizaciones")
+            .whereEqualTo("clienteUid", clienteUid)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val cotizaciones = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(CotizacionDto::class.java)
+                } ?: emptyList()
+                trySend(cotizaciones)
+            }
+        awaitClose { listener.remove() }
+    }
+
     // LECTURA — Una cotización por ID
     suspend fun getCotizacionById(id: String): Result<CotizacionDto?> {
         return try {
@@ -132,5 +149,19 @@ class FirestoreCotizacionDataSource {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    fun getCotizacionFlow(id: String): Flow<CotizacionDto?> = callbackFlow {
+        val listener = firestore.collection("cotizaciones")
+            .document(id)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+                val cotizacion = snapshot?.toObject(CotizacionDto::class.java)
+                trySend(cotizacion)
+            }
+        awaitClose { listener.remove() }
     }
 }

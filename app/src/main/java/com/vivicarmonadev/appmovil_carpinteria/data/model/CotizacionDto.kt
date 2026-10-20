@@ -6,6 +6,7 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoCotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.ItemCotizacion
 import java.util.Date
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoSolicitud
 
 data class CotizacionDto(
     @DocumentId val id: String = "",
@@ -21,10 +22,15 @@ data class CotizacionDto(
     val tiempoEstimadoDias: Int = 0,
     val comentarios: String = "",
     val estado: String = "PENDIENTE",
+
+    val observacionCliente: String? = null,       // Lo que escribe el cliente
+    val solicitudCambio: Boolean = false,         // Si pidió cambios
+    val respuestaCarpintero: String? = null,
+    val estadoSolicitud: String = "NINGUNA",
+
     @ServerTimestamp val createdAt: Date? = null,
     @ServerTimestamp val updatedAt: Date? = null
 )
-
 data class ItemCotizacionDto(
     val nombre: String = "",
     val cantidad: Int = 1,
@@ -55,7 +61,11 @@ fun CotizacionDto.toDomain(): Cotizacion {
         comentarios = comentarios,
         estado = EstadoCotizacion.fromString(estado),
         createdAt = createdAt?.time ?: 0L,
-        updatedAt = updatedAt?.time ?: 0L
+        updatedAt = updatedAt?.time ?: 0L,
+        observacionCliente = observacionCliente,
+        solicitudCambio = solicitudCambio,
+        respuestaCarpintero = respuestaCarpintero,
+        estadoSolicitud = EstadoSolicitud.valueOf(estadoSolicitud)
     )
 }
 
@@ -82,6 +92,10 @@ fun Cotizacion.toDto(): CotizacionDto {
         comentarios = comentarios,
         estado = estado.toFirestoreValue(),
         createdAt = if (createdAt > 0) Date(createdAt) else null,
-        updatedAt = if (updatedAt > 0) Date(updatedAt) else null
+        updatedAt = if (updatedAt > 0) Date(updatedAt) else null,
+        observacionCliente = observacionCliente,
+        solicitudCambio = solicitudCambio,
+        respuestaCarpintero = respuestaCarpintero,
+        estadoSolicitud = estadoSolicitud.name
     )
 }

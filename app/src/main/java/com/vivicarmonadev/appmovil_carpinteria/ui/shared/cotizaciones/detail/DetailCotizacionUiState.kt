@@ -11,25 +11,39 @@ data class DetailCotizacionUiState(
     val isCarpenter: Boolean = false,
     val currentUid: String = "",
 
+    // Cliente: observación
+    val observacionInput: String = "",
+
+    // Carpintero: respuesta
+    val respuestaInput: String = "",
+
     // Diálogos
     val showAnularDialog: Boolean = false,
     val showAceptarDialog: Boolean = false,
     val showRechazarDialog: Boolean = false,
+    val showSolicitarCambiosDialog: Boolean = false,
+    val showRechazarCambiosDialog: Boolean = false,
     val isProcessing: Boolean = false,
-    val actionSuccess: Boolean = false
+    val actionSuccess: Boolean = false,
+
+    // Flags de permisos
+    val puedoEditar: Boolean = false,
+    val puedoAnular: Boolean = false,
+    val puedoAceptarRechazar: Boolean = false,
+    val puedoSolicitarCambios: Boolean = false,
+    val puedoResponderCambios: Boolean = false
 ) {
 
-    val esMiCotizacion: Boolean
-        get() = cotizacion?.carpinteroUid == currentUid
+    fun withPermissions(cotizacion: Cotizacion, isCarpenter: Boolean): DetailCotizacionUiState {
+        val isOwner = cotizacion.carpinteroUid == currentUid
+        val isClient = cotizacion.clienteUid == currentUid
 
-    val puedoEditar: Boolean
-        get() = esMiCotizacion && cotizacion?.estado?.name == "PENDIENTE"
-
-    val puedoAnular: Boolean
-        get() = esMiCotizacion && cotizacion?.estado?.name == "PENDIENTE"
-
-    val puedoAceptarRechazar: Boolean
-        get() = !isCarpenter &&
-                cotizacion?.estado?.name == "PENDIENTE" &&
-                cotizacion?.clienteUid == currentUid
+        return copy(
+            puedoEditar = isCarpenter && isOwner && cotizacion.estado.name == "PENDIENTE",
+            puedoAnular = isCarpenter && isOwner && cotizacion.estado.name == "PENDIENTE",
+            puedoAceptarRechazar = !isCarpenter && isClient && cotizacion.estado.name == "PENDIENTE" && !cotizacion.solicitudCambio,
+            puedoSolicitarCambios = !isCarpenter && isClient && cotizacion.estado.name == "PENDIENTE" && !cotizacion.solicitudCambio,
+            puedoResponderCambios = isCarpenter && isOwner && cotizacion.solicitudCambio
+        )
+    }
 }

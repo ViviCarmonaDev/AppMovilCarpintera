@@ -149,7 +149,6 @@ class CreatePedidoViewModel(
         _uiState.update {
             it.copy(
                 tituloTouched = true,
-                categoriaTouched = true,
                 tipoMaderaTouched = true,
                 descripcionTouched = true,
                 presupuestoTouched = true

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.util.Log
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpinteroResumen
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
@@ -47,6 +49,10 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEditH
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaGalleryPicker
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaSectionHeader
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.copiarUriACache
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +62,20 @@ fun CreatePedidoScreen(
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        Log.d("PEDIDO_DEBUG", "Launcher: uri = $uri")
+        if (uri != null) {
+            val rutaSegura = copiarUriACache(context, uri)
+            Log.d("PEDIDO_DEBUG", "Launcher: rutaSegura = $rutaSegura")
+            if (rutaSegura != null) {
+                viewModel.onAgregarImagen(rutaSegura)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -91,7 +111,7 @@ fun CreatePedidoScreen(
                 imagenes = uiState.imagenesUrls,
                 label = "Imágenes de referencia",
                 maxImagenes = 3,
-                onAgregarClick = { /* TODO */ },
+                onAgregarClick =  { launcher.launch("image/*") },
                 onEliminarClick = { index -> viewModel.onEliminarImagen(index) }
             )
 
@@ -241,6 +261,7 @@ fun CreatePedidoScreen(
                     CircularProgressIndicator(color = Color(0xFF8B5A2B), strokeWidth = 3.dp)
                 }
             } else {
+                Log.d("PEDIDO_DEBUG", "Screen: imágenes=${uiState.imagenesUrls.size}, isFormValid=${uiState.isFormValid}, título=${uiState.titulo.isNotBlank()}, categoria=${uiState.categoria.isNotBlank()}, tipoMadera=${uiState.tipoMadera.isNotBlank()}, descripcion=${uiState.descripcion.isNotBlank()}")
                 PrimaryButton(
                     text = "Enviar pedido",
                     onClick = { viewModel.save() },

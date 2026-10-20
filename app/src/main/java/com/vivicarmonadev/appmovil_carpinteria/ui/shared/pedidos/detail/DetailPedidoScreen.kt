@@ -65,7 +65,8 @@ fun DetailPedidoScreen(
     onEditClick: (String) -> Unit,
     onActionSuccess: () -> Unit,
     onCrearCotizacion: (String) -> Unit,
-    onEditarCotizacion: (String) -> Unit
+    onEditarCotizacion: (String) -> Unit,
+    onCotizacionClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -116,13 +117,11 @@ fun DetailPedidoScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // Galería de imágenes
                     MervetaImagesSection(
                         imagenes = pedido.imagenesUrls,
                         aspectRatio = 1f
                     )
 
-                    // Card blanco superpuesto
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -178,7 +177,6 @@ fun DetailPedidoScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Título
                         Text(
                             text = pedido.titulo,
                             fontSize = 28.sp,
@@ -186,7 +184,6 @@ fun DetailPedidoScreen(
                             color = Color(0xFF2C2C2C)
                         )
 
-                        // Descripción
                         if (pedido.descripcion.isNotBlank()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -321,7 +318,6 @@ fun DetailPedidoScreen(
                         if (!uiState.isCarpenter && uiState.cotizaciones.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Título + badge con cantidad
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -353,7 +349,8 @@ fun DetailPedidoScreen(
                                 CotizacionRecibidaCard(
                                     cotizacion = cotizacion,
                                     onAceptar = { viewModel.onAceptarCotizacionClick(cotizacion) },
-                                    onRechazar = { viewModel.onRechazarCotizacionClick(cotizacion) }
+                                    onRechazar = { viewModel.onRechazarCotizacionClick(cotizacion) },
+                                    onClick = { onCotizacionClick(cotizacion.id) } // ✅ NUEVO
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
@@ -389,7 +386,6 @@ fun DetailPedidoScreen(
                         // ACCIONES SEGÚN ROL
                         // ============================================
 
-                        // ---- CLIENTE ----
                         if (!uiState.isCarpenter) {
                             when (pedido.status) {
                                 EstadoPedido.PENDIENTE -> {
@@ -448,7 +444,6 @@ fun DetailPedidoScreen(
                             }
                         }
 
-                        // ---- CARPINTERO ----
                         if (uiState.isCarpenter) {
                             when (pedido.status) {
                                 EstadoPedido.PENDIENTE -> {
@@ -689,12 +684,15 @@ fun DetailPedidoScreen(
     }
 }
 
+// ============================================================
 // CARD DE COTIZACIÓN RECIBIDA (cliente)
+// ============================================================
 @Composable
 private fun CotizacionRecibidaCard(
     cotizacion: Cotizacion,
     onAceptar: () -> Unit,
     onRechazar: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -702,6 +700,7 @@ private fun CotizacionRecibidaCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFF5EFE7))
+            .clickable(onClick = onClick)   // CARD CLICKEABLE
             .padding(16.dp)
     ) {
         Row(
@@ -782,8 +781,9 @@ private fun CotizacionRecibidaCard(
     }
 }
 
+// ============================================================
 // BADGE DE COTIZACIÓN
-
+// ============================================================
 @Composable
 private fun EstadoCotizacionBadge(estado: EstadoCotizacion) {
     val (bgColor, textColor) = when (estado) {
@@ -809,8 +809,9 @@ private fun EstadoCotizacionBadge(estado: EstadoCotizacion) {
     }
 }
 
+// ============================================================
 // COLUMNA DE INFO CON ÍCONO
-
+// ============================================================
 @Composable
 private fun InfoColumn(
     icon: ImageVector,

@@ -59,7 +59,16 @@ class CotizacionesViewModel(
         cotizacionesJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            cotizacionRepository.getCotizacionesByCarpenter(uid).collect { lista ->
+            val isCarpenter = _uiState.value.isCarpenter
+
+            //  Elegir el flujo según el rol
+            val flow = if (isCarpenter) {
+                cotizacionRepository.getCotizacionesByCarpenter(uid)
+            } else {
+                cotizacionRepository.getCotizacionesByCliente(uid)
+            }
+
+            flow.collect { lista ->
                 _uiState.update { state ->
                     state.copy(
                         cotizaciones = lista,
@@ -91,6 +100,7 @@ class CotizacionesViewModel(
             resultado = resultado.filter {
                 it.numeroPedido.lowercase().contains(q) ||
                         it.clienteNombre.lowercase().contains(q) ||
+                        it.carpinteroNombre.lowercase().contains(q) ||
                         it.pedidoId.lowercase().contains(q)
             }
         }

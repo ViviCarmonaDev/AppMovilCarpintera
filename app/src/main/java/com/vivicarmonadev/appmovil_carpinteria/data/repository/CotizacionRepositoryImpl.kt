@@ -23,6 +23,12 @@ class CotizacionRepositoryImpl(
         }
     }
 
+    override fun getCotizacionesByCliente(clienteUid: String): Flow<List<Cotizacion>> {
+        return dataSource.getCotizacionesByClienteFlow(clienteUid).map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
     override fun getCotizacionesByPedido(pedidoId: String): Flow<List<Cotizacion>> {
         return dataSource.getCotizacionesByPedidoFlow(pedidoId).map { list ->
             list.map { it.toDomain() }
@@ -36,6 +42,10 @@ class CotizacionRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    fun getCotizacionFlow(id: String): Flow<Cotizacion?> {
+        return dataSource.getCotizacionFlow(id).map { dto -> dto?.toDomain() }
     }
 
     override suspend fun createCotizacion(cotizacion: Cotizacion): Result<Cotizacion> {

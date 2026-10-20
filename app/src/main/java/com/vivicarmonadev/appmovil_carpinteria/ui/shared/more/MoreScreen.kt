@@ -101,10 +101,16 @@ fun MoreScreen(
         }
 
         MoreItem(
-            icon = Icons.Filled.Settings,
-            title = "Configuración",
-            subtitle = "Notificaciones y preferencias",
-            onClick = onSettings
+            icon = Icons.Filled.RequestQuote,
+            title = if (user?.role == UserRole.CARPENTER)
+                "Mis cotizaciones"
+            else
+                "Cotizaciones recibidas",
+            subtitle = if (user?.role == UserRole.CARPENTER)
+                "Gestiona las cotizaciones enviadas"
+            else
+                "Revisa las propuestas de los carpinteros",
+            onClick = onVerCotizaciones
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -586,7 +586,11 @@ fun AppNavigation(
                 onCrearCotizacion = { id -> navController.navigate("${Routes.CREATE_COTIZACION}/$id") },
                 onEditarCotizacion = { cotizacionId ->
                     navController.navigate("${Routes.EDIT_COTIZACION}/$cotizacionId")
+                },
+                onCotizacionClick = { cotizacionId ->
+                    navController.navigate("${Routes.COTIZACION_DETAIL}/$cotizacionId")
                 }
+
             )
         }
 

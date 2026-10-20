@@ -24,7 +24,12 @@ data class Cotizacion(
 
     // ---- Metadata ----
     val createdAt: Long = 0L,
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
+
+    val observacionCliente: String? = null,       // Lo que escribe el cliente
+    val solicitudCambio: Boolean = false,         // Si pidió cambios
+    val respuestaCarpintero: String? = null,      // Respuesta del carpintero
+    val estadoSolicitud: EstadoSolicitud = EstadoSolicitud.NINGUNA
 ) {
     // Total calculado (materiales + mano de obra)
     val totalMateriales: Double
@@ -45,6 +50,13 @@ data class Cotizacion(
 
     val puedeEliminarse: Boolean
         get() = estado == EstadoCotizacion.PENDIENTE
+}
+
+enum class EstadoSolicitud {
+    NINGUNA,
+    PENDIENTE,   // Cliente pidió cambios, esperando respuesta
+    ACEPTADA,    // Carpintero aceptó (edita la cotización)
+    RECHAZADA    // Carpintero rechazó
 }
 
 /**

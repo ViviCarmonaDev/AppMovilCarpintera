@@ -53,14 +53,6 @@ data class CreatePedidoUiState(
             else -> null
         }
 
-    val categoriaError: String?
-        get() = when {
-            !categoriaTouched -> null
-            categoria.isBlank() -> "Ingresa una categoría"
-            categoria.trim().length < 3 -> "Mínimo 3 caracteres"
-            else -> null
-        }
-
     val tipoMaderaError: String?
         get() = when {
             !tipoMaderaTouched -> null
@@ -91,10 +83,10 @@ data class CreatePedidoUiState(
 
     val isFormValid: Boolean
         get() = titulo.isNotBlank() && tituloError == null &&
-                categoria.isNotBlank() && categoriaError == null &&
                 tipoMadera.isNotBlank() && tipoMaderaError == null &&
                 descripcion.isNotBlank() && descripcionError == null &&
-                presupuestoError == null
+                imagenesUrls.isNotEmpty() && presupuestoError == null
+
 
     val hasChanges: Boolean
         get() = titulo.isNotBlank() ||

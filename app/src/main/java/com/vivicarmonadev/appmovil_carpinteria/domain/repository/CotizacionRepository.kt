@@ -20,6 +20,8 @@ interface CotizacionRepository {
      */
     fun getCotizacionesByPedido(pedidoId: String): Flow<List<Cotizacion>>
 
+    fun getCotizacionesByCliente(clienteUid: String): Flow<List<Cotizacion>>
+
     /**
      * Lee una cotización por su ID.
      */
