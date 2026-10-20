@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Contrato del repositorio de autenticación.
- *
+
  * Define QUÉ se puede hacer con la autenticación, pero no CÓMO. El "cómo" lo implementa AuthRepositoryImpl en la capa data.
- *
+
  * Esto permite que si se cambia Firebase por otro servicio,
  * solo tengas que escribir una nueva implementación sin tocar, los ViewModels.
  */
@@ -43,16 +43,13 @@ interface AuthRepository {
 
     suspend fun logout(): Result<Unit>
 
-
     // Obtiene el User desde Firestore a partir del uid, Devuelve null si el documento no existe.
-
     suspend fun getUserById(uid: String): Result<User?>
 
-    /**
-     * Inicia sesión con Google.
-     * Recibe el idToken ya obtenido por el GoogleSignInHelper.
-     */
+    // Inicia sesión con Google yRecibe el idToken ya obtenido por el GoogleSignInHelper.
     suspend fun loginWithGoogle(idToken: String): Result<User>
+
+    suspend fun updateUserPhoto(uid: String, photoUrl: String): Result<Unit>
 
     /**
      * Actualiza los datos editables del usuario en Firestore.

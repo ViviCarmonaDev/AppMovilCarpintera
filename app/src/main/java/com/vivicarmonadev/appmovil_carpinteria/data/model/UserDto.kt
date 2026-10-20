@@ -41,7 +41,7 @@ data class UserDto(
     @PropertyName("role")
     val role: String = "client",   // "client" o "carpenter"
 
-    @PropertyName("photo_url")
+    @PropertyName("photoUrl")
     val photoUrl: String? = null,
 
     @PropertyName("profileCompleted")

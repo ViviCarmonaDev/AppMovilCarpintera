@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.ChevronRight
@@ -41,6 +40,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.offset
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.PedidoHomeCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitleWithButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.EstadoPedidoBadge
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
@@ -52,6 +52,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.Portfol
 fun CarpenterHomeScreen(
     userName: String,
     portfolioItems: List<PortfolioItem>,
+    photoUrl: String? = null,
     pedidos: List<Pedido>,
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllPortfolioClick: () -> Unit,
@@ -67,6 +68,7 @@ fun CarpenterHomeScreen(
         MervetaHeader(
             title = "Hola, $userName",
             subtitle = "Gestiona tus proyectos de hoy",
+            avatarUrl = photoUrl,
             onNotificationClick = { /* Acción para la campana */ },
             onSettingsClick = { /* Acción para el engranaje */ }
         )
@@ -104,7 +106,7 @@ fun CarpenterHomeScreen(
                 items = pedidos,
                 key = { it.id }
             ) { pedido ->
-                PedidoMiniCard(
+                PedidoHomeCard(
                     pedido = pedido,
                     onClick = { onPedidoClick(pedido.id) }
                 )

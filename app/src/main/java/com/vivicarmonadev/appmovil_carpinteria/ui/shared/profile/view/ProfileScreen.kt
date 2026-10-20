@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,9 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,21 +37,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.Store
-import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.MainViewModel
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 
 @Composable
 fun ProfileScreen(
-    mainViewModel: MainViewModel,
+    viewModel: ProfileViewModel,
     onEditProfile: () -> Unit = {},
     onEditCarpenterProfile: () -> Unit = {}
 ) {
-    val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var mostrarFotoCompleta by remember { mutableStateOf(false) }
 
-    if (user == null) {
+    if (uiState.isLoading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,7 +67,23 @@ fun ProfileScreen(
         return
     }
 
-    val currentUser = user!!
+    if (uiState.user == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFFFFFF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = uiState.errorMessage ?: "No hay usuario",
+                fontSize = 14.sp,
+                color = Color(0xFFC5544A)
+            )
+        }
+        return
+    }
+
+    val currentUser = uiState.user!!
 
     Column(
         modifier = Modifier
@@ -73,13 +95,23 @@ fun ProfileScreen(
         ProfileHeader(
             userName = currentUser.fullName.ifBlank { "Usuario" },
             userRole = currentUser.role.name.lowercase(),
-            onEditProfile = onEditProfile
+            photoUrl = currentUser.photoUrl,
+            isUploading = uiState.isUploadingPhoto,
+            onEditProfile = onEditProfile,
+            onPhotoClick = {
+                if (!currentUser.photoUrl.isNullOrBlank()) {
+                    mostrarFotoCompleta = true     //Abre pantalla completa
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // ---- ESTADÍSTICAS ----
         StatsRow(
+            totalResenas = uiState.resenasTexto,
+            totalPedidos = uiState.pedidosTexto,
+            ratingTexto = uiState.ratingTexto,
             modifier = Modifier.padding(horizontal = 20.dp)
         )
 
@@ -94,15 +126,14 @@ fun ProfileScreen(
                 "Nombre completo" to currentUser.fullName.ifBlank { "Sin nombre" },
                 "Correo electrónico" to currentUser.email.ifBlank { "Sin correo" },
                 "Teléfono" to currentUser.telefono.ifBlank { "Sin teléfono" },
-                "direccion" to currentUser.direccion.ifBlank { "Sin dirección" },
-                "Rol" to if (currentUser.role.name.lowercase() == "carpenter") "Carpintero" else "Cliente"
+                "Dirección" to currentUser.direccion.ifBlank { "Sin dirección" },
+                "Rol" to if (currentUser.role == UserRole.CARPENTER) "Carpintero" else "Cliente"
             )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Banner del taller (solo para carpinteros)
-
         if (currentUser.role == UserRole.CARPENTER) {
             EditCarpenterProfileBanner(
                 onClick = onEditCarpenterProfile,
@@ -116,6 +147,26 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
     }
+
+    //  Diálogo para ver la foto en pantalla completa
+    if (mostrarFotoCompleta && !currentUser.photoUrl.isNullOrBlank()) {
+        Dialog(onDismissRequest = { mostrarFotoCompleta = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable { mostrarFotoCompleta = false },
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = currentUser.photoUrl,
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+    }
 }
 
 // HEADER CON AVATAR
@@ -124,7 +175,10 @@ fun ProfileScreen(
 private fun ProfileHeader(
     userName: String,
     userRole: String,
-    onEditProfile: () -> Unit
+    photoUrl: String?,
+    isUploading: Boolean,
+    onEditProfile: () -> Unit,
+    onPhotoClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -136,20 +190,41 @@ private fun ProfileHeader(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar grande
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(110.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF9F7F5)),
+                    .background(Color(0xFFF9F7F5))
+                    .clickable(onClick = onPhotoClick),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = null,
-                    tint = Color(0xFF8B5A2B),
-                    modifier = Modifier.size(56.dp)
-                )
+                if (!photoUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = Color(0xFF8B5A2B),
+                        modifier = Modifier.size(64.dp)  // Ícono más grande
+                    )
+                }
+
+                // Overlay de carga
+                if (isUploading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.4f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -164,7 +239,6 @@ private fun ProfileHeader(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Rol con badge
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
@@ -182,28 +256,36 @@ private fun ProfileHeader(
     }
 }
 
+
+
 // ESTADÍSTICAS
+
 @Composable
-private fun StatsRow(modifier: Modifier = Modifier) {
+private fun StatsRow(
+    totalResenas: String,
+    totalPedidos: String,
+    ratingTexto: String,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatCard(
             icon = Icons.Filled.Star,
-            value = "0",
+            value = totalResenas,
             label = "Reseñas",
             modifier = Modifier.weight(1f)
         )
         StatCard(
             icon = Icons.Filled.Person,
-            value = "0",
+            value = totalPedidos,
             label = "Pedidos",
             modifier = Modifier.weight(1f)
         )
         StatCard(
             icon = Icons.Filled.Star,
-            value = "—",
+            value = ratingTexto,
             label = "Rating",
             modifier = Modifier.weight(1f)
         )
@@ -247,6 +329,7 @@ private fun StatCard(
 }
 
 // TÍTULO DE SECCIÓN
+
 @Composable
 private fun SectionTitleText(text: String) {
     Text(
@@ -260,6 +343,7 @@ private fun SectionTitleText(text: String) {
 }
 
 // TARJETA DE INFORMACIÓN
+
 @Composable
 private fun InfoCard(
     modifier: Modifier = Modifier,
@@ -273,7 +357,7 @@ private fun InfoCard(
             .padding(vertical = 8.dp)
     ) {
         rows.forEachIndexed { index, (label, value) ->
-            InfoRow(label = label, value = value) 
+            InfoRow(label = label, value = value)
             if (index < rows.size - 1) {
                 Box(
                     modifier = Modifier
@@ -308,6 +392,7 @@ private fun InfoRow(label: String, value: String) {
         )
     }
 }
+
 // BOTÓN EDITAR PERFIL
 
 @Composable
@@ -341,6 +426,7 @@ private fun EditProfileButton(onClick: () -> Unit) {
 }
 
 // BANNER EDITAR TALLER (solo carpinteros)
+
 @Composable
 private fun EditCarpenterProfileBanner(
     onClick: () -> Unit,
@@ -355,7 +441,6 @@ private fun EditCarpenterProfileBanner(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Ícono con fondo beige
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -373,7 +458,6 @@ private fun EditCarpenterProfileBanner(
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Texto
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Gestiona tu taller",
@@ -389,7 +473,6 @@ private fun EditCarpenterProfileBanner(
             )
         }
 
-        // Flecha
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
             contentDescription = null,

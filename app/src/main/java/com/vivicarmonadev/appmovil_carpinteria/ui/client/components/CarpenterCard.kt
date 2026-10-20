@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.fillMaxSize
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpenterProfile
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 
@@ -52,17 +54,26 @@ fun CarpenterCard(
         // Avatar con iniciales
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(60.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF8B5A2B)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = initials,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFF9F7F5)
-            )
+            if (!user.photoUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = user.photoUrl,
+                    contentDescription = "Foto de ${user.fullName}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = initials,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFF9F7F5)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(14.dp))

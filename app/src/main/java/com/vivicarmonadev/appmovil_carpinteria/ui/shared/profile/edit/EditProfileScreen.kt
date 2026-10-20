@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.edit
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,8 +33,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.net.Uri
+import androidx.compose.foundation.border
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Person
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.CameraAlt
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.copiarUriACache
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
 
@@ -45,6 +54,21 @@ fun EditProfileScreen(
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    //  Launcher de galería
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val rutaSegura = copiarUriACache(context, uri)
+            if (rutaSegura != null) {
+                viewModel.uploadProfilePhoto(rutaSegura) {
+                    // Opcional: mostrar un Toast o Snackbar
+                }
+            }
+        }
+    }
 
     // Cuando guarda exitosamente, volvemos atrás
     LaunchedEffect(uiState.isSuccess) {
@@ -57,10 +81,9 @@ fun EditProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF6F1))
+            .background(Color(0xFFF9F7F5))
             .systemBarsPadding()
     ) {
-
         // ---- HEADER CON BOTÓN ATRÁS ----
         EditProfileHeader(onBack = onBack)
 
@@ -71,26 +94,53 @@ fun EditProfileScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-
             // Avatar
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF9F7F5)),
+                        .background(Color(0xFF8B5A2B))
+                        .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = Color(0xFF8B5A2B),
-                        modifier = Modifier.size(56.dp)
-                    )
+                    // Si hay foto, muéstrala; si no, el ícono
+                    if (!uiState.photoUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = uiState.photoUrl,
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null,
+                            tint = Color(0xFFFBF1E8),
+                            modifier = Modifier.size(120.dp)
+                        )
+                    }
+
+                    //  Ícono de cámara superpuesto
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF8B5A2B))
+                            .border(3.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 

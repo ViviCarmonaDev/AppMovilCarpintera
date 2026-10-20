@@ -42,7 +42,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.copiarUriACache
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaGalleryPicker
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpinteroResumen
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
@@ -60,6 +65,19 @@ fun EditPedidoScreen(
     onSaveSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // LAUNCHER DE GALERÍA
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val rutaSegura = copiarUriACache(context, uri)
+            if (rutaSegura != null) {
+                viewModel.onAgregarImagen(rutaSegura)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -105,7 +123,7 @@ fun EditPedidoScreen(
                     imagenes = uiState.imagenesUrls,
                     label = "Imágenes de referencia",
                     maxImagenes = 3,
-                    onAgregarClick = { /* TODO */ },
+                    onAgregarClick = { launcher.launch("image/*") },
                     onEliminarClick = { index -> viewModel.onEliminarImagen(index) }
                 )
 
@@ -121,15 +139,6 @@ fun EditPedidoScreen(
                     label = "Título del pedido",
                     placeholder = "Ej. Mesa de comedor a medida",
                     errorMessage = uiState.tituloError
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                AuthTextField(
-                    value = uiState.categoria,
-                    onValueChange = { viewModel.onCategoriaChange(it) },
-                    label = "Categoría de mueble",
-                    placeholder = "Ej. Muebles, Puertas, Cocinas",
-                    errorMessage = uiState.categoriaError
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 

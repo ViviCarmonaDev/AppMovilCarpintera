@@ -35,14 +35,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.tiempoRelativo
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.PedidoHomeCard
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.CarpenterProfile
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.CarpenterCard
-import com.vivicarmonadev.appmovil_carpinteria.ui.client.components.RecentOrderCard
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaHorizontalList
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.SectionTitleWithButton
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components.HomeEmptyHint
@@ -55,7 +54,7 @@ fun ClientHomeScreen(
     carpenters: List<Pair<User, CarpenterProfile>>,
     recentPortfolioItems: List<PortfolioItem>,
     recentOrders: List<Pedido>,
-    hasRecentOrders: Boolean,
+    photoUrl: String? = null,
     onCarpenterClick: (String) -> Unit,
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllCarpentersClick: () -> Unit,
@@ -72,6 +71,7 @@ fun ClientHomeScreen(
         MervetaHeader(
             title = "Hola, $userName",
             subtitle = "Encuentra a tu carpintero ideal",
+            avatarUrl = photoUrl,
             onNotificationClick = { /* ... */ },
             onSettingsClick = { /* ... */ }
         )
@@ -105,7 +105,7 @@ fun ClientHomeScreen(
                 items = recentOrders,
                 key = { it.id }
             ) { pedido ->
-                RecentOrderCard(
+                PedidoHomeCard(
                     pedido = pedido,
                     onClick = { onOrderClick(pedido.id) }
                 )
@@ -199,29 +199,6 @@ private fun SearchBar(modifier: Modifier = Modifier) {
         )
     }
 }
-
-@Composable
-private fun CategoriesRow(modifier: Modifier = Modifier) {
-    val categories = listOf(
-        CategoryItem("Muebles", Icons.Filled.Chair),
-        CategoryItem("Puertas", Icons.Filled.DoorBack),
-        CategoryItem("Cocina", Icons.Filled.Kitchen),
-        CategoryItem("Salas", Icons.Filled.MeetingRoom)
-    )
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        categories.forEach { category ->
-            CategoryChip(
-                item = category,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
 private data class CategoryItem(
     val label: String,
     val icon: ImageVector
@@ -254,13 +231,4 @@ private fun CategoryChip(
             color = Color(0xFF2C2C2C)
         )
     }
-}
-
-private fun estadoColorPara(estado: EstadoPedido): Color = when (estado) {
-    EstadoPedido.PENDIENTE -> Color(0xFFE0A458)
-    EstadoPedido.ACEPTADO -> Color(0xFF6B8E7F)
-    EstadoPedido.EN_PROCESO -> Color(0xFF8B5A2B)
-    EstadoPedido.TERMINADO -> Color(0xFF4A6B8B)
-    EstadoPedido.ENTREGADO -> Color(0xFF4A6B5D)
-    EstadoPedido.CANCELADO -> Color(0xFFC5544A)
 }

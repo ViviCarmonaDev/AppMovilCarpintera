@@ -27,6 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Dp
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Notifications
 
@@ -40,6 +43,7 @@ fun MervetaHeader(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    avatarUrl: String? = null,
     avatarIcon: ImageVector = Icons.Filled.Person,
     onAvatarClick: (() -> Unit)? = null,
     onNotificationClick: (() -> Unit)? = null,
@@ -82,12 +86,21 @@ fun MervetaHeader(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = avatarIcon,
-                    contentDescription = null,
-                    tint = Color(0xFF8B5A2B),
-                    modifier = Modifier.size(28.dp)
-                )
+                if (!avatarUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = avatarIcon,
+                        contentDescription = null,
+                        tint = Color(0xFF8B5A2B),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(12.dp))

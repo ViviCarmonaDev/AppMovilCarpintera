@@ -13,15 +13,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
+import com.vivicarmonadev.appmovil_carpinteria.data.remote.cloudinary.CloudinaryDataSource
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
 import kotlinx.coroutines.tasks.await
+
 
 /**
  * ViewModel de EDICIÓN de pedido.
  */
 class EditPedidoViewModel(
     private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl(),
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+    private val cloudinaryDataSource: CloudinaryDataSource = CloudinaryDataSource()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditPedidoUiState())
@@ -111,10 +116,6 @@ class EditPedidoViewModel(
 
     fun onTituloChange(value: String) {
         _uiState.update { it.copy(titulo = value, tituloTouched = true, errorMessage = null) }
-    }
-
-    fun onCategoriaChange(value: String) {
-        _uiState.update { it.copy(categoria = value, categoriaTouched = true, errorMessage = null) }
     }
 
     fun onTipoMaderaChange(value: String) {
@@ -216,7 +217,6 @@ class EditPedidoViewModel(
         _uiState.update {
             it.copy(
                 tituloTouched = true,
-                categoriaTouched = true,
                 tipoMaderaTouched = true,
                 descripcionTouched = true,
                 presupuestoTouched = true
@@ -236,6 +236,40 @@ class EditPedidoViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+            // 1. Subir imágenes nuevas a Cloudinary
+            val urlsFinales = mutableListOf<String>()
+            val imagenesLocales = state.imagenesUrls.filter {
+                it.startsWith("content://") || it.startsWith("file://") || it.startsWith("/data")
+            }
+
+            var errorSubida: String? = null
+            for (uriLocal in imagenesLocales) {
+                val url = suspendCancellableCoroutine<String?> { continuation ->
+                    cloudinaryDataSource.subirImagen(
+                        uriLocal = uriLocal,
+                        carpeta = "pedidos",
+                        onSuccess = { if (continuation.isActive) continuation.resume(it) },
+                        onError = { if (continuation.isActive) continuation.resume(null) }
+                    )
+                }
+                if (url != null) {
+                    urlsFinales.add(url)
+                } else {
+                    errorSubida = "Error al subir una de las imágenes"
+                    break
+                }
+            }
+
+            if (errorSubida != null) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = errorSubida) }
+                return@launch
+            }
+
+            // 2. Conservar las imágenes que ya eran remotas
+            val imagenesRemotas = state.imagenesUrls.filter { it.startsWith("http") }
+            urlsFinales.addAll(imagenesRemotas)
+
+            // 3. Crear el Pedido con las URLs finales
             val pedido = Pedido(
                 id = state.id,
                 numeroSecuencial = state.numeroSecuencial,
@@ -249,10 +283,10 @@ class EditPedidoViewModel(
                 descripcion = state.descripcion.trim(),
                 fechaEstimada = state.fechaEstimada,
                 presupuestoMax = state.presupuestoMax.toDoubleOrNull(),
-                imagenesUrls = state.imagenesUrls,
                 carpenterUid = state.carpenterUid,
                 carpinteroNombre = state.carpinteroNombre,
-                status = state.status
+                status = state.status,
+                imagenesUrls = urlsFinales
             )
 
             val result = pedidoRepository.updatePedido(pedido)

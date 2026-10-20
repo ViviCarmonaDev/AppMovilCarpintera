@@ -33,9 +33,9 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.BottomNavIte
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.HomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.more.MoreScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.more.MoreViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.EditProfileScreen
-import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.EditProfileViewModel
-import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.ProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.edit.EditProfileScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.edit.EditProfileViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.view.ProfileScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.view.PortfolioScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.welcome.WelcomeScreen2
@@ -74,6 +74,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.De
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.cotizaciones.detail.DetailCotizacionViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.DetailPortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.view.ProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioScreen
 
@@ -488,16 +489,34 @@ fun AppNavigation(
 
         // --- PROFILE ---
         composable(Routes.PROFILE) {
+            val profileViewModel = remember { ProfileViewModel() }
+
             MainScaffold(
                 currentRoute = Routes.PROFILE,
                 navController = navController
             ) {
                 ProfileScreen(
-                    mainViewModel = mainViewModel,
+                    viewModel = profileViewModel,
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                     onEditCarpenterProfile = { navController.navigate(Routes.TALLER) }
                 )
             }
+        }
+
+        // --- EDIT PROFILE ---
+        composable(Routes.EDIT_PROFILE) {
+            val editProfileViewModel = remember { EditProfileViewModel() }
+            val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
+
+            LaunchedEffect(user) {
+                user?.let { editProfileViewModel.initialize(it) }
+            }
+
+            EditProfileScreen(
+                viewModel = editProfileViewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
         }
 
         // --- PEDIDOS ---
@@ -640,21 +659,6 @@ fun AppNavigation(
             )
         }
 
-        // --- EDIT PROFILE ---
-        composable(Routes.EDIT_PROFILE) {
-            val editProfileViewModel = remember { EditProfileViewModel() }
-            val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
-
-            LaunchedEffect(user) {
-                user?.let { editProfileViewModel.initialize(it) }
-            }
-
-            EditProfileScreen(
-                viewModel = editProfileViewModel,
-                onBack = { navController.popBackStack() },
-                onSaveSuccess = { navController.popBackStack() }
-            )
-        }
     }
 }
 

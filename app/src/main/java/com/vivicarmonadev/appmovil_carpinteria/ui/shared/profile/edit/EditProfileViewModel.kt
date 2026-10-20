@@ -1,4 +1,4 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.vivicarmonadev.appmovil_carpinteria.data.remote.cloudinary.CloudinaryDataSource
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * ViewModel de la pantalla "Editar perfil".
@@ -18,7 +22,8 @@ import kotlinx.coroutines.launch
  * para que la pantalla navegue hacia atrás.
  */
 class EditProfileViewModel(
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+    private val cloudinaryDataSource: CloudinaryDataSource = CloudinaryDataSource()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditProfileUiState())
@@ -37,10 +42,12 @@ class EditProfileViewModel(
                 originalApellidos = user.apellidos,
                 originalTelefono = user.telefono,
                 originalDireccion = user.direccion,
+                originalPhotoUrl = user.photoUrl,
                 nombres = user.nombres,
                 apellidos = user.apellidos,
                 telefono = user.telefono,
-                direccion = user.direccion
+                direccion = user.direccion,
+                photoUrl = user.photoUrl,
             )
         }
     }
@@ -136,6 +143,51 @@ class EditProfileViewModel(
             )
         }
     }
+
+    // Subir foto de perfil
+    fun uploadProfilePhoto(uriLocal: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val user = authRepository.currentUser.firstOrNull()
+            if (user == null) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Usuario no identificado") }
+                return@launch
+            }
+
+            val url = suspendCancellableCoroutine<String?> { continuation ->
+                cloudinaryDataSource.subirImagen(
+                    uriLocal = uriLocal,
+                    carpeta = "usuarios",
+                    onSuccess = { if (continuation.isActive) continuation.resume(it) },
+                    onError = { if (continuation.isActive) continuation.resume(null) }
+                )
+            }
+
+            if (url == null) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Error al subir la foto") }
+                return@launch
+            }
+
+            val result = authRepository.updateUserPhoto(user.uid, url)
+            result.fold(
+                onSuccess = {
+                    _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isUploadingPhoto = false,
+                        photoUrl = url,
+                        )
+                    }
+                    onSuccess()
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Error") }
+                }
+            )
+        }
+    }
+
 
     // RESET (por si el usuario vuelve a entrar)
     fun resetSuccess() {

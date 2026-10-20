@@ -13,7 +13,6 @@ data class EditPedidoUiState(
 
     // ---- Datos del formulario ----
     val titulo: String = "",
-    val categoria: String = "",
     val tipoMadera: String = "",
     val anchoCm: String = "",
     val altoCm: String = "",
@@ -32,7 +31,6 @@ data class EditPedidoUiState(
 
     // ---- Valores originales ----
     val originalTitulo: String = "",
-    val originalCategoria: String = "",
     val originalTipoMadera: String = "",
     val originalAnchoCm: String = "",
     val originalAltoCm: String = "",
@@ -45,7 +43,6 @@ data class EditPedidoUiState(
 
     // ---- Flags de "tocado" ----
     val tituloTouched: Boolean = false,
-    val categoriaTouched: Boolean = false,
     val tipoMaderaTouched: Boolean = false,
     val anchoTouched: Boolean = false,
     val altoTouched: Boolean = false,
@@ -70,14 +67,6 @@ data class EditPedidoUiState(
             titulo.isBlank() -> "Ingresa un título"
             titulo.trim().length < 3 -> "Mínimo 3 caracteres"
             titulo.trim().length > 80 -> "Máximo 80 caracteres"
-            else -> null
-        }
-
-    val categoriaError: String?
-        get() = when {
-            !categoriaTouched -> null
-            categoria.isBlank() -> "Ingresa una categoría"
-            categoria.trim().length < 3 -> "Mínimo 3 caracteres"
             else -> null
         }
 
@@ -113,7 +102,6 @@ data class EditPedidoUiState(
 
     val isFormValid: Boolean
         get() = titulo.isNotBlank() && tituloError == null &&
-                categoria.isNotBlank() && categoriaError == null &&
                 tipoMadera.isNotBlank() && tipoMaderaError == null &&
                 descripcion.isNotBlank() && descripcionError == null &&
                 presupuestoError == null
@@ -123,7 +111,6 @@ data class EditPedidoUiState(
     val hasChanges: Boolean
         get() = titulo != originalTitulo ||
                 descripcion != originalDescripcion ||
-                categoria != originalCategoria ||
                 tipoMadera != originalTipoMadera ||
                 anchoCm != originalAnchoCm ||
                 altoCm != originalAltoCm ||

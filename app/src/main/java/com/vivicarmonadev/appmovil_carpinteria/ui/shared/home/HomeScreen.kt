@@ -38,6 +38,7 @@ fun HomeScreen(
         when (user.role) {
             UserRole.CARPENTER -> CarpenterHomeScreen(
                 userName = user.nombres.ifBlank { "Usuario" },
+                photoUrl = user.photoUrl,
                 portfolioItems = uiState.myPortfolioItems,
                 pedidos = uiState.recentOrders,
                 onPortfolioItemClick = onPortfolioItemClick,
@@ -48,9 +49,9 @@ fun HomeScreen(
 
             UserRole.CLIENT -> ClientHomeScreen(
                 userName = user.nombres.ifBlank { "Usuario" },
+                photoUrl = user.photoUrl,
                 carpenters = uiState.carpenters,
                 recentPortfolioItems = uiState.recentPortfolioItems,
-                hasRecentOrders = uiState.hasRecentOrders,
                 onCarpenterClick = onCarpenterClick,
                 onPortfolioItemClick = onPortfolioItemClick,
                 onSeeAllCarpentersClick = onSeeAllCarpentersClick,

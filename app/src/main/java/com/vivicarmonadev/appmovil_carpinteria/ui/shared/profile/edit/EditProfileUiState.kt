@@ -1,12 +1,10 @@
-package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile
+package com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.edit
 
 /**
  * Estado de la UI de "Editar perfil".
- *
  * Guarda dos versiones de los datos:
  *  - Los originales (como estaban al abrir la pantalla)
  *  - Los editados (como el usuario los va cambiando)
- *
  * Así podemos saber si el usuario cambió algo (`hasChanges`).
  */
 data class EditProfileUiState(
@@ -15,6 +13,7 @@ data class EditProfileUiState(
     val originalApellidos: String = "",
     val originalTelefono: String = "",
     val originalDireccion: String = "",
+    val originalPhotoUrl: String? = null,
 
     // ---- Datos editados ----
     val nombres: String = "",
@@ -31,7 +30,9 @@ data class EditProfileUiState(
     // ---- Estado general ----
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val photoUrl: String? = null,
+    val isUploadingPhoto: Boolean = false
 ) {
 
     // VALIDACIONES (mismas reglas que el registro)
@@ -85,5 +86,6 @@ data class EditProfileUiState(
         get() = nombres != originalNombres ||
                 apellidos != originalApellidos ||
                 telefono != originalTelefono ||
-                direccion != originalDireccion
+                direccion != originalDireccion ||
+                photoUrl != originalPhotoUrl
 }
