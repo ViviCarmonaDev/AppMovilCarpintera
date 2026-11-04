@@ -35,7 +35,8 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.theme.AppMovilCarpinteriaTheme
 @Composable
 fun WelcomeScreen2(
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -135,7 +136,7 @@ private fun WelcomeScreen2Preview() {
     AppMovilCarpinteriaTheme(darkTheme = false) {
         WelcomeScreen2(
             onLoginClick = {},
-            onRegisterClick = {}
+            onRegisterClick = {},
         )
     }
 }

@@ -223,9 +223,8 @@ fun DetailCotizacionScreen(
                         Text(cotizacion.comentarios, fontSize = 14.sp, color = Color(0xFF4A4A4A))
                     }
 
-                    // ==========================================
                     // CLIENTE: Observación + botón solicitar cambios
-                    // ==========================================
+
                     if (uiState.puedoSolicitarCambios) {
                         Spacer(Modifier.height(24.dp))
                         Text(
@@ -262,9 +261,8 @@ fun DetailCotizacionScreen(
                         )
                     }
 
-                    // ==========================================
                     // CLIENTE: Si ya solicitó cambios
-                    // ==========================================
+
                     if (cotizacion.solicitudCambio && !uiState.isCarpenter) {
                         Spacer(Modifier.height(16.dp))
                         Box(
@@ -282,9 +280,8 @@ fun DetailCotizacionScreen(
                         }
                     }
 
-                    // ==========================================
                     // CLIENTE: Si los cambios fueron ACEPTADOS
-                    // ==========================================
+
                     if (!uiState.isCarpenter && cotizacion.estadoSolicitud == EstadoSolicitud.ACEPTADA) {
                         Spacer(Modifier.height(16.dp))
                         Box(
@@ -302,9 +299,8 @@ fun DetailCotizacionScreen(
                         }
                     }
 
-                    // ==========================================
                     // CARPINTERO: Ver observación del cliente
-                    // ==========================================
+
                     if (uiState.isCarpenter && cotizacion.solicitudCambio) {
                         Spacer(Modifier.height(16.dp))
                         Text("Observación del cliente", fontWeight = FontWeight.Bold)
@@ -338,9 +334,8 @@ fun DetailCotizacionScreen(
                         }
                     }
 
-                    // ==========================================
                     // Si el carpintero ya rechazó los cambios
-                    // ==========================================
+
                     if (cotizacion.estadoSolicitud == EstadoSolicitud.RECHAZADA &&
                         cotizacion.respuestaCarpintero != null
                     ) {
@@ -359,9 +354,8 @@ fun DetailCotizacionScreen(
 
                     Spacer(Modifier.height(32.dp))
 
-                    // ==========================================
                     // ACCIONES ORIGINALES
-                    // ==========================================
+
                     if (uiState.puedoEditar) {
                         MervetaActionButton(
                             text = "Editar",
@@ -408,9 +402,7 @@ fun DetailCotizacionScreen(
         }
     }
 
-    // ============================================================
     // DIÁLOGOS
-    // ============================================================
 
     if (uiState.showAnularDialog) {
         MervetaConfirmDialog(
@@ -448,9 +440,8 @@ fun DetailCotizacionScreen(
         )
     }
 
-    // ============================================================
     // DIÁLOGO DE RECHAZAR CAMBIOS (con TextField)
-    // ============================================================
+
     if (uiState.showRechazarCambiosDialog) {
         Dialog(onDismissRequest = { viewModel.onRechazarCambiosCancel() }) {
             Card(
@@ -522,9 +513,7 @@ fun DetailCotizacionScreen(
     }
 }
 
-// ============================================================
 // COMPONENTES INTERNOS
-// ============================================================
 
 @Composable
 private fun MaterialRow(material: ItemCotizacion) {

@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
@@ -44,20 +44,19 @@ fun PortfolioItemCard(
 ) {
     val primeraImagen = item.imagenesUrls.firstOrNull()
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFFFBF1E8))
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
             .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically   // Alinea imagen y texto al centro
     ) {
-        // Imagen (izquierda) — Tamaño fijo y cuadrado
+        // ---- IMAGEN (sin corazón ni botón "+") ----
         Box(
             modifier = Modifier
-                .size(100.dp)   // Vuelve a ser cuadrada y fija
-                .clip(RoundedCornerShape(14.dp))
+                .fillMaxWidth()
+                .height(150.dp)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 .background(Color(0xFFF5EFE7))
         ) {
             if (!primeraImagen.isNullOrBlank()) {
@@ -76,78 +75,54 @@ fun PortfolioItemCard(
                         imageVector = Icons.Filled.Image,
                         contentDescription = null,
                         tint = Color(0xFF8B5A2B).copy(alpha = 0.4f),
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.width(14.dp))
-
-        // Info (derecha)
+        // ---- INFO ----
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
         ) {
-
-            // VISTA CLIENTE (isOwner = false)
-
-            if (!isOwner) {
-                if (item.nombreTaller.isNotBlank()) {
-                    Text(
-                        text = item.nombreTaller,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF8B5A2B),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                if (item.carpinteroNombre.isNotBlank()) {
-                    Text(
-                        text = "Carpintero: ${item.carpinteroNombre}",
-                        fontSize = 11.sp,
-                        color = Color(0xFF6B6B6B),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // Título (para ambos)
+            // Título
             Text(
                 text = item.titulo,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF2C2C2C),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
-            // VISTA CARPINTERO (isOwner = true)
+            Spacer(modifier = Modifier.height(4.dp))
 
-            if (isOwner) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (item.categoria.isNotBlank()) {
-                        Chip(text = item.categoria)
-                    }
-                    if (item.material.isNotBlank()) {
-                        Chip(text = item.material)
-                    }
-                }
+            // Categoría + Material
+            if (item.categoria.isNotBlank() || item.material.isNotBlank()) {
+                Text(
+                    text = listOfNotNull(
+                        item.categoria.takeIf { it.isNotBlank() },
+                        item.material.takeIf { it.isNotBlank() }
+                    ).joinToString(" · "),
+                    fontSize = 11.sp,
+                    color = Color(0xFF6B6B6B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
-            // Precio (para ambos)
+            // Precio + Etiqueta (con colores verdes)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = item.precioTexto,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF8B5A2B)
                 )
@@ -164,42 +139,23 @@ fun PortfolioItemCard(
 }
 
 @Composable
-private fun Chip(text: String) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFFFFFFFF))
-            .padding(horizontal = 8.dp, vertical = 3.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF8B5A2B),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
 private fun TipoPrecioChip(texto: String, tipo: TipoPrecio) {
     val (bgColor, textColor, icon) = when (tipo) {
         TipoPrecio.FIJO -> Triple(
-            Color(0xFF4A5D3E),
-            Color(0xFFF9F7F5),
+            Color(0xFF4A5D3E), // Verde oscuro
+            Color(0xFFF9F7F5), // Blanco
             Icons.Filled.Lock
         )
         TipoPrecio.A_TRATAR -> Triple(
-            Color(0xFF6B7F5C),
-            Color(0xFFF9F7F5),
+            Color(0xFF6B7F5C), // Verde medio
+            Color(0xFFF9F7F5), // Blanco
             Icons.Filled.Handshake
         )
     }
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(bgColor)
             .padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -213,7 +169,7 @@ private fun TipoPrecioChip(texto: String, tipo: TipoPrecio) {
         )
         Text(
             text = texto,
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.3.sp,
             color = textColor

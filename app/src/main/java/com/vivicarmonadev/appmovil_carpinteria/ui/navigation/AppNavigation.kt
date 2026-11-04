@@ -77,6 +77,14 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.portafolio.detail.De
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.profile.view.ProfileViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.portafolio.CarpenterPortfolioScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.view.MaterialesViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.view.MaterialesScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.view.CategoriasScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.view.CategoriasViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateCategoriaScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateCategoriaViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialViewModel
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -106,6 +114,14 @@ object Routes {
     const val COTIZACIONES = "cotizaciones"
     const val COTIZACION_DETAIL = "cotizacion_detail"
     const val CARPENTER_PORTFOLIO = "carpenter_portfolio"  //portafolio desde la vista de cliente
+    const val MATERIALES = "materiales"
+    const val CREATE_MATERIAL = "create_material"
+    const val CREATE_CATEGORIA = "create_categoria"
+
+    const val EDIT_MATERIAL = "edit_material"
+    const val MATERIAL_DETAIL = "material_detail"
+    const val CATEGORIAS_MATERIALES = "categorias_materiales"
+    const val MATERIALES_POR_CATEGORIA = "materiales_por_categoria"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -207,6 +223,7 @@ fun AppNavigation(
                 onGoToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
+
 
         // --- REGISTRO PASO 1 ---
         composable(Routes.REGISTER) {
@@ -476,6 +493,7 @@ fun AppNavigation(
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                     onEditCarpenterProfile = { navController.navigate(Routes.TALLER) },
                     onVerCotizaciones = { navController.navigate(Routes.COTIZACIONES) },
+                    onVerMateriales = { navController.navigate(Routes.CATEGORIAS_MATERIALES) },
                     onLogout = {
                         moreViewModel.logout {
                             navController.navigate(Routes.WELCOME_1) {
@@ -660,6 +678,72 @@ fun AppNavigation(
                     navController.navigate("${Routes.EDIT_COTIZACION}/$id")
                 },
                 onAnularSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // --- CATEGORÍAS DE MATERIALES ---
+        composable(Routes.CATEGORIAS_MATERIALES) {
+            val viewModel = remember { CategoriasViewModel() }
+            MainScaffold(currentRoute = Routes.CATEGORIAS_MATERIALES, navController = navController) {
+                CategoriasScreen(
+                    viewModel = viewModel,
+                    onCreateClick = { navController.navigate(Routes.CREATE_CATEGORIA) },
+                    onCategoriaClick = { categoria ->
+                        navController.navigate("${Routes.MATERIALES_POR_CATEGORIA}/${categoria.id}/${categoria.nombre}")
+                    }
+                )
+            }
+        }
+
+        // --- MATERIALES POR CATEGORÍA ---
+        composable(
+            route = "${Routes.MATERIALES_POR_CATEGORIA}/{categoriaId}/{nombreCategoria}",
+            arguments = listOf(
+                navArgument("categoriaId") { type = NavType.StringType },
+                navArgument("nombreCategoria") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val categoriaId = backStackEntry.arguments?.getString("categoriaId") ?: ""
+            val nombreCategoria = backStackEntry.arguments?.getString("nombreCategoria") ?: ""
+            val viewModel = remember { MaterialesViewModel() }
+
+            MaterialesScreen(
+                viewModel = viewModel,
+                categoriaId = categoriaId,
+                nombreCategoria = nombreCategoria,
+                onCreateClick = {
+                    navController.navigate("${Routes.CREATE_MATERIAL}/$categoriaId")
+                },
+                onItemClick = { material ->
+                    // TODO: navegar al detalle
+                }
+            )
+        }
+
+        // --- CREAR CATEGORÍA ---
+        composable(Routes.CREATE_CATEGORIA) {
+            val viewModel = remember { CreateCategoriaViewModel() }
+
+            CreateCategoriaScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // --- CREAR MATERIAL (con categoriaId) ---
+        composable(
+            route = "${Routes.CREATE_MATERIAL}/{categoriaId}",
+            arguments = listOf(navArgument("categoriaId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val categoriaId = backStackEntry.arguments?.getString("categoriaId") ?: ""
+            val viewModel = remember { CreateMaterialViewModel() }
+
+            CreateMaterialScreen(
+                viewModel = viewModel,
+                categoriaId = categoriaId,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
 

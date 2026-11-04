@@ -261,7 +261,10 @@ fun CreatePedidoScreen(
                     CircularProgressIndicator(color = Color(0xFF8B5A2B), strokeWidth = 3.dp)
                 }
             } else {
-                Log.d("PEDIDO_DEBUG", "Screen: imágenes=${uiState.imagenesUrls.size}, isFormValid=${uiState.isFormValid}, título=${uiState.titulo.isNotBlank()}, categoria=${uiState.categoria.isNotBlank()}, tipoMadera=${uiState.tipoMadera.isNotBlank()}, descripcion=${uiState.descripcion.isNotBlank()}")
+                Log.d(
+                    "PEDIDO_DEBUG",
+                    "Screen: imágenes=${uiState.imagenesUrls.size}, isFormValid=${uiState.isFormValid}, título=${uiState.titulo.isNotBlank()}, categoria=${uiState.categoria.isNotBlank()}, tipoMadera=${uiState.tipoMadera.isNotBlank()}, descripcion=${uiState.descripcion.isNotBlank()}")
+
                 PrimaryButton(
                     text = "Enviar pedido",
                     onClick = { viewModel.save() },

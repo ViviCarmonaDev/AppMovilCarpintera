@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
@@ -51,14 +52,11 @@ fun MoreScreen(
     mainViewModel: MainViewModel,
     onEditProfile: () -> Unit = {},
     onEditCarpenterProfile: () -> Unit = {},
-    onSettings: () -> Unit = {},
-    onLanguage: () -> Unit = {},
     onHelp: () -> Unit = {},
-    onPrivacy: () -> Unit = {},
     onTerms: () -> Unit = {},
-    onInvite: () -> Unit = {},
     onVouchers: () -> Unit = {},
     onVerCotizaciones: () -> Unit = {},
+    onVerMateriales: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val user by mainViewModel.currentUser.collectAsStateWithLifecycle()
@@ -100,6 +98,9 @@ fun MoreScreen(
             )
         }
 
+        // ---- Gestiones y Beneficios ----
+        SectionTitleText(text = "Gestiones y Beneficios")
+
         MoreItem(
             icon = Icons.Filled.RequestQuote,
             title = if (user?.role == UserRole.CARPENTER)
@@ -115,14 +116,11 @@ fun MoreScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ---- Gestiones y Beneficios ----
-        SectionTitleText(text = "Gestiones y Beneficios")
-
         MoreItem(
-            icon = Icons.Filled.RequestQuote,
-            title = "Mis cotizaciones",
-            subtitle = "Gestiona las cotizaciones enviadas",
-            onClick = onVerCotizaciones
+            icon = Icons.Filled.Folder,
+            title = "Categorias de materiales",
+            subtitle = "Consulta las categorias de materiales y precios referenciales",
+            onClick = onVerMateriales
         )
 
         MoreItem(

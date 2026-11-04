@@ -80,4 +80,6 @@ dependencies {
 
     // base de datos para imagenes
     implementation("com.cloudinary:cloudinary-android:3.1.2")
+
+    implementation("com.google.firebase:firebase-messaging-ktx:24.0.0")
 }

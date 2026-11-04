@@ -36,6 +36,7 @@ fun LoginScreen(
     serverClientId: String,
     onLoginSuccess: (User) -> Unit,
     onGoToRegister: () -> Unit
+
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val loggedInUser by viewModel.loggedInUser.collectAsStateWithLifecycle()
@@ -80,7 +81,7 @@ fun LoginScreen(
             horizontalArrangement = Arrangement.End
         ) {
             TextButton(
-                onClick = { /* TODO: recuperar contraseña */ },
+                onClick = {},
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(

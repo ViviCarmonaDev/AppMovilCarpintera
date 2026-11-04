@@ -66,11 +66,11 @@ fun CarpenterHomeScreen(
     ) {
         // Header
         MervetaHeader(
-            title = "Hola, $userName",
+            title = "Hola",
+            userName = userName,
             subtitle = "Gestiona tus proyectos de hoy",
             avatarUrl = photoUrl,
-            onNotificationClick = { /* Acción para la campana */ },
-            onSettingsClick = { /* Acción para el engranaje */ }
+            onNotificationClick = { /* Acción para la campana */ }
         )
 
         // Métricas

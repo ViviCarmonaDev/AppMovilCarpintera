@@ -91,7 +91,6 @@ data class CreatePedidoUiState(
     val hasChanges: Boolean
         get() = titulo.isNotBlank() ||
                 descripcion.isNotBlank() ||
-                categoria.isNotBlank() ||
                 tipoMadera.isNotBlank() ||
                 anchoCm.isNotBlank() ||
                 altoCm.isNotBlank() ||

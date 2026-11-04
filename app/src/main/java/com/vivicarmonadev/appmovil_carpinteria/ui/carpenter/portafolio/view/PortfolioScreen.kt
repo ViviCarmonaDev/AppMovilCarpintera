@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
@@ -119,17 +120,19 @@ fun PortfolioScreen(
     }
 }
 
-// Lista de trabajos (1 columna, cards horizontales)
+// LISTA DE TRABAJOS (grid de 2 columnas)
 @Composable
 private fun ItemsList(
     items: List<PortfolioItem>,
     isOwner: Boolean,
     onItemClick: (PortfolioItem) -> Unit
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items, key = { it.id }) { item ->
             PortfolioItemCard(
