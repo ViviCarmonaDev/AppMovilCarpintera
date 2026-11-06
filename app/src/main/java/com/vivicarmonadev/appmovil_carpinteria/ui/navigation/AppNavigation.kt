@@ -23,6 +23,8 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.notificaciones.view.NotificacionesScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.notificaciones.view.NotificacionesViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.login.LoginScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.login.LoginViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.register.RegisterCredentialsScreen
@@ -89,6 +91,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.Creat
 object Routes {
     const val WELCOME_1 = "welcome_1"
     const val WELCOME_2 = "welcome_2"
+    const val NOTIFICACIONES = "notificaciones"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val REGISTER_CREDENTIALS = "register_credentials"
@@ -223,7 +226,6 @@ fun AppNavigation(
                 onGoToRegister = { navController.navigate(Routes.REGISTER) }
             )
         }
-
 
         // --- REGISTRO PASO 1 ---
         composable(Routes.REGISTER) {
@@ -409,7 +411,8 @@ fun AppNavigation(
                     onSeeAllCarpentersClick = { navController.navigate(Routes.PORTFOLIO) },
                     onSeeAllPortfolioClick = { navController.navigate(Routes.PORTFOLIO) },
                     onOrderClick = { pedidoId -> navController.navigate("${Routes.PEDIDO_DETAIL}/$pedidoId") },
-                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) }
+                    onSeeAllOrdersClick = { navController.navigate(Routes.PEDIDOS) },
+                    onNotificationClick = { navController.navigate(Routes.NOTIFICACIONES) }
                 )
             }
         }
@@ -747,6 +750,25 @@ fun AppNavigation(
             )
         }
 
+        composable(Routes.NOTIFICACIONES) {
+            val viewModel = remember { NotificacionesViewModel() }
+            MainScaffold(currentRoute = Routes.NOTIFICACIONES, navController = navController) {
+                NotificacionesScreen(
+                    viewModel = viewModel,
+                    onNotificacionClick = { notificacion ->
+                        // Navegar según el tipo de notificación
+                        when (notificacion.tipo) {
+                            "nuevo_pedido", "estado_pedido" -> {
+                                navController.navigate("${Routes.PEDIDO_DETAIL}/${notificacion.referenciaId}")
+                            }
+                            "nueva_cotizacion", "respuesta_cotizacion" -> {
+                                navController.navigate("${Routes.COTIZACION_DETAIL}/${notificacion.referenciaId}")
+                            }
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 

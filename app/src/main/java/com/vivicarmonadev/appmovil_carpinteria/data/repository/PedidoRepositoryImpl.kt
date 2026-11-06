@@ -6,6 +6,7 @@ import com.vivicarmonadev.appmovil_carpinteria.data.remote.firestore.FirestorePe
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoPedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Pedido
 import com.vivicarmonadev.appmovil_carpinteria.domain.repository.PedidoRepository
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Notificacion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.map
  * Es el "pegamento" entre la capa de dominio y la capa de datos.
  */
 class PedidoRepositoryImpl(
-    private val dataSource: FirestorePedidoDataSource = FirestorePedidoDataSource()
+    private val dataSource: FirestorePedidoDataSource = FirestorePedidoDataSource(),
+    private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl()
 ) : PedidoRepository {
 
     // CLIENTE
@@ -62,8 +64,20 @@ class PedidoRepositoryImpl(
             val createdDto = result.getOrNull()
                 ?: return Result.failure(Exception("No se pudo crear el pedido"))
 
-            Result.success(createdDto.toDomain())
+            // Si el pedido tiene un carpintero asignado, notificarlo
+            if (!order.carpenterUid.isNullOrBlank()) {
+                val notificacion = Notificacion(
+                    destinatarioUid = order.carpenterUid!!,
+                    titulo = "Nuevo pedido recibido",
+                    mensaje = "Tienes un nuevo pedido: ${order.titulo}",
+                    tipo = "nuevo_pedido",
+                    referenciaId = createdDto.id,
+                    leida = false
+                )
+                notificacionRepository.crearNotificacion(notificacion)
+            }
 
+            Result.success(createdDto.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -90,7 +104,6 @@ class PedidoRepositoryImpl(
             Result.failure(e)
         }
     }
-
     override suspend fun updatePedidoStatus(
         pedidoId: String,
         nuevoEstado: EstadoPedido
@@ -100,16 +113,29 @@ class PedidoRepositoryImpl(
                 return Result.failure(Exception("El pedido no tiene ID"))
             }
 
-            dataSource.updateEstado(
-                pedidoId = pedidoId,
-                nuevoEstado = nuevoEstado.toFirestoreValue()
-            )
+            // 1. Actualizar el estado en Firestore
+            dataSource.updateEstado(pedidoId, nuevoEstado.toFirestoreValue())
 
+            // 2. Obtener el pedido para saber quién es el cliente
+            val pedido = getPedidoById(pedidoId).getOrNull()
+            if (pedido != null) {
+                // 3. Crear notificación para el cliente
+                val notificacion = Notificacion(
+                    destinatarioUid = pedido.clientUid,
+                    titulo = "Estado de tu pedido actualizado",
+                    mensaje = "Tu pedido \"${pedido.titulo}\" cambió a ${nuevoEstado.toDisplayText()}.",
+                    tipo = "estado_pedido",
+                    referenciaId = pedidoId,
+                    leida = false
+                )
+                notificacionRepository.crearNotificacion(notificacion)
+            }
+
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
     override suspend fun deletePedido(id: String): Result<Unit> {
         return try {
             if (id.isBlank()) {

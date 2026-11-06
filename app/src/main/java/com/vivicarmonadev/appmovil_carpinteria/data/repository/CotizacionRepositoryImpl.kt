@@ -6,6 +6,7 @@ import com.vivicarmonadev.appmovil_carpinteria.data.remote.firestore.FirestoreCo
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoCotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.repository.CotizacionRepository
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Notificacion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.map
  * Es el "pegamento" entre la capa de dominio y la capa de datos.
  */
 class CotizacionRepositoryImpl(
-    private val dataSource: FirestoreCotizacionDataSource = FirestoreCotizacionDataSource()
+    private val dataSource: FirestoreCotizacionDataSource = FirestoreCotizacionDataSource(),
+    private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl()
 ) : CotizacionRepository {
 
     override fun getCotizacionesByCarpenter(carpenterUid: String): Flow<List<Cotizacion>> {
@@ -50,8 +52,25 @@ class CotizacionRepositoryImpl(
 
     override suspend fun createCotizacion(cotizacion: Cotizacion): Result<Cotizacion> {
         return try {
-            val result = dataSource.createCotizacion(cotizacion.toDto())
-            result.map { it.toDomain() }
+            dataSource.createCotizacion(cotizacion.toDto()).fold(
+                onSuccess = { createdDto ->
+                    // Notificar al cliente
+                    val notificacion = Notificacion(
+                        destinatarioUid = cotizacion.clienteUid,
+                        titulo = "Nueva cotización recibida",
+                        mensaje = "${cotizacion.carpinteroNombre} te envió una cotización por S/ ${cotizacion.costoTotal}",
+                        tipo = "nueva_cotizacion",
+                        referenciaId = createdDto.id,
+                        leida = false
+                    )
+                    notificacionRepository.crearNotificacion(notificacion)
+
+                    Result.success(createdDto.toDomain())
+                },
+                onFailure = { exception ->
+                    Result.failure(exception)
+                }
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -59,8 +78,27 @@ class CotizacionRepositoryImpl(
 
     override suspend fun updateCotizacion(cotizacion: Cotizacion): Result<Cotizacion> {
         return try {
+            // 1. Actualizar en Firestore
             val result = dataSource.updateCotizacion(cotizacion.toDto())
+
             if (result.isSuccess) {
+                // 2. Notificar al carpintero si el estado cambió (Aceptada/Rechazada)
+                // Solo notificamos si la cotización tiene un carpintero asignado
+                if (cotizacion.carpinteroUid.isNotBlank() &&
+                    (cotizacion.estado == EstadoCotizacion.ACEPTADA ||
+                            cotizacion.estado == EstadoCotizacion.RECHAZADA)) {
+
+                    val notificacion = Notificacion(
+                        destinatarioUid = cotizacion.carpinteroUid,
+                        titulo = "Respuesta a tu cotización",
+                        mensaje = "El cliente ${cotizacion.estado.toDisplayText().lowercase()} tu cotización.",
+                        tipo = "respuesta_cotizacion",
+                        referenciaId = cotizacion.id,
+                        leida = false
+                    )
+                    notificacionRepository.crearNotificacion(notificacion)
+                }
+
                 Result.success(cotizacion)
             } else {
                 Result.failure(result.exceptionOrNull() ?: Exception("Error al actualizar"))

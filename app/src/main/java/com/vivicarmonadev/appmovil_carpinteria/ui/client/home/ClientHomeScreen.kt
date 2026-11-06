@@ -60,7 +60,8 @@ fun ClientHomeScreen(
     onSeeAllCarpentersClick: () -> Unit,
     onSeeAllPortfolioClick: () -> Unit,
     onOrderClick: (String) -> Unit,
-    onSeeAllOrdersClick: () -> Unit
+    onSeeAllOrdersClick: () -> Unit,
+    onNotificationClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -72,8 +73,8 @@ fun ClientHomeScreen(
             title = "Hola, $userName",
             subtitle = "Encuentra a tu carpintero ideal",
             avatarUrl = photoUrl,
-            onNotificationClick = { /* ... */ },
-            onSettingsClick = { /* ... */ }
+            onNotificationClick =  onNotificationClick
+
         )
 
         // Buscador

@@ -57,7 +57,8 @@ fun CarpenterHomeScreen(
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllPortfolioClick: () -> Unit,
     onPedidoClick: (String) -> Unit,
-    onSeeAllPedidosClick: () -> Unit
+    onSeeAllPedidosClick: () -> Unit,
+    onNotificationClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -70,7 +71,7 @@ fun CarpenterHomeScreen(
             userName = userName,
             subtitle = "Gestiona tus proyectos de hoy",
             avatarUrl = photoUrl,
-            onNotificationClick = { /* Acción para la campana */ }
+            onNotificationClick = onNotificationClick
         )
 
         // Métricas

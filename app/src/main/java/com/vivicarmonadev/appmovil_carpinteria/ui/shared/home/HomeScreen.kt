@@ -21,7 +21,8 @@ fun HomeScreen(
     onSeeAllCarpentersClick: () -> Unit,
     onSeeAllPortfolioClick: () -> Unit,
     onOrderClick: (String) -> Unit,
-    onSeeAllOrdersClick: () -> Unit
+    onSeeAllOrdersClick: () -> Unit,
+    onNotificationClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -44,7 +45,8 @@ fun HomeScreen(
                 onPortfolioItemClick = onPortfolioItemClick,
                 onSeeAllPortfolioClick = onSeeAllPortfolioClick,
                 onPedidoClick = onOrderClick,
-                onSeeAllPedidosClick = onSeeAllOrdersClick
+                onSeeAllPedidosClick = onSeeAllOrdersClick,
+                onNotificationClick = onNotificationClick
             )
 
             UserRole.CLIENT -> ClientHomeScreen(
@@ -58,7 +60,8 @@ fun HomeScreen(
                 onSeeAllPortfolioClick = onSeeAllPortfolioClick,
                 recentOrders = uiState.recentOrders,
                 onOrderClick = onOrderClick,
-                onSeeAllOrdersClick = onSeeAllOrdersClick
+                onSeeAllOrdersClick = onSeeAllOrdersClick,
+                onNotificationClick = onNotificationClick
             )
         }
     }
