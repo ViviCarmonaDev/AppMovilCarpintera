@@ -32,6 +32,8 @@ data class CarpenterProfileDto(
     val rating: Float = 0f,
     val totalReviews: Int = 0,
     val profileCompleted: Boolean = false,
+    val latitud: Double? = null,
+    val longitud: Double? = null,
 
     @ServerTimestamp
     val createdAt: Date? = null,
@@ -58,7 +60,9 @@ fun CarpenterProfileDto.toDomain(): CarpenterProfile {
         totalReviews = totalReviews,
         profileCompleted = profileCompleted,
         createdAt = createdAt?.time ?: 0L,
-        updatedAt = updatedAt?.time ?: 0L
+        updatedAt = updatedAt?.time ?: 0L,
+        latitud = latitud,
+        longitud = longitud,
     )
 }
 
@@ -74,11 +78,12 @@ fun CarpenterProfile.toDto(): CarpenterProfileDto {
         skills = skills,
         fotoTallerUrl = fotoTallerUrl,
         fotoMaestroUrl = fotoMaestroUrl,
-
         rating = rating,
         totalReviews = totalReviews,
         profileCompleted = profileCompleted,
         createdAt = if (createdAt > 0) Date(createdAt) else null,
-        updatedAt = if (updatedAt > 0) Date(updatedAt) else null
+        updatedAt = if (updatedAt > 0) Date(updatedAt) else null,
+        latitud = latitud,
+        longitud = longitud,
     )
 }

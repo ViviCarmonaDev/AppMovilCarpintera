@@ -28,11 +28,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfil.CarpenterPublicProfileViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.Routes
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.MenuOptionsSection
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.PortfolioSection
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.PublicProfileHeader
-import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.ReviewsSection
 
 @Composable
 fun CarpenterPublicProfileScreen(
@@ -40,16 +42,17 @@ fun CarpenterPublicProfileScreen(
     uid: String,
     onBack: () -> Unit,
     onSeeAllPortfolioClick: (String) -> Unit,
-    onPortfolioItemClick: (String) -> Unit
+    onPortfolioItemClick: (String) -> Unit,
+    onUbicacionClick: (Double, Double, String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var scrollEnabled by remember { mutableStateOf(true) }
 
     LaunchedEffect(uid) {
         viewModel.loadCarpenter(uid)
     }
 
-    // ⚠️ SIN systemBarsPadding() para que el header suba hasta el status bar
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -73,10 +76,10 @@ fun CarpenterPublicProfileScreen(
             }
 
             uiState.isLoaded -> {
-                // ✅ TODO dentro de un LazyColumn → todo scrollea junto
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 24.dp)
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    userScrollEnabled = scrollEnabled
                 ) {
 
                     // ---- HEADER (scrollea con el contenido) ----
@@ -114,7 +117,7 @@ fun CarpenterPublicProfileScreen(
                         )
                     }
 
-                    // ---- RESEÑAS ----
+                    /* ---- RESEÑAS ----
                     item {
                         ReviewsSection(
                             reviews = uiState.reviews,
@@ -123,11 +126,16 @@ fun CarpenterPublicProfileScreen(
                         )
                     }
 
+                     */
+
                     // ---- OPCIONES DE MENÚ ----
                     item {
                         MenuOptionsSection(
                             onMiPerfilClick = { /* TODO: ir a Mi perfil */ },
                             onMiTallerClick = { /* TODO: ir a Mi taller */ },
+                            onMiUbicacionClick = {
+                                    onUbicacionClick(-7.1638, -78.5003, "Taller de prueba")
+                            },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }

@@ -86,6 +86,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.view.Categor
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateCategoriaScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateCategoriaViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.mapa.UbicacionScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialViewModel
 
 object Routes {
@@ -120,11 +121,11 @@ object Routes {
     const val MATERIALES = "materiales"
     const val CREATE_MATERIAL = "create_material"
     const val CREATE_CATEGORIA = "create_categoria"
-
     const val EDIT_MATERIAL = "edit_material"
     const val MATERIAL_DETAIL = "material_detail"
     const val CATEGORIAS_MATERIALES = "categorias_materiales"
     const val MATERIALES_POR_CATEGORIA = "materiales_por_categoria"
+    const val UBICACION_TALLER = "ubicacion_taller"
 }
 
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
@@ -372,6 +373,9 @@ fun AppNavigation(
                     navController.navigate("${Routes.CARPENTER_PORTFOLIO}/$carpinteroUid") },
                 onPortfolioItemClick = { itemId ->
                     navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/$itemId")
+                },
+                onUbicacionClick = { lat, lng, nombre ->
+                    navController.navigate("${Routes.UBICACION_TALLER}/$lat/$lng/$nombre")
                 }
             )
         }
@@ -718,7 +722,7 @@ fun AppNavigation(
                     navController.navigate("${Routes.CREATE_MATERIAL}/$categoriaId")
                 },
                 onItemClick = { material ->
-                    // TODO: navegar al detalle
+                    navController.navigate("${Routes.MATERIAL_DETAIL}/${material.id}")
                 }
             )
         }
@@ -761,6 +765,7 @@ fun AppNavigation(
                             "nuevo_pedido", "estado_pedido" -> {
                                 navController.navigate("${Routes.PEDIDO_DETAIL}/${notificacion.referenciaId}")
                             }
+
                             "nueva_cotizacion", "respuesta_cotizacion" -> {
                                 navController.navigate("${Routes.COTIZACION_DETAIL}/${notificacion.referenciaId}")
                             }
@@ -768,6 +773,26 @@ fun AppNavigation(
                     }
                 )
             }
+        }
+
+        composable(
+            route = "${Routes.UBICACION_TALLER}/{latitud}/{longitud}/{nombreTaller}",
+            arguments = listOf(
+                navArgument("latitud") { type = NavType.StringType },
+                navArgument("longitud") { type = NavType.StringType },
+                navArgument("nombreTaller") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val latitud = backStackEntry.arguments?.getString("latitud")?.toDoubleOrNull()
+            val longitud = backStackEntry.arguments?.getString("longitud")?.toDoubleOrNull()
+            val nombreTaller = backStackEntry.arguments?.getString("nombreTaller") ?: ""
+
+            UbicacionScreen(
+                latitud = latitud,
+                longitud = longitud,
+                nombreTaller = nombreTaller,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

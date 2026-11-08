@@ -82,4 +82,9 @@ dependencies {
     implementation("com.cloudinary:cloudinary-android:3.1.2")
 
     implementation("com.google.firebase:firebase-messaging-ktx:24.0.0")
+
+    // Google Maps para Compose
+    implementation("com.google.maps.android:maps-compose:4.3.0")
+    // SDK base de Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 }

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 fun MenuOptionsSection(
     onMiPerfilClick: () -> Unit,
     onMiTallerClick: () -> Unit,
+    onMiUbicacionClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -58,6 +59,16 @@ fun MenuOptionsSection(
             title = "Mi taller",
             subtitle = "Datos del negocio y servicios",
             onClick = onMiTallerClick
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // ---- Opción: ubicació ----
+        MenuOptionItem(
+            icon = Icons.Filled.Store,
+            title = "Mi ubicación",
+            subtitle = "dirección del taller",
+            onClick = onMiUbicacionClick
         )
     }
 }

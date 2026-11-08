@@ -25,7 +25,9 @@ data class CarpenterProfile(
     val totalReviews: Int = 0,
     val profileCompleted: Boolean = false,
     val createdAt: Long = 0L,
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
+    val latitud: Double? = null,
+    val longitud: Double? = null,
 ) {
 
     // Lista de skills formateada para mostrar en UI.
