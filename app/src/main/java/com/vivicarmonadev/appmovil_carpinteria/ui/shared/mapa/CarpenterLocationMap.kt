@@ -40,7 +40,7 @@ fun CarpenterLocationMap(
         GoogleMap(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(600.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .pointerInput(Unit) {
                     detectTapGestures(

@@ -175,6 +175,30 @@ class ProfileViewModel(
         }
     }
 
+    // Agrega esto dentro de tu clase ProfileViewModel
+    fun loadUserById(uid: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // Asumo que tienes un AuthRepositoryImpl o un UserRepositoryImpl
+            // Si tu función se llama distinto, cámbiala aquí:
+            val result = authRepository.getUserById(uid)
+
+            result.fold(
+                onSuccess = { user ->
+                    if (user != null) {
+                        _uiState.update { it.copy(user = user, isLoading = false) }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = "Usuario no encontrado") }
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                }
+            )
+        }
+    }
+
     fun refresh() {
         loadUserData()
     }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.User
 
 /**
  * ViewModel del perfil público del carpintero.
@@ -85,6 +86,8 @@ class CarpenterPublicProfileViewModel(
 
     fun buildWhatsAppLink(): String? {
         val profile = _uiState.value.profile ?: return null
+        val state = _uiState.value
+        val user = state.user ?: return null
 
         val telefono = profile.telefonoTaller
             .filter { it.isDigit() }
@@ -95,7 +98,8 @@ class CarpenterPublicProfileViewModel(
         val numeroConCodigo = "51$telefono"   // Código de Perú
 
         val nombreTaller = profile.nombreTaller.ifBlank { "tu taller" }
-        val mensaje = "Hola! Vi $nombreTaller en Merveta y me gustaría consultarte sobre tus servicios."
+        val nombreCarpintero = user.fullName.ifBlank { "carpintero" }
+        val mensaje = "¡Hola $nombreCarpintero! 👋 vi tu taller \"$nombreTaller\" en Merveta y me encantó tu trabajo. 🪚✨ Me gustaría saber más sobre tus servicios. ¿Podemos conversar?"
 
         val mensajeEncoded = URLEncoder.encode(mensaje, "UTF-8")
 

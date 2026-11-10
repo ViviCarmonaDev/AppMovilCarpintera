@@ -3,7 +3,6 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
@@ -88,7 +87,12 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.Creat
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateCategoriaViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialScreen
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.mapa.UbicacionScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.edit.EditMaterialScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.edit.EditMaterialViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.detail.DetailMaterialScreen
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.detail.DetailMaterialViewModel
 import com.vivicarmonadev.appmovil_carpinteria.ui.shared.materiales.create.CreateMaterialViewModel
+import com.vivicarmonadev.appmovil_carpinteria.ui.shared.more.EjercicoPatalla
 
 object Routes {
     const val WELCOME_1 = "welcome_1"
@@ -110,6 +114,8 @@ object Routes {
     const val EDIT_PORTFOLIO_ITEM = "edit_portfolio_item"
     const val PORTFOLIO_ITEM_DETAIL = "portfolio_item_detail"
     const val CARPENTER_PUBLIC_PROFILE = "carpenter_public_profile"
+    const val CARPENTER_PUBLIC_TALLER = "carpenter_public_taller/{uid}"
+    const val CARPENTER_PUBLIC_INFO = "carpenter_public_info/{uid}"
     const val PEDIDOS = "pedidos"
     const val CREATE_PEDIDO = "create_pedido"
     const val EDIT_PEDIDO = "edit_pedido"
@@ -119,16 +125,15 @@ object Routes {
     const val COTIZACIONES = "cotizaciones"
     const val COTIZACION_DETAIL = "cotizacion_detail"
     const val CARPENTER_PORTFOLIO = "carpenter_portfolio"  //portafolio desde la vista de cliente
-    const val MATERIALES = "materiales"
     const val CREATE_MATERIAL = "create_material"
     const val CREATE_CATEGORIA = "create_categoria"
-    const val EDIT_MATERIAL = "edit_material"
+    const val MATERIAL_EDIT = "material_edit"
     const val MATERIAL_DETAIL = "material_detail"
     const val CATEGORIAS_MATERIALES = "categorias_materiales"
     const val MATERIALES_POR_CATEGORIA = "materiales_por_categoria"
     const val UBICACION_TALLER = "ubicacion_taller"
+    const val TERMS = "terms"
 }
-
 private const val WEB_CLIENT_ID = "73930140303-882u6cn6rd0j4dl1uqi3fg6i9ta4i1n0.apps.googleusercontent.com"
 
 @Composable
@@ -371,13 +376,60 @@ fun AppNavigation(
                 uid = uid,
                 onBack = { navController.popBackStack() },
                 onSeeAllPortfolioClick = { carpinteroUid ->
-                    navController.navigate("${Routes.CARPENTER_PORTFOLIO}/$carpinteroUid") },
+                    navController.navigate("${Routes.CARPENTER_PORTFOLIO}/$carpinteroUid")
+                },
                 onPortfolioItemClick = { itemId ->
                     navController.navigate("${Routes.PORTFOLIO_ITEM_DETAIL}/$itemId")
                 },
                 onUbicacionClick = { lat, lng, nombre ->
                     navController.navigate("${Routes.UBICACION_TALLER}/$lat/$lng/$nombre")
+                },
+                onPerfilClick = { id ->
+                    navController.navigate("carpenter_public_info/$id") // Tu nueva ruta
+                },
+                onTallerClick = { id ->
+                    navController.navigate("carpenter_public_taller/$id") // Tu nueva ruta
                 }
+            )
+        }
+
+        // --- TALLER PÚBLICO (Vista del cliente) ---
+        composable(
+            route = Routes.CARPENTER_PUBLIC_TALLER,
+            arguments = listOf(navArgument("uid") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid") ?: ""
+            val tallerViewModel = remember { TallerViewModel() }
+
+            TallerScreen(
+                viewModel = tallerViewModel,
+                uid = uid,
+                onBack = { navController.popBackStack() },
+                onEditClick = { /* El cliente no puede editar el taller */ },
+                isOwner = false
+            )
+        }
+
+        // --- PERFIL PÚBLICO (Información del cliente) ---
+        composable(
+            route = Routes.CARPENTER_PUBLIC_INFO,
+            arguments = listOf(navArgument("uid") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val uid = backStackEntry.arguments?.getString("uid") ?: ""
+            val profileViewModel = remember { ProfileViewModel() }
+
+            // IMPORTANTE: Debes asegurarte de que tu ProfileViewModel tenga una función
+            // para cargar el perfil de un UID específico (no solo el del usuario actual).
+            // Si no la tiene, el perfil se verá vacío.
+            LaunchedEffect(uid) {
+                profileViewModel.loadUserById(uid) // <-- Debes crear esta función en tu ViewModel
+            }
+
+            ProfileScreen(
+                viewModel = profileViewModel,
+                onEditProfile = { /* El cliente no edita */ },
+                onEditCarpenterProfile = { /* El cliente no edita */ },
+                isOwner = false
             )
         }
 
@@ -501,6 +553,7 @@ fun AppNavigation(
                     onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
                     onEditCarpenterProfile = { navController.navigate(Routes.TALLER) },
                     onVerCotizaciones = { navController.navigate(Routes.COTIZACIONES) },
+                    onTerms = { navController.navigate(Routes.TERMS)},
                     onVerMateriales = { navController.navigate(Routes.CATEGORIAS_MATERIALES) },
                     onLogout = {
                         moreViewModel.logout {
@@ -511,6 +564,13 @@ fun AppNavigation(
                     }
                 )
             }
+        }
+
+        //ejercicio
+        composable(Routes.TERMS) {
+            EjercicoPatalla(
+             onBack = {navController.popBackStack()}
+            )
         }
 
         // --- PROFILE ---
@@ -724,7 +784,7 @@ fun AppNavigation(
                 },
                 onItemClick = { material ->
                     navController.navigate("${Routes.MATERIAL_DETAIL}/${material.id}")
-                }
+                },
             )
         }
 
@@ -755,20 +815,66 @@ fun AppNavigation(
             )
         }
 
+        // --- DETALLE DEL MATERIAL ---
+        composable(
+            route = "${Routes.MATERIAL_DETAIL}/{materialId}", // <-- Aquí agregamos el /{materialId}
+            arguments = listOf(navArgument("materialId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val materialId = backStackEntry.arguments?.getString("materialId") ?: ""
+            val viewModel = remember { DetailMaterialViewModel() }
+
+            DetailMaterialScreen(
+                viewModel = viewModel,
+                materialId = materialId,
+                onBack = { navController.popBackStack() },
+                onEditClick = { id ->
+                    navController.navigate("material_edit/$id")
+                },
+                onDeleteSuccess = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- EDITAR MATERIAL ---
+        composable(
+            route = "${Routes.MATERIAL_EDIT}/{materialId}", // <-- Aquí agregamos el /{materialId}
+            arguments = listOf(navArgument("materialId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val materialId = backStackEntry.arguments?.getString("materialId") ?: ""
+            val viewModel = remember { EditMaterialViewModel() }
+
+            EditMaterialScreen(
+                viewModel = viewModel,
+                materialId = materialId,
+                onBack = { navController.popBackStack() },
+                onSaveSuccess = {
+                    // Volver al detalle después de guardar
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(Routes.NOTIFICACIONES) {
             val viewModel = remember { NotificacionesViewModel() }
             MainScaffold(currentRoute = Routes.NOTIFICACIONES, navController = navController) {
                 NotificacionesScreen(
                     viewModel = viewModel,
                     onNotificacionClick = { notificacion ->
-                        // Navegar según el tipo de notificación
                         when (notificacion.tipo) {
-                            "nuevo_pedido", "estado_pedido" -> {
+                            // 1. Pedidos (Nuevo pedido o cambio de estado)
+                            "nuevo_pedido", "estado_pedido", "pedido_libre" -> {
                                 navController.navigate("${Routes.PEDIDO_DETAIL}/${notificacion.referenciaId}")
                             }
 
-                            "nueva_cotizacion", "respuesta_cotizacion" -> {
+                            // 2. Cotizaciones (Nueva cotización, respuesta o SOLICITUD DE CAMBIOS)
+                            "nueva_cotizacion", "respuesta_cotizacion", "solicitud_cambios" -> {
                                 navController.navigate("${Routes.COTIZACION_DETAIL}/${notificacion.referenciaId}")
+                            }
+
+                            // 3. Cualquier otra (por seguridad, va al pedido)
+                            else -> {
+                                navController.navigate("${Routes.PEDIDO_DETAIL}/${notificacion.referenciaId}")
                             }
                         }
                     }
@@ -795,6 +901,13 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() }
             )
         }
+
+        /** // --- FORGOT PASSWORD ---
+        composable(Routes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }*/
     }
 }
 @Composable

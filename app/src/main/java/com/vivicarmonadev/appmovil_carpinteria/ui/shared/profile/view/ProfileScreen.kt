@@ -50,7 +50,8 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.UserRole
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     onEditProfile: () -> Unit = {},
-    onEditCarpenterProfile: () -> Unit = {}
+    onEditCarpenterProfile: () -> Unit = {},
+    isOwner: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var mostrarFotoCompleta by remember { mutableStateOf(false) }
@@ -143,7 +144,9 @@ fun ProfileScreen(
         }
 
         // ---- BOTÓN EDITAR PERFIL ----
-        EditProfileButton(onClick = onEditProfile)
+        if (isOwner) {
+            EditProfileButton(onClick = onEditProfile)
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
     }

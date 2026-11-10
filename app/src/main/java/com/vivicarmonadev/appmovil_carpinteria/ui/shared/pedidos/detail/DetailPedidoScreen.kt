@@ -88,24 +88,14 @@ fun DetailPedidoScreen(
     ) {
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color(0xFF8B5A2B))
                 }
             }
 
             uiState.errorMessage != null && uiState.pedido == null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = uiState.errorMessage!!,
-                        color = Color(0xFFC5544A),
-                        fontSize = 14.sp
-                    )
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(uiState.errorMessage!!, color = Color(0xFFC5544A), fontSize = 14.sp)
                 }
             }
 
@@ -117,10 +107,7 @@ fun DetailPedidoScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    MervetaImagesSection(
-                        imagenes = pedido.imagenesUrls,
-                        aspectRatio = 1f
-                    )
+                    MervetaImagesSection(imagenes = pedido.imagenesUrls, aspectRatio = 1f)
 
                     Column(
                         modifier = Modifier
@@ -146,82 +133,43 @@ fun DetailPedidoScreen(
                                         .background(Color(0xFFF5EFE7))
                                         .padding(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
-                                    Text(
-                                        text = pedido.numeroPedido,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF8B5A2B)
-                                    )
+                                    Text(pedido.numeroPedido, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8B5A2B))
                                 }
 
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Schedule,
-                                        contentDescription = null,
-                                        tint = Color(0xFF8A8A8A),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = tiempoRelativo(pedido.createdAt),
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF8A8A8A)
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color(0xFF8A8A8A), modifier = Modifier.size(14.dp))
+                                    Text(tiempoRelativo(pedido.createdAt), fontSize = 12.sp, color = Color(0xFF8A8A8A))
                                 }
                             }
-
                             EstadoPedidoBadge(estado = pedido.status)
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(
-                            text = pedido.titulo,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2C2C2C)
-                        )
+                        Text(pedido.titulo, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2C2C2C))
 
                         if (pedido.descripcion.isNotBlank()) {
                             Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = pedido.descripcion,
-                                fontSize = 15.sp,
-                                lineHeight = 22.sp,
-                                color = Color(0xFF6B6B6B)
-                            )
+                            Text(pedido.descripcion, fontSize = 15.sp, lineHeight = 22.sp, color = Color(0xFF6B6B6B))
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Info del cliente (si soy carpintero)
                         if (uiState.isCarpenter && pedido.clienteNombre.isNotBlank()) {
-                            MervetaInfoCard(
-                                icon = Icons.Filled.Person,
-                                label = "Cliente",
-                                value = pedido.clienteNombre
-                            )
+                            MervetaInfoCard(icon = Icons.Filled.Person, label = "Cliente", value = pedido.clienteNombre)
                             Spacer(modifier = Modifier.height(12.dp))
                         }
 
-                        // Info del carpintero (si soy cliente)
                         if (!uiState.isCarpenter) {
                             MervetaInfoCard(
                                 icon = Icons.Filled.Person,
                                 label = "Carpintero",
-                                value = if (pedido.isLibre) {
-                                    "Esperando carpintero"
-                                } else {
-                                    pedido.carpinteroNombre ?: "Carpintero asignado"
-                                },
+                                value = if (pedido.isLibre) "Esperando carpintero" else pedido.carpinteroNombre ?: "Carpintero asignado",
                                 isMuted = pedido.isLibre
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                         }
 
-                        // Card horizontal: Tipo + Medidas + Entrega
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -231,43 +179,13 @@ fun DetailPedidoScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            InfoColumn(
-                                icon = Icons.Filled.Chair,
-                                label = "Tipo",
-                                value = pedido.tipoMadera.ifBlank { "—" },
-                                modifier = Modifier.weight(0.9f)
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .height(48.dp)
-                                    .background(Color(0xFFE0DCD7))
-                            )
-
-                            InfoColumn(
-                                icon = Icons.Filled.Straighten,
-                                label = "Medidas",
-                                value = pedido.medidasTexto ?: "—",
-                                modifier = Modifier.weight(1.3f)
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .height(48.dp)
-                                    .background(Color(0xFFE0DCD7))
-                            )
-
-                            InfoColumn(
-                                icon = Icons.Filled.CalendarToday,
-                                label = "Entrega",
-                                value = pedido.fechaEstimada?.let { fechaCorta(it) } ?: "—",
-                                modifier = Modifier.weight(1f)
-                            )
+                            InfoColumn(icon = Icons.Filled.Chair, label = "Tipo", value = pedido.tipoMadera.ifBlank { "—" }, modifier = Modifier.weight(0.9f))
+                            Box(modifier = Modifier.width(1.dp).height(48.dp).background(Color(0xFFE0DCD7)))
+                            InfoColumn(icon = Icons.Filled.Straighten, label = "Medidas", value = pedido.medidasTexto ?: "—", modifier = Modifier.weight(1.3f))
+                            Box(modifier = Modifier.width(1.dp).height(48.dp).background(Color(0xFFE0DCD7)))
+                            InfoColumn(icon = Icons.Filled.CalendarToday, label = "Entrega", value = pedido.fechaEstimada?.let { fechaCorta(it) } ?: "—", modifier = Modifier.weight(1f))
                         }
 
-                        // Card de presupuesto
                         if (pedido.presupuestoTexto != null) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Row(
@@ -278,114 +196,52 @@ fun DetailPedidoScreen(
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF8A9E7A)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Payments,
-                                        contentDescription = null,
-                                        tint = Color(0xFFF9F7F5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
+                                Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(Color(0xFF8A9E7A)), contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Filled.Payments, contentDescription = null, tint = Color(0xFFF9F7F5), modifier = Modifier.size(22.dp))
                                 }
-
                                 Spacer(modifier = Modifier.width(12.dp))
-
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Presupuesto",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF6B6B6B)
-                                    )
+                                    Text("Presupuesto", fontSize = 12.sp, color = Color(0xFF6B6B6B))
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = pedido.presupuestoTexto!!,
-                                        fontSize = 22.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF2C2C2C)
-                                    )
+                                    Text(pedido.presupuestoTexto!!, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2C2C2C))
                                 }
                             }
                         }
 
-                        // ============================================
                         // COTIZACIONES RECIBIDAS (solo para el cliente)
-                        // ============================================
                         if (!uiState.isCarpenter && uiState.cotizaciones.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Cotizaciones recibidas",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2C2C2C)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF8B5A2B))
-                                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = "${uiState.cotizaciones.size}",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFF9F7F5)
-                                    )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Cotizaciones recibidas", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2C2C2C))
+                                Box(modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Color(0xFF8B5A2B)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                                    Text("${uiState.cotizaciones.size}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFF9F7F5))
                                 }
                             }
-
                             Spacer(modifier = Modifier.height(12.dp))
-
                             uiState.cotizaciones.forEach { cotizacion ->
                                 CotizacionRecibidaCard(
                                     cotizacion = cotizacion,
                                     onAceptar = { viewModel.onAceptarCotizacionClick(cotizacion) },
                                     onRechazar = { viewModel.onRechazarCotizacionClick(cotizacion) },
-                                    onClick = { onCotizacionClick(cotizacion.id) } // ✅ NUEVO
+                                    onClick = { onCotizacionClick(cotizacion.id) }
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
 
-                        // Mensaje cuando no hay cotizaciones
-                        if (!uiState.isCarpenter &&
-                            uiState.cotizaciones.isEmpty() &&
-                            pedido.status == EstadoPedido.PENDIENTE
-                        ) {
+                        if (!uiState.isCarpenter && uiState.cotizaciones.isEmpty() && pedido.status == EstadoPedido.PENDIENTE) {
                             Spacer(modifier = Modifier.height(24.dp))
-
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFF5EFE7))
-                                    .padding(16.dp),
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFF5EFE7)).padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "Aún no has recibido cotizaciones. Los carpinteros están revisando tu pedido.",
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF6B6B6B),
-                                    textAlign = TextAlign.Center
-                                )
+                                Text("Aún no has recibido cotizaciones. Los carpinteros están revisando tu pedido.", fontSize = 13.sp, color = Color(0xFF6B6B6B), textAlign = TextAlign.Center)
                             }
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // ============================================
                         // ACCIONES SEGÚN ROL
-                        // ============================================
-
                         if (!uiState.isCarpenter) {
                             when (pedido.status) {
                                 EstadoPedido.PENDIENTE -> {
@@ -394,53 +250,17 @@ fun DetailPedidoScreen(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        MervetaActionButton(
-                                            text = "Editar",
-                                            icon = Icons.Filled.Edit,
-                                            backgroundColor = Color(0xFF8B5A2B),
-                                            contentColor = Color(0xFFF9F7F5),
-                                            onClick = { onEditClick(pedido.id) },
-                                            modifier = Modifier.weight(1f)
-                                        )
-
-                                        MervetaActionButton(
-                                            text = "Cancelar",
-                                            backgroundColor = Color(0xFFFADBD8),
-                                            contentColor = Color(0xFFC5544A),
-                                            onClick = { viewModel.onCancelarClick() },
-                                            modifier = Modifier.weight(1f)
-                                        )
-
-                                        Box(
-                                            modifier = Modifier
-                                                .size(56.dp)
-                                                .clip(RoundedCornerShape(14.dp))
-                                                .background(Color(0xFFC5544A))
-                                                .clickable { viewModel.onEliminarClick() },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Filled.Delete,
-                                                contentDescription = "Eliminar",
-                                                tint = Color(0xFFF9F7F5),
-                                                modifier = Modifier.size(22.dp)
-                                            )
+                                        MervetaActionButton(text = "Editar", icon = Icons.Filled.Edit, backgroundColor = Color(0xFF8B5A2B), contentColor = Color(0xFFF9F7F5), onClick = { onEditClick(pedido.id) }, modifier = Modifier.weight(1f))
+                                        MervetaActionButton(text = "Cancelar", backgroundColor = Color(0xFFFADBD8), contentColor = Color(0xFFC5544A), onClick = { viewModel.onCancelarClick() }, modifier = Modifier.weight(1f))
+                                        Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFC5544A)).clickable { viewModel.onEliminarClick() }, contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Filled.Delete, contentDescription = "Eliminar", tint = Color(0xFFF9F7F5), modifier = Modifier.size(22.dp))
                                         }
                                     }
                                 }
-
                                 EstadoPedido.CANCELADO -> {
-                                    MervetaActionButton(
-                                        text = "Eliminar pedido",
-                                        icon = Icons.Filled.Delete,
-                                        backgroundColor = Color(0xFFC5544A),
-                                        contentColor = Color(0xFFF9F7F5),
-                                        onClick = { viewModel.onEliminarClick() },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    MervetaActionButton(text = "Eliminar pedido", icon = Icons.Filled.Delete, backgroundColor = Color(0xFFC5544A), contentColor = Color(0xFFF9F7F5), onClick = { viewModel.onEliminarClick() }, modifier = Modifier.fillMaxWidth())
                                 }
-
-                                else -> { /* Sin acciones */ }
+                                else -> {}
                             }
                         }
 
@@ -450,150 +270,79 @@ fun DetailPedidoScreen(
                                     val miCotizacion = uiState.miCotizacion
 
                                     if (miCotizacion != null) {
-                                        when (miCotizacion.estado) {
-                                            EstadoCotizacion.PENDIENTE -> {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clip(RoundedCornerShape(14.dp))
-                                                        .background(Color(0xFFF5EFE7))
-                                                        .padding(vertical = 16.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Filled.Schedule,
-                                                            contentDescription = null,
-                                                            tint = Color(0xFF8B5A2B),
-                                                            modifier = Modifier.size(18.dp)
-                                                        )
-                                                        Text(
-                                                            text = "Esperando respuesta del cliente",
-                                                            fontSize = 14.sp,
-                                                            fontWeight = FontWeight.SemiBold,
-                                                            color = Color(0xFF8B5A2B)
-                                                        )
-                                                    }
+                                        // ✅ LÓGICA DE CAMBIOS SOLICITADOS
+                                        if (miCotizacion.solicitudCambio) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFFFCEBD0)).padding(14.dp)
+                                            ) {
+                                                Column {
+                                                    Text("El cliente solicita cambios:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8B5A2B))
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text("\"${miCotizacion.observacionCliente}\"", fontSize = 14.sp, color = Color(0xFF8B5A2B), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                                                 }
-
-                                                Spacer(modifier = Modifier.height(10.dp))
-
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    MervetaActionButton(
-                                                        text = "Editar",
-                                                        icon = Icons.Filled.Edit,
-                                                        backgroundColor = Color(0xFF8B5A2B),
-                                                        contentColor = Color(0xFFF9F7F5),
-                                                        onClick = { onEditarCotizacion(miCotizacion.id) },
-                                                        modifier = Modifier.weight(1f)
-                                                    )
-
+                                            }
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            MervetaActionButton(
+                                                text = "Revisar y responder cambios",
+                                                backgroundColor = Color(0xFF8B5A2B),
+                                                contentColor = Color.White,
+                                                onClick = { onCotizacionClick(miCotizacion.id) },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        } else {
+                                            when (miCotizacion.estado) {
+                                                EstadoCotizacion.PENDIENTE -> {
                                                     Box(
-                                                        modifier = Modifier
-                                                            .size(56.dp)
-                                                            .clip(RoundedCornerShape(14.dp))
-                                                            .background(Color(0xFFC5544A).copy(alpha = 0.1f))
-                                                            .clickable { viewModel.onAnularCotizacionClick(miCotizacion) },
+                                                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFFF5EFE7)).padding(vertical = 16.dp),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        Icon(
-                                                            imageVector = Icons.Filled.Delete,
-                                                            contentDescription = "Anular",
-                                                            tint = Color(0xFFC5544A),
-                                                            modifier = Modifier.size(22.dp)
-                                                        )
+                                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                            Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color(0xFF8B5A2B), modifier = Modifier.size(18.dp))
+                                                            Text("Esperando respuesta del cliente", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF8B5A2B))
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        MervetaActionButton(text = "Editar", icon = Icons.Filled.Edit, backgroundColor = Color(0xFF8B5A2B), contentColor = Color(0xFFF9F7F5), onClick = { onEditarCotizacion(miCotizacion.id) }, modifier = Modifier.weight(1f))
+                                                        Box(modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFC5544A).copy(alpha = 0.1f)).clickable { viewModel.onAnularCotizacionClick(miCotizacion) }, contentAlignment = Alignment.Center) {
+                                                            Icon(Icons.Filled.Delete, contentDescription = "Anular", tint = Color(0xFFC5544A), modifier = Modifier.size(22.dp))
+                                                        }
                                                     }
                                                 }
-                                            }
-
-                                            EstadoCotizacion.ACEPTADA -> {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clip(RoundedCornerShape(14.dp))
-                                                        .background(Color(0xFFD4E0D9))
-                                                        .padding(vertical = 16.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(
-                                                        text = "✓ Cotización aceptada",
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = Color(0xFF2E4A3E)
-                                                    )
+                                                EstadoCotizacion.ACEPTADA -> {
+                                                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFFD4E0D9)).padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                                                        Text("✓ Cotización aceptada", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E4A3E))
+                                                    }
                                                 }
-                                            }
-
-                                            EstadoCotizacion.RECHAZADA -> {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clip(RoundedCornerShape(14.dp))
-                                                        .background(Color(0xFFFADBD8))
-                                                        .padding(vertical = 16.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(
-                                                        text = "✗ Cotización rechazada",
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = Color(0xFFC5544A)
-                                                    )
+                                                EstadoCotizacion.RECHAZADA -> {
+                                                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFFFADBD8)).padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                                                        Text("✗ Cotización rechazada", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC5544A))
+                                                    }
                                                 }
-                                            }
-
-                                            EstadoCotizacion.ANULADA -> {
-                                                MervetaActionButton(
-                                                    text = "Crear nueva cotización",
-                                                    icon = Icons.Filled.RequestQuote,
-                                                    onClick = { onCrearCotizacion(pedido.id) },
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
+                                                EstadoCotizacion.ANULADA -> {
+                                                    MervetaActionButton(text = "Crear nueva cotización", icon = Icons.Filled.RequestQuote, onClick = { onCrearCotizacion(pedido.id) }, modifier = Modifier.fillMaxWidth())
+                                                }
                                             }
                                         }
                                     } else {
-                                        MervetaActionButton(
-                                            text = "Crear cotización",
-                                            icon = Icons.Filled.RequestQuote,
-                                            onClick = { onCrearCotizacion(pedido.id) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
+                                        MervetaActionButton(text = "Crear cotización", icon = Icons.Filled.RequestQuote, onClick = { onCrearCotizacion(pedido.id) }, modifier = Modifier.fillMaxWidth())
                                     }
                                 }
 
                                 EstadoPedido.ACEPTADO -> {
-                                    MervetaActionButton(
-                                        text = "Iniciar trabajo",
-                                        onClick = { viewModel.onCambiarEstado(EstadoPedido.EN_PROCESO) },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    MervetaActionButton(text = "Iniciar trabajo", onClick = { viewModel.onCambiarEstado(EstadoPedido.EN_PROCESO) }, modifier = Modifier.fillMaxWidth())
                                 }
-
                                 EstadoPedido.EN_PROCESO -> {
-                                    MervetaActionButton(
-                                        text = "Marcar como terminado",
-                                        onClick = { viewModel.onCambiarEstado(EstadoPedido.TERMINADO) },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    MervetaActionButton(text = "Marcar como terminado", onClick = { viewModel.onCambiarEstado(EstadoPedido.TERMINADO) }, modifier = Modifier.fillMaxWidth())
                                 }
-
                                 EstadoPedido.TERMINADO -> {
-                                    MervetaActionButton(
-                                        text = "Marcar como entregado",
-                                        backgroundColor = Color(0xFF4A6B5D),
-                                        onClick = { viewModel.onCambiarEstado(EstadoPedido.ENTREGADO) },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    MervetaActionButton(text = "Marcar como entregado", backgroundColor = Color(0xFF4A6B5D), onClick = { viewModel.onCambiarEstado(EstadoPedido.ENTREGADO) }, modifier = Modifier.fillMaxWidth())
                                 }
-
-                                else -> { /* Sin acciones */ }
+                                else -> {}
                             }
                         }
                     }
@@ -609,20 +358,13 @@ fun DetailPedidoScreen(
                         .clickable(onClick = onBack),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Atrás",
-                        tint = Color(0xFF2C2C2C),
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = Color(0xFF2C2C2C), modifier = Modifier.size(22.dp))
                 }
             }
         }
     }
 
-    // ============================================
     // DIÁLOGOS
-    // ============================================
     if (uiState.showCancelDialog) {
         MervetaConfirmDialog(
             title = "Cancelar pedido",
@@ -700,7 +442,7 @@ private fun CotizacionRecibidaCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFF5EFE7))
-            .clickable(onClick = onClick)   // CARD CLICKEABLE
+            .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         Row(
@@ -708,74 +450,36 @@ private fun CotizacionRecibidaCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = cotizacion.carpinteroNombre,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2C2C2C)
-            )
+            Text(cotizacion.carpinteroNombre, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2C2C2C))
             EstadoCotizacionBadge(estado = cotizacion.estado)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = cotizacion.costoTotalTexto,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF8B5A2B)
-        )
+        Text(cotizacion.costoTotalTexto, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8B5A2B))
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Schedule,
-                contentDescription = null,
-                tint = Color(0xFF6B6B6B),
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = cotizacion.tiempoEstimadoTexto,
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color(0xFF6B6B6B), modifier = Modifier.size(14.dp))
+            Text(cotizacion.tiempoEstimadoTexto, fontSize = 12.sp, color = Color(0xFF6B6B6B))
         }
 
         if (cotizacion.comentarios.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = cotizacion.comentarios,
-                fontSize = 13.sp,
-                color = Color(0xFF4A4A4A),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(cotizacion.comentarios, fontSize = 13.sp, color = Color(0xFF4A4A4A), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
 
-        if (cotizacion.estado == EstadoCotizacion.PENDIENTE) {
+        if (cotizacion.solicitudCambio) {
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MervetaActionButton(
-                    text = "Aceptar",
-                    backgroundColor = Color(0xFF4A5D3E),
-                    contentColor = Color(0xFFF9F7F5),
-                    onClick = onAceptar,
-                    modifier = Modifier.weight(1f)
-                )
-                MervetaActionButton(
-                    text = "Rechazar",
-                    backgroundColor = Color(0xFFFADBD8),
-                    contentColor = Color(0xFFC5544A),
-                    onClick = onRechazar,
-                    modifier = Modifier.weight(1f)
-                )
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color(0xFFFCEBD0)).padding(12.dp)) {
+                Text("⏳ Esperando respuesta del carpintero a tu solicitud de cambios...", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF8B5A2B))
+            }
+        } else if (cotizacion.estado == EstadoCotizacion.PENDIENTE) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MervetaActionButton(text = "Aceptar", backgroundColor = Color(0xFF4A5D3E), contentColor = Color(0xFFF9F7F5), onClick = onAceptar, modifier = Modifier.weight(1f))
+                MervetaActionButton(text = "Rechazar", backgroundColor = Color(0xFFFADBD8), contentColor = Color(0xFFC5544A), onClick = onRechazar, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -799,13 +503,7 @@ private fun EstadoCotizacionBadge(estado: EstadoCotizacion) {
             .background(bgColor)
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = estado.toDisplayText().uppercase(),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-            color = textColor
-        )
+        Text(estado.toDisplayText().uppercase(), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp, color = textColor)
     }
 }
 
@@ -819,43 +517,13 @@ private fun InfoColumn(
     value: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFFFFFFF)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color(0xFF8B5A2B),
-                modifier = Modifier.size(18.dp)
-            )
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(Color(0xFFFFFFFF)), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = Color(0xFF8B5A2B), modifier = Modifier.size(18.dp))
         }
-
         Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = Color(0xFF6B6B6B)
-        )
-
+        Text(label, fontSize = 11.sp, color = Color(0xFF6B6B6B))
         Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = value,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF2C2C2C),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2C2C2C), maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }

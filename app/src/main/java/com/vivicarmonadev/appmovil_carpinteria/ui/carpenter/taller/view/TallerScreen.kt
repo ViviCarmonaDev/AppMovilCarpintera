@@ -40,7 +40,8 @@ fun TallerScreen(
     viewModel: TallerViewModel,
     uid: String,
     onBack: () -> Unit,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    isOwner: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -150,17 +151,18 @@ fun TallerScreen(
                         }
                     }
 
+                    if (isOwner) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        PrimaryButton(
+                            text = "EDITAR TALLER",
+                            icon = Icons.Filled.Edit,
+                            onClick = onEditClick,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Botón editar
-                    PrimaryButton(
-                        text = "EDITAR TALLER",
-                        icon = Icons.Filled.Edit,
-                        onClick = onEditClick,
-                        modifier = Modifier.padding(horizontal = 20.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

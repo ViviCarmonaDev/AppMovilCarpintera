@@ -15,14 +15,8 @@ import com.vivicarmonadev.appmovil_carpinteria.data.repository.CotizacionReposit
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Cotizacion
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.EstadoCotizacion
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 
-/**
- * ViewModel para la pantalla de detalle de un pedido.
-
- * Carga el pedido por ID, permite:
- *  - Cliente: editar, cancelar.
- *  - Carpintero: tomar pedido, avanzar estado.
- */
 class DetailPedidoViewModel(
     private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl(),
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
@@ -36,7 +30,6 @@ class DetailPedidoViewModel(
     private var cotizacionesJob: Job? = null
 
     // INICIALIZAR
-
     fun initialize(pedidoId: String) {
         currentPedidoId = pedidoId
 
@@ -45,18 +38,20 @@ class DetailPedidoViewModel(
 
             authRepository.currentUser.collect { user ->
                 if (user != null) {
+                    val isCarpenter = user.role == UserRole.CARPENTER
                     _uiState.update {
                         it.copy(
-                            isCarpenter = user.role == UserRole.CARPENTER,
+                            isCarpenter = isCarpenter,
                             currentUid = user.uid,
                             currentUserName = user.nombres
                         )
                     }
+                    // Cargamos el pedido y las cotizaciones UNA VEZ que sabemos quién es el usuario
+                    cargarPedido()
+                    cargarCotizaciones(pedidoId, user.uid, isCarpenter)
                 }
-                cargarPedido()
             }
         }
-        cargarCotizaciones(pedidoId)
     }
 
     private suspend fun cargarPedido() {
@@ -88,101 +83,65 @@ class DetailPedidoViewModel(
         )
     }
 
-    private fun cargarCotizaciones(pedidoId: String) {
+    private fun cargarCotizaciones(pedidoId: String, currentUid: String, isCarpenter: Boolean) {
         cotizacionesJob?.cancel()
+
         cotizacionesJob = viewModelScope.launch {
-            cotizacionRepository.getCotizacionesByPedido(pedidoId).collect { lista ->
-                _uiState.update { it.copy(cotizaciones = lista) }
+            cotizacionRepository.getCotizacionesByPedido(pedidoId).collectLatest { lista ->
+                // Solo actualizamos la lista general.
+                // El get() del UiState se encargará de calcular "miCotizacion" en base al currentUid.
+                _uiState.update { state ->
+                    state.copy(cotizaciones = lista)
+                }
             }
         }
     }
 
-    // ACCIONES DEL CLIENTE
-    fun onCancelarClick() {
-        _uiState.update { it.copy(showCancelDialog = true) }
+    override fun onCleared() {
+        super.onCleared()
+        cotizacionesJob?.cancel()
     }
 
-    fun onCancelarCancel() {
-        _uiState.update { it.copy(showCancelDialog = false) }
-    }
+    // ACCIONES DEL CLIENTE
+    fun onCancelarClick() { _uiState.update { it.copy(showCancelDialog = true) } }
+    fun onCancelarCancel() { _uiState.update { it.copy(showCancelDialog = false) } }
 
     fun onCancelarConfirm() {
         val pedido = _uiState.value.pedido ?: return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true) }
-
-            val result = pedidoRepository.updatePedidoStatus(
-                pedidoId = pedido.id,
-                nuevoEstado = EstadoPedido.CANCELADO
-            )
-
+            val result = pedidoRepository.updatePedidoStatus(pedido.id, EstadoPedido.CANCELADO)
             result.fold(
                 onSuccess = {
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            showCancelDialog = false,
-                            actionSuccess = true
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, showCancelDialog = false, actionSuccess = true) }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            showCancelDialog = false,
-                            errorMessage = "Error al cancelar: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, showCancelDialog = false, errorMessage = "Error al cancelar: ${exception.message}") }
                 }
             )
         }
     }
 
-    // ELIMINAR PEDIDO (solo cliente, solo PENDIENTE)
-
-    fun onEliminarClick() {
-        _uiState.update { it.copy(showDeleteDialog = true) }
-    }
-
-    fun onEliminarCancel() {
-        _uiState.update { it.copy(showDeleteDialog = false) }
-    }
+    fun onEliminarClick() { _uiState.update { it.copy(showDeleteDialog = true) } }
+    fun onEliminarCancel() { _uiState.update { it.copy(showDeleteDialog = false) } }
 
     fun onEliminarConfirm() {
         val pedido = _uiState.value.pedido ?: return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true) }
-
             val result = pedidoRepository.deletePedido(pedido.id)
-
             result.fold(
                 onSuccess = {
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            showDeleteDialog = false,
-                            actionSuccess = true
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, showDeleteDialog = false, actionSuccess = true) }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            showDeleteDialog = false,
-                            errorMessage = "Error al eliminar: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, showDeleteDialog = false, errorMessage = "Error al eliminar: ${exception.message}") }
                 }
             )
         }
     }
 
     // ACCIONES DEL CARPINTERO
-
     fun onTomarPedido() {
         val state = _uiState.value
         val pedido = state.pedido ?: return
@@ -190,28 +149,18 @@ class DetailPedidoViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true) }
-
             val result = pedidoRepository.asignarCarpintero(
                 pedidoId = pedido.id,
                 carpenterUid = state.currentUid,
                 carpinteroNombre = state.currentUserName
             )
-
             result.fold(
                 onSuccess = {
-                    // Recargar el pedido para ver el cambio
                     cargarPedido()
-                    _uiState.update {
-                        it.copy(isProcessing = false, actionSuccess = true)
-                    }
+                    _uiState.update { it.copy(isProcessing = false, actionSuccess = true) }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            errorMessage = "Error al tomar el pedido: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, errorMessage = "Error al tomar el pedido: ${exception.message}") }
                 }
             )
         }
@@ -219,43 +168,24 @@ class DetailPedidoViewModel(
 
     fun onCambiarEstado(nuevoEstado: EstadoPedido) {
         val pedido = _uiState.value.pedido ?: return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true) }
-
-            val result = pedidoRepository.updatePedidoStatus(
-                pedidoId = pedido.id,
-                nuevoEstado = nuevoEstado
-            )
-
+            val result = pedidoRepository.updatePedidoStatus(pedido.id, nuevoEstado)
             result.fold(
                 onSuccess = {
                     cargarPedido()
-                    _uiState.update {
-                        it.copy(isProcessing = false, actionSuccess = true)
-                    }
+                    _uiState.update { it.copy(isProcessing = false, actionSuccess = true) }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            errorMessage = "Error al actualizar: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcessing = false, errorMessage = "Error al actualizar: ${exception.message}") }
                 }
             )
         }
     }
 
     // ACEPTAR / RECHAZAR COTIZACIÓN (cliente)
-
-    fun onAceptarCotizacionClick(cotizacion: Cotizacion) {
-        _uiState.update { it.copy(cotizacionAAceptar = cotizacion) }
-    }
-
-    fun onAceptarCotizacionCancel() {
-        _uiState.update { it.copy(cotizacionAAceptar = null) }
-    }
+    fun onAceptarCotizacionClick(cotizacion: Cotizacion) { _uiState.update { it.copy(cotizacionAAceptar = cotizacion) } }
+    fun onAceptarCotizacionCancel() { _uiState.update { it.copy(cotizacionAAceptar = null) } }
 
     fun onAceptarCotizacionConfirm() {
         val cotizacion = _uiState.value.cotizacionAAceptar ?: return
@@ -263,145 +193,69 @@ class DetailPedidoViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isProcesandoCotizacion = true) }
-
-            // 1. Marcar la cotización elegida como ACEPTADA
             cotizacionRepository.aceptarCotizacion(cotizacion.id)
-
-            // 2. Asignar el carpintero al pedido
-            val asignarResult = pedidoRepository.asignarCarpintero(
-                pedidoId = pedido.id,
-                carpenterUid = cotizacion.carpinteroUid,
-                carpinteroNombre = cotizacion.carpinteroNombre
-            )
-
-            // 3. Cambiar el pedido a ACEPTADO
+            val asignarResult = pedidoRepository.asignarCarpintero(pedido.id, cotizacion.carpinteroUid, cotizacion.carpinteroNombre)
             pedidoRepository.updatePedidoStatus(pedido.id, EstadoPedido.ACEPTADO)
 
-            // 4. Rechazar las demás cotizaciones pendientes
             _uiState.value.cotizaciones
                 .filter { it.id != cotizacion.id && it.estado == EstadoCotizacion.PENDIENTE }
-                .forEach { otra ->
-                    cotizacionRepository.rechazarCotizacion(otra.id)
-                }
+                .forEach { otra -> cotizacionRepository.rechazarCotizacion(otra.id) }
+
             asignarResult.fold(
                 onSuccess = {
                     cargarPedido()
-                    _uiState.update {
-                        it.copy(
-                            isProcesandoCotizacion = false,
-                            cotizacionAAceptar = null,
-                            cotizacionSuccessMessage = "Cotización aceptada"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcesandoCotizacion = false, cotizacionAAceptar = null, cotizacionSuccessMessage = "Cotización aceptada") }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcesandoCotizacion = false,
-                            cotizacionAAceptar = null,
-                            errorMessage = "Error: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcesandoCotizacion = false, cotizacionAAceptar = null, errorMessage = "Error: ${exception.message}") }
                 }
             )
         }
     }
 
-    // ============================================
-// ANULAR COTIZACIÓN (carpintero)
-// ============================================
-
-    fun onAnularCotizacionClick(cotizacion: Cotizacion) {
-        _uiState.update { it.copy(cotizacionAAnular = cotizacion) }
-    }
-
-    fun onAnularCotizacionCancel() {
-        _uiState.update { it.copy(cotizacionAAnular = null) }
-    }
+    // ANULAR COTIZACIÓN (carpintero)
+    fun onAnularCotizacionClick(cotizacion: Cotizacion) { _uiState.update { it.copy(cotizacionAAnular = cotizacion) } }
+    fun onAnularCotizacionCancel() { _uiState.update { it.copy(cotizacionAAnular = null) } }
 
     fun onAnularCotizacionConfirm() {
         val cotizacion = _uiState.value.cotizacionAAnular ?: return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isAnulandoCotizacion = true) }
-
             val result = cotizacionRepository.anularCotizacion(cotizacion.id)
-
             result.fold(
                 onSuccess = {
-                    _uiState.update {
-                        it.copy(
-                            isAnulandoCotizacion = false,
-                            cotizacionAAnular = null,
-                            cotizacionAnularSuccessMessage = "Cotización anulada"
-                        )
-                    }
+                    _uiState.update { it.copy(isAnulandoCotizacion = false, cotizacionAAnular = null, cotizacionAnularSuccessMessage = "Cotización anulada") }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isAnulandoCotizacion = false,
-                            cotizacionAAnular = null,
-                            errorMessage = "Error al anular: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isAnulandoCotizacion = false, cotizacionAAnular = null, errorMessage = "Error al anular: ${exception.message}") }
                 }
             )
         }
     }
 
-    fun clearCotizacionAnularSuccessMessage() {
-        _uiState.update { it.copy(cotizacionAnularSuccessMessage = null) }
-    }
+    fun clearCotizacionAnularSuccessMessage() { _uiState.update { it.copy(cotizacionAnularSuccessMessage = null) } }
 
-    fun onRechazarCotizacionClick(cotizacion: Cotizacion) {
-        _uiState.update { it.copy(cotizacionARechazar = cotizacion) }
-    }
-
-    fun onRechazarCotizacionCancel() {
-        _uiState.update { it.copy(cotizacionARechazar = null) }
-    }
+    fun onRechazarCotizacionClick(cotizacion: Cotizacion) { _uiState.update { it.copy(cotizacionARechazar = cotizacion) } }
+    fun onRechazarCotizacionCancel() { _uiState.update { it.copy(cotizacionARechazar = null) } }
 
     fun onRechazarCotizacionConfirm() {
         val cotizacion = _uiState.value.cotizacionARechazar ?: return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isProcesandoCotizacion = true) }
-
             val result = cotizacionRepository.rechazarCotizacion(cotizacion.id)
-
             result.fold(
                 onSuccess = {
-                    _uiState.update {
-                        it.copy(
-                            isProcesandoCotizacion = false,
-                            cotizacionARechazar = null,
-                            cotizacionSuccessMessage = "Cotización rechazada"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcesandoCotizacion = false, cotizacionARechazar = null, cotizacionSuccessMessage = "Cotización rechazada") }
                 },
                 onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isProcesandoCotizacion = false,
-                            cotizacionARechazar = null,
-                            errorMessage = "Error: ${exception.message}"
-                        )
-                    }
+                    _uiState.update { it.copy(isProcesandoCotizacion = false, cotizacionARechazar = null, errorMessage = "Error: ${exception.message}") }
                 }
             )
         }
     }
 
     // MENSAJES
-
-    fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
-    fun clearActionSuccess() {
-        _uiState.update { it.copy(actionSuccess = false) }
-    }
-    fun clearCotizacionSuccessMessage() {
-        _uiState.update { it.copy(cotizacionSuccessMessage = null) }
-    }
+    fun clearError() { _uiState.update { it.copy(errorMessage = null) } }
+    fun clearActionSuccess() { _uiState.update { it.copy(actionSuccess = false) } }
+    fun clearCotizacionSuccessMessage() { _uiState.update { it.copy(cotizacionSuccessMessage = null) } }
 }

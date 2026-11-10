@@ -30,7 +30,8 @@ fun MaterialesScreen(
     categoriaId: String,
     nombreCategoria: String,
     onCreateClick: () -> Unit,
-    onItemClick: (Material) -> Unit
+    onItemClick: (Material) -> Unit,
+    onEditClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

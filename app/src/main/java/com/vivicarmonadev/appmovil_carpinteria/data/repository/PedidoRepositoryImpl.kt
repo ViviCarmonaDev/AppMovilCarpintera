@@ -13,39 +13,34 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 
-/**
- * Implementación del PedidoRepository usando Firestore.
- * Es el "pegamento" entre la capa de dominio y la capa de datos.
- */
 class PedidoRepositoryImpl(
     private val dataSource: FirestorePedidoDataSource = FirestorePedidoDataSource(),
     private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl()
 ) : PedidoRepository {
 
-    // CLIENTE
     override fun getMyPedidos(clientUid: String): Flow<List<Pedido>> {
         return dataSource.getPedidosByClientFlow(clientUid).map { list ->
             list.map { it.toDomain() }
         }
     }
 
+    fun getPedidoFlow(id: String): Flow<Pedido?> {
+        return dataSource.getPedidoFlow(id).map { it?.toDomain() }
+    }
+
     override suspend fun getPedidoById(id: String): Result<Pedido?> {
         return try {
             val result = dataSource.getPedidoById(id)
-
             if (result.isFailure) {
-                return Result.failure(
-                    result.exceptionOrNull() ?: Exception("Error al leer el pedido")
-                )
+                return Result.failure(result.exceptionOrNull() ?: Exception("Error al leer el pedido"))
             }
-
             val dto = result.getOrNull()
             Result.success(dto?.toDomain())
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
     override suspend fun createPedido(order: Pedido): Result<Pedido> {
         return try {
             val pedidoConEstado = order.copy(status = EstadoPedido.PENDIENTE)
@@ -58,36 +53,14 @@ class PedidoRepositoryImpl(
 
             val createdDto = result.getOrNull() ?: return Result.failure(Exception("No se pudo crear el pedido"))
 
-            // --- LÓGICA DE NOTIFICACIONES ---
             if (!order.carpenterUid.isNullOrBlank()) {
-                // 1. Tiene carpintero asignado: Notificar solo a él
-                val notificacion = Notificacion(
-                    destinatarioUid = order.carpenterUid!!,
-                    titulo = "Nuevo pedido recibido",
-                    mensaje = "Tienes un nuevo pedido: ${order.titulo}",
-                    tipo = "nuevo_pedido",
-                    referenciaId = createdDto.id,
-                    leida = false
-                )
+                val notificacion = Notificacion(destinatarioUid = order.carpenterUid!!, titulo = "Nuevo pedido recibido", mensaje = "Tienes un nuevo pedido: ${order.titulo}", tipo = "nuevo_pedido", referenciaId = createdDto.id, leida = false)
                 notificacionRepository.crearNotificacion(notificacion)
             } else {
-                // 2. Es libre: Notificar a TODOS los carpinteros
-                val snapshot = Firebase.firestore
-                    .collection("users")
-                    .whereEqualTo("role", "carpenter")
-                    .get()
-                    .await()
-
+                val snapshot = Firebase.firestore.collection("users").whereEqualTo("role", "carpenter").get().await()
                 snapshot.documents.forEach { doc ->
                     val carpenterUid = doc.id
-                    val notificacion = Notificacion(
-                        destinatarioUid = carpenterUid,
-                        titulo = "Nuevo pedido libre",
-                        mensaje = "Hay una nueva solicitud disponible: ${order.titulo}",
-                        tipo = "pedido_libre",
-                        referenciaId = createdDto.id,
-                        leida = false
-                    )
+                    val notificacion = Notificacion(destinatarioUid = carpenterUid, titulo = "Nuevo pedido libre", mensaje = "Hay una nueva solicitud disponible: ${order.titulo}", tipo = "pedido_libre", referenciaId = createdDto.id, leida = false)
                     notificacionRepository.crearNotificacion(notificacion)
                 }
             }
@@ -100,106 +73,56 @@ class PedidoRepositoryImpl(
 
     override suspend fun updatePedido(order: Pedido): Result<Pedido> {
         return try {
-            if (order.id.isBlank()) {
-                return Result.failure(Exception("El pedido no tiene ID"))
-            }
-
+            if (order.id.isBlank()) return Result.failure(Exception("El pedido no tiene ID"))
             val dto = order.toDto()
             val result = dataSource.updatePedido(dto)
-
-            if (result.isFailure) {
-                return Result.failure(
-                    result.exceptionOrNull() ?: Exception("Error al actualizar el pedido")
-                )
-            }
-
+            if (result.isFailure) return Result.failure(result.exceptionOrNull() ?: Exception("Error al actualizar el pedido"))
             Result.success(order)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    override suspend fun updatePedidoStatus(
-        pedidoId: String,
-        nuevoEstado: EstadoPedido
-    ): Result<Unit> {
+
+    override suspend fun updatePedidoStatus(pedidoId: String, nuevoEstado: EstadoPedido): Result<Unit> {
         return try {
-            if (pedidoId.isBlank()) {
-                return Result.failure(Exception("El pedido no tiene ID"))
-            }
-
-            // 1. Actualizar el estado en Firestore
+            if (pedidoId.isBlank()) return Result.failure(Exception("El pedido no tiene ID"))
             dataSource.updateEstado(pedidoId, nuevoEstado.toFirestoreValue())
-
-            // 2. Obtener el pedido para saber quién es el cliente
             val pedido = getPedidoById(pedidoId).getOrNull()
             if (pedido != null) {
-                // 3. Crear notificación para el cliente
-                val notificacion = Notificacion(
-                    destinatarioUid = pedido.clientUid,
-                    titulo = "Estado de tu pedido actualizado",
-                    mensaje = "Tu pedido \"${pedido.titulo}\" cambió a ${nuevoEstado.toDisplayText()}.",
-                    tipo = "estado_pedido",
-                    referenciaId = pedidoId,
-                    leida = false
-                )
+                val notificacion = Notificacion(destinatarioUid = pedido.clientUid, titulo = "Estado de tu pedido actualizado", mensaje = "Tu pedido \"${pedido.titulo}\" cambió a ${nuevoEstado.toDisplayText()}.", tipo = "estado_pedido", referenciaId = pedidoId, leida = false)
                 notificacionRepository.crearNotificacion(notificacion)
             }
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
     override suspend fun deletePedido(id: String): Result<Unit> {
         return try {
-            if (id.isBlank()) {
-                return Result.failure(Exception("El pedido no tiene ID"))
-            }
-
+            if (id.isBlank()) return Result.failure(Exception("El pedido no tiene ID"))
             dataSource.deletePedido(id)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    // CARPINTERO
-
     override fun getPedidosAsignadosAMi(carpenterUid: String): Flow<List<Pedido>> {
-        return dataSource.getPedidosByCarpenterFlow(carpenterUid).map { list ->
-            list.map { it.toDomain() }
-        }
+        return dataSource.getPedidosByCarpenterFlow(carpenterUid).map { list -> list.map { it.toDomain() } }
     }
 
     override fun getPedidosLibres(): Flow<List<Pedido>> {
-        return dataSource.getPedidosLibresFlow().map { list ->
-            list.map { it.toDomain() }
-        }
+        return dataSource.getPedidosLibresFlow().map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun asignarCarpintero(
-        pedidoId: String,
-        carpenterUid: String,
-        carpinteroNombre: String
-    ): Result<Unit> {
+    override suspend fun asignarCarpintero(pedidoId: String, carpenterUid: String, carpinteroNombre: String): Result<Unit> {
         return try {
-            if (pedidoId.isBlank()) {
-                return Result.failure(Exception("El pedido no tiene ID"))
-            }
-
-            dataSource.asignarCarpintero(
-                pedidoId = pedidoId,
-                carpenterUid = carpenterUid,
-                carpinteroNombre = carpinteroNombre
-            )
-
+            if (pedidoId.isBlank()) return Result.failure(Exception("El pedido no tiene ID"))
+            dataSource.asignarCarpintero(pedidoId = pedidoId, carpenterUid = carpenterUid, carpinteroNombre = carpinteroNombre)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
-    // UTILIDADES
 
     override suspend fun getNextNumeroSecuencial(): Result<Long> {
         return try {

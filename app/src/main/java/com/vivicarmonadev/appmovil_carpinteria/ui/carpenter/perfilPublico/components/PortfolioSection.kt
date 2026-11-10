@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,11 +35,10 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.model.PortfolioItem
 @Composable
 fun PortfolioSection(
     items: List<PortfolioItem>,
-    onItemClick: (PortfolioItem) -> Unit,
-    onSeeAllClick: () -> Unit,
+    onItemClick: (String) -> Unit, // <-- Solo este recibe el ID (String)
+    onSeeAllClick: () -> Unit,     // <-- Solo este no recibe nada
     modifier: Modifier = Modifier
 ) {
-    // ✅ TODO dentro de un Card blanco con bordes redondeados
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -118,7 +116,6 @@ fun PortfolioSection(
 
         // ---- LISTA HORIZONTAL DE TRABAJOS ----
         if (items.isEmpty()) {
-            // Estado vacío: fondo crema igual que antes, pero dentro del Card blanco
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -135,13 +132,12 @@ fun PortfolioSection(
             }
         } else {
             LazyRow(
-                // Sin contentPadding horizontal extra, porque el Card ya tiene 16dp de padding
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(items, key = { it.id }) { item ->
                     PortfolioImageCard(
                         item = item,
-                        onClick = { onItemClick(item) }
+                        onClick = { onItemClick(item.id) } // <-- Pasamos el ID correctamente
                     )
                 }
             }

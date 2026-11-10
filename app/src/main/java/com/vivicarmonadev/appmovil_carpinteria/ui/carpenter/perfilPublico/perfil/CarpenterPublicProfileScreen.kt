@@ -2,18 +2,13 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.perfi
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,16 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.padding
 import androidx.core.net.toUri
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.vivicarmonadev.appmovil_carpinteria.ui.navigation.Routes
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.MenuOptionsSection
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.PortfolioSection
 import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.perfilPublico.components.PublicProfileHeader
@@ -43,46 +30,37 @@ fun CarpenterPublicProfileScreen(
     onBack: () -> Unit,
     onSeeAllPortfolioClick: (String) -> Unit,
     onPortfolioItemClick: (String) -> Unit,
-    onUbicacionClick: (Double, Double, String) -> Unit
+    onUbicacionClick: (Double, Double, String) -> Unit,
+    onPerfilClick: (String) -> Unit,
+    onTallerClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var scrollEnabled by remember { mutableStateOf(true) }
 
     LaunchedEffect(uid) {
         viewModel.loadCarpenter(uid)
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+        modifier = Modifier.fillMaxSize().background(Color.White)
     ) {
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color(0xFF8B5A2B))
                 }
             }
 
             uiState.errorMessage != null && !uiState.isLoaded -> {
-                ErrorState(
-                    message = uiState.errorMessage ?: "",
-                    onBack = onBack
-                )
+                ErrorState(message = uiState.errorMessage ?: "", onBack = onBack)
             }
 
             uiState.isLoaded -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 24.dp),
-                    userScrollEnabled = scrollEnabled
+                    contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-
-                    // ---- HEADER (scrollea con el contenido) ----
+                    // ---- HEADER ----
                     item {
                         PublicProfileHeader(
                             onBack = onBack,
@@ -90,8 +68,7 @@ fun CarpenterPublicProfileScreen(
                             onMessageClick = {
                                 val link = viewModel.buildWhatsAppLink()
                                 if (link != null) {
-                                    val intent = Intent(Intent.ACTION_VIEW, link.toUri())
-                                    context.startActivity(intent)
+                                    context.startActivity(Intent(Intent.ACTION_VIEW, link.toUri()))
                                 }
                             },
                             fotoTallerUrl = uiState.profile?.fotoTallerUrl,
@@ -111,72 +88,51 @@ fun CarpenterPublicProfileScreen(
                     item {
                         PortfolioSection(
                             items = uiState.portfolioItems,
-                            onItemClick = { /* TODO */ },
-                            onSeeAllClick = { /* TODO */ },
+                            onItemClick = { itemId -> onPortfolioItemClick(itemId) }, // <-- CONECTADO
+                            onSeeAllClick = { onSeeAllPortfolioClick(uid) }, // <-- CONECTADO
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
                     }
 
-                    /* ---- RESEÑAS ----
-                    item {
-                        ReviewsSection(
-                            reviews = uiState.reviews,
-                            onSeeAllClick = { /* TODO */ },
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-
-                     */
-
                     // ---- OPCIONES DE MENÚ ----
                     item {
+
                         MenuOptionsSection(
-                            onMiPerfilClick = { /* TODO: ir a Mi perfil */ },
-                            onMiTallerClick = { /* TODO: ir a Mi taller */ },
+                            onMiPerfilClick = { onPerfilClick(uid) },
+                            onMiTallerClick = { onTallerClick(uid)},
                             onMiUbicacionClick = {
-                                    onUbicacionClick(-7.1638, -78.5003, "Taller de prueba")
+                                val lat = uiState.profile?.latitud
+                                val lng = uiState.profile?.longitud
+                                val nombre = uiState.profile?.nombreTaller ?: "Taller"
+
+                                if (lat != null && lng != null) {
+                                    onUbicacionClick(lat, lng, nombre) // <-- CONECTADO A DATOS REALES
+                                } else {
+                                    // Aquí podrías mostrar un Toast o Snackbar si no hay ubicación
+                                }
                             },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
 
-                    // ---- ESPACIO FINAL ----
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
             }
         }
     }
 }
 
-// ESTADO DE ERROR
 @Composable
-private fun ErrorState(
-    message: String,
-    onBack: () -> Unit
-) {
+private fun ErrorState(message: String, onBack: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = "😕", fontSize = 48.sp)
-
         Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = message,
-            fontSize = 16.sp,
-            color = Color(0xFF2C2C2C),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Medium
-        )
-
+        Text(message, fontSize = 16.sp, color = Color(0xFF2C2C2C), textAlign = TextAlign.Center, fontWeight = FontWeight.Medium)
         Spacer(modifier = Modifier.height(24.dp))
-
         Text(
             text = "VOLVER",
             fontSize = 13.sp,
@@ -184,10 +140,7 @@ private fun ErrorState(
             letterSpacing = 1.sp,
             color = Color(0xFF8B5A2B),
             modifier = Modifier
-                .background(
-                    color = Color(0xFFF5EFE7),
-                    shape = RoundedCornerShape(28.dp)
-                )
+                .background(color = Color(0xFFF5EFE7), shape = RoundedCornerShape(28.dp))
                 .padding(horizontal = 24.dp, vertical = 12.dp)
                 .clickable(onClick = onBack)
         )
