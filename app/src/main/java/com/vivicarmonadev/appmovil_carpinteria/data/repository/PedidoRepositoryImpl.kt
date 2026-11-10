@@ -1,5 +1,7 @@
 package com.vivicarmonadev.appmovil_carpinteria.data.repository
 
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.vivicarmonadev.appmovil_carpinteria.data.model.toDomain
 import com.vivicarmonadev.appmovil_carpinteria.data.model.toDto
 import com.vivicarmonadev.appmovil_carpinteria.data.remote.firestore.FirestorePedidoDataSource
@@ -9,6 +11,7 @@ import com.vivicarmonadev.appmovil_carpinteria.domain.repository.PedidoRepositor
 import com.vivicarmonadev.appmovil_carpinteria.domain.model.Notificacion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
 
 /**
  * Implementación del PedidoRepository usando Firestore.
@@ -20,7 +23,6 @@ class PedidoRepositoryImpl(
 ) : PedidoRepository {
 
     // CLIENTE
-
     override fun getMyPedidos(clientUid: String): Flow<List<Pedido>> {
         return dataSource.getPedidosByClientFlow(clientUid).map { list ->
             list.map { it.toDomain() }
@@ -44,28 +46,21 @@ class PedidoRepositoryImpl(
             Result.failure(e)
         }
     }
-
     override suspend fun createPedido(order: Pedido): Result<Pedido> {
         return try {
-            // Forzar estado PENDIENTE al crear (regla de negocio)
-            val pedidoConEstado = order.copy(
-                status = EstadoPedido.PENDIENTE
-            )
-
+            val pedidoConEstado = order.copy(status = EstadoPedido.PENDIENTE)
             val dto = pedidoConEstado.toDto()
             val result = dataSource.createPedido(dto)
 
             if (result.isFailure) {
-                return Result.failure(
-                    result.exceptionOrNull() ?: Exception("Error al crear el pedido")
-                )
+                return Result.failure(result.exceptionOrNull() ?: Exception("Error al crear el pedido"))
             }
 
-            val createdDto = result.getOrNull()
-                ?: return Result.failure(Exception("No se pudo crear el pedido"))
+            val createdDto = result.getOrNull() ?: return Result.failure(Exception("No se pudo crear el pedido"))
 
-            // Si el pedido tiene un carpintero asignado, notificarlo
+            // --- LÓGICA DE NOTIFICACIONES ---
             if (!order.carpenterUid.isNullOrBlank()) {
+                // 1. Tiene carpintero asignado: Notificar solo a él
                 val notificacion = Notificacion(
                     destinatarioUid = order.carpenterUid!!,
                     titulo = "Nuevo pedido recibido",
@@ -75,6 +70,26 @@ class PedidoRepositoryImpl(
                     leida = false
                 )
                 notificacionRepository.crearNotificacion(notificacion)
+            } else {
+                // 2. Es libre: Notificar a TODOS los carpinteros
+                val snapshot = Firebase.firestore
+                    .collection("users")
+                    .whereEqualTo("role", "carpenter")
+                    .get()
+                    .await()
+
+                snapshot.documents.forEach { doc ->
+                    val carpenterUid = doc.id
+                    val notificacion = Notificacion(
+                        destinatarioUid = carpenterUid,
+                        titulo = "Nuevo pedido libre",
+                        mensaje = "Hay una nueva solicitud disponible: ${order.titulo}",
+                        tipo = "pedido_libre",
+                        referenciaId = createdDto.id,
+                        leida = false
+                    )
+                    notificacionRepository.crearNotificacion(notificacion)
+                }
             }
 
             Result.success(createdDto.toDomain())

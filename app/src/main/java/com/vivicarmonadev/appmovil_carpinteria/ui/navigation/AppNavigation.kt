@@ -3,6 +3,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
@@ -796,7 +797,6 @@ fun AppNavigation(
         }
     }
 }
-
 @Composable
 private fun MainScaffold(
     currentRoute: String,
@@ -811,11 +811,13 @@ private fun MainScaffold(
         BottomNavItem(Routes.PROFILE, "Perfil", Icons.Filled.Person)
     )
 
+    // Volvemos al Column original
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFFFFFF))
     ) {
+        // El weight(1f) es clave para que el contenido haga scroll sin taparse
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -824,6 +826,7 @@ private fun MainScaffold(
             content()
         }
 
+        // La barra pegada abajo
         BottomNavBar(
             items = bottomNavItems,
             currentRoute = currentRoute,

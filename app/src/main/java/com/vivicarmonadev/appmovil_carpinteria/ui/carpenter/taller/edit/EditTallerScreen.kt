@@ -1,6 +1,9 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.edit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,9 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +38,7 @@ import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.AuthTextField
 import com.vivicarmonadev.appmovil_carpinteria.ui.auth.components.SkillSelector
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaDiscardDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.MervetaEditHeader
+import com.vivicarmonadev.appmovil_carpinteria.ui.carpenter.taller.components.MervetaMapPickerDialog
 import com.vivicarmonadev.appmovil_carpinteria.ui.common.components.PrimaryButton
 
 /**
@@ -132,6 +141,62 @@ fun EditTallerScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // ---- UBICACIÓN DEL TALLER (MAPA) ----
+                Text(
+                    text = "Ubicación del taller",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF2C2C2C)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            BorderStroke(1.dp, Color(0xFFE0D6CC)),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .clickable { viewModel.onOpenMapPicker() }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFF8B5A2B)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (uiState.hasUbicacion)
+                                "Ubicación seleccionada"
+                            else
+                                "Seleccionar ubicación del taller",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF2C2C2C)
+                        )
+                        if (uiState.hasUbicacion) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.ubicacionTexto,
+                                fontSize = 12.sp,
+                                color = Color(0xFF6B6B6B)
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (uiState.hasUbicacion) "Cambiar" else "Elegir",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF8B5A2B)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // ---- TELÉFONO ----
                 AuthTextField(
                     value = uiState.telefonoTaller,
@@ -205,11 +270,16 @@ fun EditTallerScreen(
                 // ---- BOTÓN GUARDAR ----
                 if (uiState.isLoading) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF8B5A2B), strokeWidth = 3.dp)
+                        CircularProgressIndicator(
+                            color = Color(0xFF8B5A2B),
+                            strokeWidth = 3.dp
+                        )
                     }
                 } else {
                     PrimaryButton(
@@ -221,6 +291,16 @@ fun EditTallerScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+
+        // Diálogo del mapa
+        if (uiState.showMapPicker) {
+            MervetaMapPickerDialog(
+                initialLat = uiState.latitud,
+                initialLng = uiState.longitud,
+                onConfirm = { lat, lng -> viewModel.onUbicacionConfirm(lat, lng) },
+                onDismiss = { viewModel.onCloseMapPicker() }
+            )
         }
 
         // Diálogo descartar

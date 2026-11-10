@@ -84,7 +84,7 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx:24.0.0")
 
     // Google Maps para Compose
-    implementation("com.google.maps.android:maps-compose:4.3.0")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
     // SDK base de Google Maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 }

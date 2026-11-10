@@ -23,17 +23,29 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlin.collections.emptyList
+import androidx.lifecycle.viewModelScope
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.NotificacionRepositoryImpl
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
     private val carpenterRepository: CarpenterRepositoryImpl = CarpenterRepositoryImpl(),
     private val portfolioRepository: PortfolioRepositoryImpl = PortfolioRepositoryImpl(),
-    private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl()
+    private val pedidoRepository: PedidoRepositoryImpl = PedidoRepositoryImpl(),
+    private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    // Nuevo estado para las notificaciones no leídas
+    private val _notificacionesNoLeidas = MutableStateFlow(0)
+    val notificacionesNoLeidas: StateFlow<Int> = _notificacionesNoLeidas.asStateFlow()
     private var currentUid: String = ""
     private var currentRole: UserRole = UserRole.CLIENT
 
@@ -41,6 +53,7 @@ class HomeViewModel(
     private var pedidosJob: Job? = null
 
     init {
+        cargarContadorNotificaciones()
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 if (user != null) {
@@ -165,6 +178,23 @@ class HomeViewModel(
         }
     }
 
+    private fun cargarContadorNotificaciones() {
+        viewModelScope.launch {
+            authRepository.currentUser
+                .flatMapLatest { user ->
+                    if (user != null) {
+                        notificacionRepository.getNotificaciones(user.uid)
+                    } else {
+                        flowOf(emptyList())
+                    }
+                }
+                .collect { lista ->
+                    // Filtramos y contamos las no leídas
+                    val noLeidas = lista.count { !it.leida }
+                    _notificacionesNoLeidas.value = noLeidas
+                }
+        }
+    }
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }

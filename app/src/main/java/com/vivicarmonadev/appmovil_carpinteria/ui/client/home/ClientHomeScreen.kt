@@ -61,7 +61,8 @@ fun ClientHomeScreen(
     onSeeAllPortfolioClick: () -> Unit,
     onOrderClick: (String) -> Unit,
     onSeeAllOrdersClick: () -> Unit,
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    notificacionesNoLeidas: Int = 0,
 ) {
     Column(
         modifier = Modifier
@@ -73,7 +74,8 @@ fun ClientHomeScreen(
             title = "Hola, $userName",
             subtitle = "Encuentra a tu carpintero ideal",
             avatarUrl = photoUrl,
-            onNotificationClick =  onNotificationClick
+            onNotificationClick =  onNotificationClick,
+            notificacionesNoLeidas = notificacionesNoLeidas
 
         )
 
@@ -86,7 +88,6 @@ fun ClientHomeScreen(
 
         // Pedidos recientes
         SectionTitleWithButton(
-            icon = Icons.Filled.Schedule,
             title = "Pedidos recientes",
             subtitle = "Tus pedidos en curso",
             actionText = "Ver todos",
@@ -115,7 +116,6 @@ fun ClientHomeScreen(
 
         // Carpinteros destacados
         SectionTitleWithButton(
-            icon = Icons.Filled.Person,
             title = "Carpinteros destacados",
             subtitle = "Profesionales cerca de ti",
             actionText = "Ver más",
@@ -145,7 +145,6 @@ fun ClientHomeScreen(
 
         // Trabajos recientes
         SectionTitleWithButton(
-            icon = Icons.Filled.Folder,
             title = "Trabajos recientes",
             subtitle = "Explora los últimos trabajos",
             actionText = "Ver más",

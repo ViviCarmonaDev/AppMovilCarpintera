@@ -55,6 +55,9 @@ class EditTallerViewModel(
                             aniosExperiencia = aniosStr,
                             skills = profile.skills,
                             isLoading = false,
+                            latitud = profile.latitud,
+                            longitud = profile.longitud,
+
                             // Originales
                             originalNombreTaller = profile.nombreTaller,
                             originalRuc = profile.ruc,
@@ -62,7 +65,9 @@ class EditTallerViewModel(
                             originalDireccionTaller = profile.direccionTaller,
                             originalTelefonoTaller = profile.telefonoTaller,
                             originalAniosExperiencia = aniosStr,
-                            originalSkills = profile.skills
+                            originalSkills = profile.skills,
+                            originalLatitud = profile.latitud,
+                            originalLongitud = profile.longitud,
                         )
                     }
                 },
@@ -134,8 +139,36 @@ class EditTallerViewModel(
         }
     }
 
-    // ---- GUARDAR ----
+    // ---- EVENTOS DEL MAPA ----
 
+    fun onOpenMapPicker() {
+        _uiState.update { it.copy(showMapPicker = true, errorMessage = null) }
+    }
+
+    fun onCloseMapPicker() {
+        _uiState.update { it.copy(showMapPicker = false) }
+    }
+
+    /**
+     * Confirmación desde el diálogo del mapa.
+     * Si lat/lng vienen null se interpreta como "sin ubicación".
+     */
+    fun onUbicacionConfirm(lat: Double?, lng: Double?) {
+        _uiState.update {
+            it.copy(
+                latitud = lat,
+                longitud = lng,
+                showMapPicker = false,
+                errorMessage = null
+            )
+        }
+    }
+
+    fun onUbicacionChange(lat: Double, lng: Double) {
+        _uiState.update { it.copy(latitud = lat, longitud = lng) }
+    }
+
+    // ---- GUARDAR ----
     fun saveChanges() {
         val state = _uiState.value
 
@@ -147,7 +180,7 @@ class EditTallerViewModel(
                 direccionTallerTouched = true,
                 telefonoTallerTouched = true,
                 aniosExperienciaTouched = true,
-                skillsTouched = true
+                skillsTouched = true,
             )
         }
 
@@ -178,7 +211,9 @@ class EditTallerViewModel(
                 telefonoTaller = state.telefonoTaller.trim(),
                 aniosExperiencia = state.aniosExperiencia.toIntOrNull() ?: 0,
                 skills = state.skills,
-                profileCompleted = true
+                profileCompleted = true,
+                latitud = state.latitud,
+                longitud = state.longitud
             )
 
             val result = carpenterRepository.saveCarpenterProfile(profile)

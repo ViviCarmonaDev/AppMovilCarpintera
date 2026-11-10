@@ -298,59 +298,74 @@ fun DetailCotizacionScreen(
                             )
                         }
                     }
-
-                    // CARPINTERO: Ver observación del cliente
-
-                    if (uiState.isCarpenter && cotizacion.solicitudCambio) {
-                        Spacer(Modifier.height(16.dp))
-                        Text("Observación del cliente", fontWeight = FontWeight.Bold)
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFFCEBD0))
-                                .padding(14.dp)
-                        ) {
-                            Text(cotizacion.observacionCliente ?: "", fontSize = 14.sp)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
-                            MervetaActionButton(
-                                text = "Aceptar y editar",
-                                backgroundColor = Color(0xFF4A5D3E),
-                                contentColor = Color.White,
-                                onClick = {
-                                    viewModel.aceptarCambios(onNavigateToEdit = onEditClick)
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                            MervetaActionButton(
-                                text = "Rechazar",
-                                backgroundColor = Color(0xFFFADBD8),
-                                contentColor = Color(0xFFC5544A),
-                                onClick = { viewModel.onRechazarCambiosClick() },
-                                modifier = Modifier.weight(1f)
+                    // LÓGICA DE ESTADOS PARA EL CARPINTERO
+                    if (uiState.isCarpenter) {
+                        if (cotizacion.solicitudCambio) {
+                            //  EL CLIENTE SOLICITÓ CAMBIOS: Mostramos observación y botones
+                            Spacer(Modifier.height(16.dp))
+                            Text("Observación del cliente", fontWeight = FontWeight.Bold)
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFFCEBD0))
+                                    .padding(14.dp)
+                            ) {
+                                Text(cotizacion.observacionCliente ?: "", fontSize = 14.sp, color = Color(0xFF8B5A2B))
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                                MervetaActionButton(
+                                    text = "Aceptar y editar",
+                                    backgroundColor = Color(0xFF4A5D3E),
+                                    contentColor = Color.White,
+                                    onClick = { viewModel.aceptarCambios(onNavigateToEdit = onEditClick) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MervetaActionButton(
+                                    text = "Rechazar",
+                                    backgroundColor = Color(0xFFFADBD8),
+                                    contentColor = Color(0xFFC5544A),
+                                    onClick = { viewModel.onRechazarCambiosClick() },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        } else if (cotizacion.estadoSolicitud == EstadoSolicitud.ACEPTADA) {
+                            // El carpintero ya aceptó y editó
+                            Spacer(Modifier.height(16.dp))
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFD4E0D9))
+                                    .padding(14.dp)
+                            ) {
+                                Text("Has aceptado los cambios. La cotización ha sido actualizada.", fontSize = 13.sp, color = Color(0xFF2E4A3E))
+                            }
+                        } else if (cotizacion.estadoSolicitud == EstadoSolicitud.RECHAZADA) {
+                            // El carpintero ya rechazó
+                            Spacer(Modifier.height(16.dp))
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFFADBD8))
+                                    .padding(14.dp)
+                            ) {
+                                Text("Rechazaste los cambios. Respuesta: ${cotizacion.respuestaCarpintero}", fontSize = 13.sp, color = Color(0xFFC5544A))
+                            }
+                        } else {
+                            // Ninguna de las anteriores (esperando respuesta del cliente a la cotización inicial)
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                "Esperando respuesta del cliente...",
+                                fontSize = 14.sp,
+                                color = Color(0xFF6B6B6B),
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                             )
                         }
                     }
 
-                    // Si el carpintero ya rechazó los cambios
-
-                    if (cotizacion.estadoSolicitud == EstadoSolicitud.RECHAZADA &&
-                        cotizacion.respuestaCarpintero != null
-                    ) {
-                        Spacer(Modifier.height(16.dp))
-                        Text("Respuesta del carpintero", fontWeight = FontWeight.Bold)
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFFADBD8))
-                                .padding(14.dp)
-                        ) {
-                            Text(cotizacion.respuestaCarpintero ?: "", fontSize = 14.sp)
-                        }
-                    }
 
                     Spacer(Modifier.height(32.dp))
 

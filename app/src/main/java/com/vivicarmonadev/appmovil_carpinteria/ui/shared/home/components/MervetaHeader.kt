@@ -2,7 +2,7 @@ package com.vivicarmonadev.appmovil_carpinteria.ui.shared.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -44,6 +43,7 @@ fun MervetaHeader(
     avatarIcon: ImageVector = Icons.Filled.Person,
     onAvatarClick: (() -> Unit)? = null,
     onNotificationClick: (() -> Unit)? = null,
+    notificacionesNoLeidas: Int = 0,
     onSettingsClick: (() -> Unit)? = null,
     verticalPadding: Dp = 60.dp,
     bottomPadding: Dp = 24.dp
@@ -154,6 +154,26 @@ fun MervetaHeader(
                         )
                     }
                 }
+
+                // BADGE ROJO
+                if (notificacionesNoLeidas > 0) {
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (-12).dp, y = (-12).dp) // Lo movemos a la esquina
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935)), // Rojo
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (notificacionesNoLeidas > 9) "9+" else notificacionesNoLeidas.toString(),
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 if (onSettingsClick != null) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(

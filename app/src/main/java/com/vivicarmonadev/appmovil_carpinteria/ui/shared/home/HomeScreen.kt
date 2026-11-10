@@ -25,6 +25,7 @@ fun HomeScreen(
     onNotificationClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val noLeidas by viewModel.notificacionesNoLeidas.collectAsStateWithLifecycle()
 
     if (uiState.currentUser == null) {
         Box(
@@ -46,7 +47,8 @@ fun HomeScreen(
                 onSeeAllPortfolioClick = onSeeAllPortfolioClick,
                 onPedidoClick = onOrderClick,
                 onSeeAllPedidosClick = onSeeAllOrdersClick,
-                onNotificationClick = onNotificationClick
+                onNotificationClick = onNotificationClick,
+                notificacionesNoLeidas = noLeidas,
             )
 
             UserRole.CLIENT -> ClientHomeScreen(
@@ -61,7 +63,8 @@ fun HomeScreen(
                 recentOrders = uiState.recentOrders,
                 onOrderClick = onOrderClick,
                 onSeeAllOrdersClick = onSeeAllOrdersClick,
-                onNotificationClick = onNotificationClick
+                onNotificationClick = onNotificationClick,
+                notificacionesNoLeidas = noLeidas,
             )
         }
     }

@@ -13,10 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.vivicarmonadev.appmovil_carpinteria.data.repository.NotificacionRepositoryImpl
+import com.vivicarmonadev.appmovil_carpinteria.domain.model.Notificacion
 
 class DetailCotizacionViewModel(
     private val cotizacionRepository: CotizacionRepositoryImpl = CotizacionRepositoryImpl(),
-    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl()
+    private val authRepository: AuthRepositoryImpl = AuthRepositoryImpl(),
+            private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailCotizacionUiState())
@@ -146,7 +149,7 @@ class DetailCotizacionViewModel(
             result.fold(
                 onSuccess = {
                     _uiState.update { it.copy(isProcessing = false) }
-                    // ✅ Navegar a editar (el Flow actualizará la UI automáticamente)
+                    //  Navegar a editar (el Flow actualizará la UI automáticamente)
                     onNavigateToEdit(cotizacion.id)
                 },
                 onFailure = { e ->
@@ -174,6 +177,16 @@ class DetailCotizacionViewModel(
                 respuestaCarpintero = respuesta.ifBlank { "Cambios rechazados" },
                 estadoSolicitud = EstadoSolicitud.RECHAZADA,
                 solicitudCambio = false
+            )
+            cotizacionRepository.updateCotizacion(updated)
+
+            val notificacion = Notificacion(
+                destinatarioUid = cotizacion.clienteUid,
+                titulo = "Cambios rechazados",
+                mensaje = "El carpintero ha rechazado tu solicitud de cambios: $respuesta",
+                tipo = "cambios_rechazados",
+                referenciaId = cotizacion.id,
+                leida = false
             )
 
             cotizacionRepository.updateCotizacion(updated)

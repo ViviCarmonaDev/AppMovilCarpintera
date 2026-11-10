@@ -10,6 +10,8 @@ data class EditTallerUiState(
     val telefonoTaller: String = "",
     val aniosExperiencia: String = "",
     val skills: List<String> = emptyList(),
+    val latitud: Double? = null,
+    val longitud: Double? = null,
 
     // ---- Valores originales (para detectar cambios) ----
     val originalNombreTaller: String = "",
@@ -19,6 +21,8 @@ data class EditTallerUiState(
     val originalTelefonoTaller: String = "",
     val originalAniosExperiencia: String = "",
     val originalSkills: List<String> = emptyList(),
+    val originalLatitud: Double? = null,
+    val originalLongitud: Double? = null,
 
     // ---- Flags de "tocado" ----
     val nombreTallerTouched: Boolean = false,
@@ -33,7 +37,10 @@ data class EditTallerUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false,
-    val showDiscardDialog: Boolean = false
+    val showDiscardDialog: Boolean = false,
+
+    // ---- Estado del selector de mapa ----
+    val showMapPicker: Boolean = false
 ) {
 
     // ---- VALIDACIONES ----
@@ -116,5 +123,20 @@ data class EditTallerUiState(
                 direccionTaller != originalDireccionTaller ||
                 telefonoTaller != originalTelefonoTaller ||
                 aniosExperiencia != originalAniosExperiencia ||
-                skills != originalSkills
+                skills != originalSkills ||
+                latitud != originalLatitud ||
+                longitud != originalLongitud
+
+    // ---- Helpers de ubicación ----
+
+    val hasUbicacion: Boolean
+        get() = latitud != null && longitud != null
+
+    val ubicacionTexto: String
+        get() = if (latitud != null && longitud != null) {
+            "Lat: %.6f, Lng: %.6f".format(latitud, longitud)
+        } else {
+            "Sin ubicación seleccionada"
+        }
+
 }

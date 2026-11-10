@@ -54,6 +54,7 @@ fun CarpenterHomeScreen(
     portfolioItems: List<PortfolioItem>,
     photoUrl: String? = null,
     pedidos: List<Pedido>,
+    notificacionesNoLeidas: Int = 0,
     onPortfolioItemClick: (String) -> Unit,
     onSeeAllPortfolioClick: () -> Unit,
     onPedidoClick: (String) -> Unit,
@@ -71,7 +72,8 @@ fun CarpenterHomeScreen(
             userName = userName,
             subtitle = "Gestiona tus proyectos de hoy",
             avatarUrl = photoUrl,
-            onNotificationClick = onNotificationClick
+            onNotificationClick = onNotificationClick,
+            notificacionesNoLeidas = notificacionesNoLeidas
         )
 
         // Métricas
@@ -87,7 +89,6 @@ fun CarpenterHomeScreen(
 
         // Pedidos activos
         SectionTitleWithButton(
-            icon = Icons.Filled.Schedule,
             title = "Pedidos activos",
             subtitle = "Estos son tus pedidos en curso",
             actionText = "Ver todos",
@@ -116,7 +117,6 @@ fun CarpenterHomeScreen(
 
         // Mi portafolio
         SectionTitleWithButton(
-            icon = Icons.Filled.Folder,
             title = "Mi portafolio",
             subtitle = "Tus trabajos publicados",
             actionText = "Ver todos",

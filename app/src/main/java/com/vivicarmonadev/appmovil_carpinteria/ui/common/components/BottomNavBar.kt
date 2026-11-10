@@ -45,8 +45,8 @@ fun BottomNavBar(
             .fillMaxWidth()
             .clip(
                 RoundedCornerShape(
-                    topStart = 30.dp,   // esquina superior izquierda
-                    topEnd = 30.dp      // esquina superior derecha
+                    topStart = 30.dp,
+                    topEnd = 30.dp
                 )
             )
             .background(Color(0xFFF5EFE7))

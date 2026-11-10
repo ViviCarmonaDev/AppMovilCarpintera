@@ -75,18 +75,30 @@ class CotizacionRepositoryImpl(
             Result.failure(e)
         }
     }
-
     override suspend fun updateCotizacion(cotizacion: Cotizacion): Result<Cotizacion> {
         return try {
             // 1. Actualizar en Firestore
             val result = dataSource.updateCotizacion(cotizacion.toDto())
 
             if (result.isSuccess) {
-                // 2. Notificar al carpintero si el estado cambió (Aceptada/Rechazada)
-                // Solo notificamos si la cotización tiene un carpintero asignado
+                // 2. Notificar al carpintero
+
+                // CASO A: El cliente solicita cambios
+                if (cotizacion.solicitudCambio && cotizacion.estado == EstadoCotizacion.PENDIENTE) {
+                    val notificacion = Notificacion(
+                        destinatarioUid = cotizacion.carpinteroUid,
+                        titulo = "Solicitud de cambios",
+                        mensaje = "El cliente solicita cambios en la cotización #${cotizacion.numeroPedido}. Revisa la observación.",
+                        tipo = "solicitud_cambios",
+                        referenciaId = cotizacion.id,
+                        leida = false
+                    )
+                    notificacionRepository.crearNotificacion(notificacion)
+                }
+
+                // CASO B: El cliente acepta o rechaza la cotización
                 if (cotizacion.carpinteroUid.isNotBlank() &&
-                    (cotizacion.estado == EstadoCotizacion.ACEPTADA ||
-                            cotizacion.estado == EstadoCotizacion.RECHAZADA)) {
+                    (cotizacion.estado == EstadoCotizacion.ACEPTADA || cotizacion.estado == EstadoCotizacion.RECHAZADA)) {
 
                     val notificacion = Notificacion(
                         destinatarioUid = cotizacion.carpinteroUid,

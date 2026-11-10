@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.collectLatest
 
 class NotificacionesViewModel(
     private val notificacionRepository: NotificacionRepositoryImpl = NotificacionRepositoryImpl(),
@@ -24,24 +27,23 @@ class NotificacionesViewModel(
 
     private fun cargarNotificaciones() {
         viewModelScope.launch {
-            authRepository.currentUser.collect { user ->
-                if (user != null) {
-                    _uiState.update { it.copy(isLoading = true) }
-                    notificacionRepository.getNotificaciones(user.uid).collect { lista ->
-                        _uiState.update {
-                            it.copy(
-                                notificaciones = lista,
-                                isLoading = false,
-                                errorMessage = null
-                            )
-                        }
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(notificaciones = emptyList(), isLoading = false)
+            authRepository.currentUser
+                .flatMapLatest { user ->
+                    if (user != null) {
+                        notificacionRepository.getNotificaciones(user.uid)
+                    } else {
+                        flowOf(emptyList()) // Si no hay usuario, lista vacía
                     }
                 }
-            }
+                .collectLatest { lista ->
+                    _uiState.update {
+                        it.copy(
+                            notificaciones = lista,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+                }
         }
     }
 

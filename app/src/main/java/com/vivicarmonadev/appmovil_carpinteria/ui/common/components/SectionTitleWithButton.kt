@@ -1,6 +1,5 @@
 package com.vivicarmonadev.appmovil_carpinteria.ui.common.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
@@ -28,7 +26,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SectionTitleWithButton(
-    icon: ImageVector,
     title: String,
     subtitle: String,
     actionText: String,
@@ -39,60 +36,43 @@ fun SectionTitleWithButton(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icono circular marrón
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF8B5A2B)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Título y subtítulo
+        // Textos a la izquierda
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontSize = 17.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2C2C2C)
             )
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = Color(0xFF6B6B6B)
-            )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B6B6B)
+                )
+            }
         }
 
-        // Botón "Ver todos"
+        // Botón "Ver todos / Ver galería" a la derecha (sin fondo, solo texto y flecha)
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF8B5A2B))
                 .clickable(onClick = onActionClick)
-                .padding(horizontal = 14.dp, vertical = 8.dp)
+                .padding(vertical = 8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = actionText,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    color = Color(0xFF8B5A2B) // Color café
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp)
+                    tint = Color(0xFF8B5A2B), // Color café
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
